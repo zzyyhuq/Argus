@@ -1,3 +1,15 @@
+import sys
+
+# Windows consoles default to a legacy codepage (GBK on zh-CN). gpt_researcher
+# logs LLM request/response bodies, so any character outside that codepage
+# raises UnicodeEncodeError inside the LLM call and burns through all retries.
+# Force UTF-8 before any handler binds to these streams.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 from dotenv import load_dotenv
 import logging
 from pathlib import Path
