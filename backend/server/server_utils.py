@@ -289,8 +289,7 @@ def get_config_dict(
         "SEARX_URL": searx_url or os.getenv("SEARX_URL", ""),
         "LANGCHAIN_TRACING_V2": os.getenv("LANGCHAIN_TRACING_V2", "true"),
         "DOC_PATH": os.getenv("DOC_PATH", "./my-docs"),
-        "RETRIEVER": os.getenv("RETRIEVER", ""),
-        "EMBEDDING_MODEL": os.getenv("OPENAI_EMBEDDING_MODEL", "")
+        "RETRIEVER": os.getenv("RETRIEVER", "")
     }
 
 

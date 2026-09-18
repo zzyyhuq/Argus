@@ -98,34 +98,6 @@ class Config:
 
     def _handle_deprecated_attributes(self) -> None:
         """Handle deprecated configuration attributes with warnings."""
-        if os.getenv("EMBEDDING_PROVIDER") is not None:
-            warnings.warn(
-                "EMBEDDING_PROVIDER is deprecated and will be removed soon. Use EMBEDDING instead.",
-                FutureWarning,
-                stacklevel=2,
-            )
-            self.embedding_provider = (
-                os.environ["EMBEDDING_PROVIDER"] or self.embedding_provider
-            )
-
-            embedding_provider = os.environ["EMBEDDING_PROVIDER"]
-            if embedding_provider == "ollama":
-                self.embedding_model = os.environ["OLLAMA_EMBEDDING_MODEL"]
-            elif embedding_provider == "custom":
-                self.embedding_model = os.getenv("OPENAI_EMBEDDING_MODEL", "custom")
-            elif embedding_provider == "openai":
-                self.embedding_model = "text-embedding-3-large"
-            elif embedding_provider == "azure_openai":
-                self.embedding_model = "text-embedding-3-large"
-            elif embedding_provider == "huggingface":
-                self.embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
-            elif embedding_provider == "gigachat":
-                self.embedding_model = "Embeddings"
-            elif embedding_provider == "google_genai":
-                self.embedding_model = "text-embedding-004"
-            else:
-                raise Exception("Embedding provider not found.")
-
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."

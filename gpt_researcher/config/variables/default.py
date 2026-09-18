@@ -2,7 +2,7 @@ from .base import BaseConfig
 
 DEFAULT_CONFIG: BaseConfig = {
     "RETRIEVER": "tavily",
-    "EMBEDDING": "openai:text-embedding-3-small",
+    "EMBEDDING": "dashscope:text-embedding-v3",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-5.4-mini",
     "SMART_LLM": "openai:gpt-5.4",  # Has support for long responses (2k+ words).
@@ -33,6 +33,8 @@ DEFAULT_CONFIG: BaseConfig = {
     "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
+    # DashScope quirks (compat base URL, chunk_size, ctx-length check) are
+    # defaulted inside Memory; only set keys here to override them.
     "EMBEDDING_KWARGS": {},
     "VERBOSE": False,
     # Deep research specific settings
