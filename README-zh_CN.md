@@ -19,9 +19,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
 [English](README.md) |
-[中文](README-zh_CN.md) |
-[日本語](README-ja_JP.md) |
-[한국어](README-ko_KR.md)
+[中文](README-zh_CN.md)
 </div>
 
 # 🔎 GPT Researcher

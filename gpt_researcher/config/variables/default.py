@@ -28,7 +28,7 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_SCRAPER_WORKERS": 15,
     "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # Minimum seconds between scraper requests (0 = no limit, useful for API rate limiting)
     "MAX_SUBTOPICS": 3,
-    "LANGUAGE": "english",
+    "LANGUAGE": "chinese",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",

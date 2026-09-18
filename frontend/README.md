@@ -1,85 +1,58 @@
-# Frontend Application
+# 前端界面
 
-This frontend project aims to enhance the user experience of GPT-Researcher, providing an intuitive and efficient interface for automated research. It offers two deployment options to suit different needs and environments.
+本目录是 GPT Researcher 的网页界面，由 FastAPI 后端直接提供静态文件，**没有独立的前端服务**。
 
-## Option 1: Static Frontend (FastAPI)
+## 运行
 
-A lightweight solution using FastAPI to serve static files.
+1. 安装依赖：
 
-#### Prerequisites
-- Python 3.11+
-- pip
-
-#### Setup and Running
-
-1. Install required packages:
    ```
    pip install -r requirements.txt
    ```
 
-2. Start the server:
+2. 启动后端（会同时提供本目录的界面）：
+
    ```
    python -m uvicorn main:app
    ```
 
-3. Access at `http://localhost:8000`
+3. 浏览器打开 `http://localhost:8000`
 
-#### Demo
-https://github.com/assafelovic/gpt-researcher/assets/13554167/dd6cf08f-b31e-40c6-9907-1915f52a7110
+> 注意：`frontend/static/` 是**服务启动的硬依赖**——`backend/server/app.py` 在模块顶层
+> `app.mount(..., StaticFiles(directory=...))`，该目录缺失会导致应用无法导入。不要删除。
 
-## Option 2: NextJS Frontend
+## 文件说明
 
-A more robust solution with enhanced features and performance.
+| 文件 | 用途 |
+|---|---|
+| `index.html` | 页面结构 |
+| `scripts.js` | 全部前端逻辑，含 `BACKEND_MESSAGE_RULES`（后端英文进度消息的中文映射表） |
+| `styles.css` | 样式 |
+| `pdf_styles.css` | PDF 导出样式 |
+| `static/` | logo、favicon、Agent 头像等静态资源 |
 
-#### Prerequisites
-- Node.js (v18.17.0 recommended)
-- npm
+## 界面语言
 
-#### Setup and Running
+界面为**中文硬编码**，不含语言切换。
 
-1. Navigate to NextJS directory:
-   ```
-   cd nextjs
-   ```
+后端通过 websocket 推送的研究进度提示，其文案写在 Python 源码里（`gpt_researcher/skills/*.py`）。
+这些消息在浏览器端由 `scripts.js` 的 `BACKEND_MESSAGE_RULES` + `translateBackendMessage()`
+统一转换，接入点是 `addAgentResponse()`——**所有**后端日志消息都经过这一个函数。
 
-2. Set up Node.js:
-   ```
-   nvm install 18.17.0
-   nvm use v18.17.0
-   ```
+新增后端消息时，记得同步添加一条映射规则，否则该条会以英文显示。
 
-3. Install dependencies:
-   ```
-   npm install --legacy-peer-deps
-   ```
+生成的**研究报告**语言由 `gpt_researcher/config/variables/default.py` 的 `LANGUAGE` 控制（当前为 `chinese`）。
 
-4. Start development server:
-   ```
-   npm run dev
-   ```
+## 功能
 
-5. Access at `http://localhost:3000`
+- 研究查询输入，支持报告类型、语气、数据源等参数
+- 研究过程实时进度展示
+- 报告渲染与导出（PDF / Word / Markdown / JSON）
+- 针对报告的追问对话
+- 研究历史记录（本地存储）
+- MCP 服务器配置
 
-Note: Requires backend server on `localhost:8000` as detailed in option 1.
+## 历史说明
 
-#### Demo
-https://github.com/user-attachments/assets/092e9e71-7e27-475d-8c4f-9dddd28934a3
-
-## Choosing an Option
-
-- Static Frontend: Quick setup, lightweight deployment.
-- NextJS Frontend: Feature-rich, scalable, better performance and SEO.
-
-For production, NextJS is recommended.
-
-## Frontend Features
-
-Our frontend enhances GPT-Researcher by providing:
-
-1. Intuitive Research Interface: Streamlined input for research queries.
-2. Real-time Progress Tracking: Visual feedback on ongoing research tasks.
-3. Interactive Results Display: Easy-to-navigate presentation of findings.
-4. Customizable Settings: Adjust research parameters to suit specific needs.
-5. Responsive Design: Optimal experience across various devices.
-
-These features aim to make the research process more efficient and user-friendly, complementing GPT-Researcher's powerful agent capabilities.
+本目录曾并存一套 Next.js 前端（`nextjs/`，即 npm 包 `gpt-researcher-ui`），
+已于结构精简时移除。当前后端提供的界面自始至终都是这里的静态版本。
