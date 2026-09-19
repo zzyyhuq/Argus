@@ -25,7 +25,6 @@ from .prompts import get_prompt_family
 from .skills.browser import BrowserManager
 from .skills.context_manager import ContextManager
 from .skills.curator import SourceCurator
-from .scraper.utils import is_junk_image_url
 from .skills.deep_research import DeepResearchSkill
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
@@ -449,12 +448,6 @@ class GPTResearcher:
         Returns:
             The generated report as a string.
         """
-        # Select source images lazily. Every report type funnels through here,
-        # including deep research, which returns from conduct_research() before
-        # the research-phase selection would have run.
-        if not self.available_images:
-            self.available_images = self._select_report_images()
-
         has_available_images = bool(self.available_images)
         self._current_step = "report_writing"
         await self._log_event("research", step="writing_report", details={
@@ -655,33 +648,6 @@ class GPTResearcher:
             images: List of image dictionaries to add.
         """
         self.research_images.extend(images)
-
-    def _select_report_images(self, limit: int = 3) -> list[dict[str, Any]]:
-        """Choose source images to embed in the report.
-
-        ``research_images`` holds bare URLs gathered per sub-query while
-        scraping. Page furniture (logos, icons, spacers) is filtered out first
-        -- see ``is_junk_image_url`` -- because the scraper's own scoring
-        cannot separate it from real content.
-
-        The limit is deliberately small: a research report reads better with
-        two or three relevant images than with a gallery of whatever the
-        sources happened to contain.
-
-        Args:
-            limit: Maximum number of images to offer the report writer.
-
-        Returns:
-            list[dict]: ``{url, alt_text}`` rows consumed by ``write_report``.
-        """
-        selected: list[dict[str, Any]] = []
-        for url in self.research_images:
-            if is_junk_image_url(url):
-                continue
-            selected.append({"url": url, "alt_text": "研究来源配图"})
-            if len(selected) >= limit:
-                break
-        return selected
 
     def get_research_sources(self) -> list[dict[str, Any]]:
         """Get all research sources collected during research.

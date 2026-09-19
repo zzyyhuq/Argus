@@ -62,39 +62,6 @@ def get_relevant_images(soup: BeautifulSoup, url: str) -> list:
         logging.error(f"Error in get_relevant_images: {e}")
         return []
 
-# Page furniture that appears on nearly every site and carries no research
-# value. `get_relevant_images` cannot separate these from real content by score
-# alone -- pages rarely declare img width/height, so most images land on score
-# 0 -- which means a logo or tracking pixel is otherwise as likely to be picked
-# for a report illustration as a photograph.
-_JUNK_IMAGE_URL = re.compile(
-    r"(logo|icon|avatar|sprite|placeholder|spacer|pixel|blank|loading|"
-    r"spinner|badge|favicon|qr[-_]?code|wechat|weixin|share)",
-    re.IGNORECASE,
-)
-_JUNK_IMAGE_EXTENSIONS = (".svg", ".ico")
-
-
-def is_junk_image_url(url: str) -> bool:
-    """Return True for image URLs that are almost certainly not content images.
-
-    Heuristic and intentionally conservative -- it only rejects patterns that
-    are page furniture on essentially every site (site logos, icons, avatars,
-    spacers, tracking pixels) plus SVG/ICO, which are icons rather than photos.
-
-    Args:
-        url: Absolute image URL.
-
-    Returns:
-        bool: True when the URL looks like page furniture.
-    """
-    if not url:
-        return True
-    if urlparse(url).path.lower().endswith(_JUNK_IMAGE_EXTENSIONS):
-        return True
-    return bool(_JUNK_IMAGE_URL.search(url))
-
-
 def parse_dimension(value: str) -> int:
     """Parse dimension value, handling px units"""
     # HTML width/height attrs are often missing or non-string; callers pass
