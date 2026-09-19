@@ -1087,32 +1087,6 @@ select.form-control option {
     display: none;
 }
 
-/* 研究配图 */
-.images_div {
-    margin-bottom: var(--sp-5);
-}
-
-#selectedImagesContainer {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-3);
-}
-
-#selectedImagesContainer img {
-    width: 180px;
-    height: 130px;
-    object-fit: cover;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: border-color .15s, transform .15s;
-}
-
-#selectedImagesContainer img:hover {
-    border-color: var(--accent);
-    transform: translateY(-2px);
-}
-
 /* 对话面板 */
 .chat-messages {
     max-height: 420px;
@@ -1638,54 +1612,6 @@ select.form-control option {
     max-height: none;
 }
 
-/* 图片灯箱 */
-.image-dialog {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-overlay);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--sp-6);
-    background: rgba(0, 0, 0, .85);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity .2s, visibility .2s;
-}
-
-.image-dialog.visible {
-    opacity: 1;
-    visibility: visible;
-}
-
-.image-dialog img {
-    max-width: 90%;
-    max-height: 85vh;
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-lg);
-}
-
-.image-dialog .close-btn {
-    position: absolute;
-    top: var(--sp-5);
-    right: var(--sp-5);
-    padding: 8px 18px;
-    font-family: inherit;
-    font-size: 13px;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    transition: background-color .15s;
-}
-
-.image-dialog .close-btn:hover {
-    background: var(--surface-3);
-}
-
 /* Toast */
 .toast-notification {
     position: fixed;
@@ -1804,11 +1730,6 @@ footer {
         max-width: none;
         border-radius: 0;
         padding: var(--sp-4);
-    }
-
-    #selectedImagesContainer img {
-        width: calc(50% - var(--sp-2));
-        height: 110px;
     }
 
     .chat-message {

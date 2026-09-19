@@ -651,8 +651,6 @@ const GPTResearcher = (() => {
     // Clear current research/report areas
     document.getElementById('output').innerHTML = '';
     document.getElementById('reportContainer').innerHTML = '';
-    document.getElementById('selectedImagesContainer').innerHTML = '';
-    document.getElementById('selectedImagesContainer').style.display = 'none';
 
     // Hide download bar and chat
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
@@ -799,10 +797,6 @@ const GPTResearcher = (() => {
       chatContainer.style.display = 'none';
     }
 
-    const imageContainer = document.getElementById('selectedImagesContainer')
-    imageContainer.innerHTML = ''
-    imageContainer.style.display = 'none'
-
     updateState('in_progress')
 
     addAgentResponse({
@@ -873,9 +867,6 @@ const GPTResearcher = (() => {
           displaySubQuestions(data.metadata)
         }
         addAgentResponse(data)
-      } else if (data.type === 'images') {
-        console.log("Received images:", data);  // Debug log
-        displaySelectedImages(data)
       } else if (data.type === 'report') {
         // Add to reportContent for history
         reportContent += data.output;
@@ -1445,70 +1436,6 @@ const GPTResearcher = (() => {
   // 来源 URL 标签输入功能已随旧界面移除（#tags-input / #custom_source 都不存在）。
   // tags 数组本身要保留为空数组：请求负载仍会读取它（scripts.js:969 的 source_urls）。
   const tags = [];
-
-  const displaySelectedImages = (data) => {
-    const imageContainer = document.getElementById('selectedImagesContainer')
-    //imageContainer.innerHTML = '<h3>Selected Images</h3>'
-    const images = JSON.parse(data.output)
-    console.log("Received images:", images);  // Debug log
-    if (images && images.length > 0) {
-      images.forEach(imageUrl => {
-        const imgElement = document.createElement('img')
-        imgElement.src = imageUrl
-        imgElement.alt = '研究图片'
-        imgElement.style.maxWidth = '200px'
-        imgElement.style.margin = '5px'
-        imgElement.style.cursor = 'pointer'
-        imgElement.onclick = () => showImageDialog(imageUrl)
-        imageContainer.appendChild(imgElement)
-      })
-      imageContainer.style.display = 'block'
-    } else {
-      imageContainer.innerHTML += '<p>本次研究未找到图片。</p>'
-    }
-  }
-
-  const showImageDialog = (imageUrl) => {
-    let dialog = document.querySelector('.image-dialog');
-    if (!dialog) {
-        dialog = document.createElement('div');
-        dialog.className = 'image-dialog';
-
-        const img = document.createElement('img');
-        img.alt = '原始尺寸研究图片';
-
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = '关闭';
-        closeBtn.className = 'close-btn'; // Added class for styling
-
-        dialog.appendChild(img);
-        dialog.appendChild(closeBtn);
-        document.body.appendChild(dialog);
-
-        closeBtn.onclick = () => {
-            dialog.classList.remove('visible');
-        };
-        // Close on clicking backdrop
-        dialog.addEventListener('click', (e) => {
-            if (e.target === dialog) {
-                dialog.classList.remove('visible');
-            }
-        });
-    }
-
-    const imgElement = dialog.querySelector('img');
-    imgElement.src = imageUrl;
-    dialog.classList.add('visible');
-
-    // Close with Escape key
-    const escapeKeyListener = (e) => {
-        if (e.key === 'Escape') {
-            dialog.classList.remove('visible');
-            document.removeEventListener('keydown', escapeKeyListener);
-        }
-    };
-    document.addEventListener('keydown', escapeKeyListener);
-}
 
   // Function to show download bar and enable buttons
   const showDownloadPanels = () => {
@@ -2579,8 +2506,6 @@ const GPTResearcher = (() => {
     init,
     startResearch,
     copyToClipboard,
-    displaySelectedImages,
-    showImageDialog,
     checkCookieStatus,
     exportHistory,
     importHistory: triggerImportHistory,  // Add import function to return object

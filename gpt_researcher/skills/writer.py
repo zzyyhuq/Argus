@@ -4,7 +4,6 @@ This module provides the ReportGenerator class that handles report
 writing, including introductions, conclusions, and subtopic management.
 """
 
-import json
 from typing import Dict, Optional
 
 from ..actions import (
@@ -61,18 +60,6 @@ class ReportGenerator:
             str: The generated report.
         """
         available_images = available_images or []
-        
-        # send the selected images prior to writing report
-        research_images = self.researcher.get_research_images()
-        if research_images:
-            await stream_output(
-                "images",
-                "selected_images",
-                json.dumps(research_images),
-                self.researcher.websocket,
-                True,
-                research_images
-            )
 
         context = ext_context or self.researcher.context
 
