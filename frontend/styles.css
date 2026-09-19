@@ -1362,6 +1362,22 @@ select.form-control option {
     margin-bottom: var(--sp-2);
 }
 
+/* 格式链接（Word / MD / JSON）带文字标签，和下方纯图标的操作按钮不是一回事：
+   这个容器此前没有任何规则，三个链接就紧贴在一起。 */
+.history-entry-format {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: var(--sp-2);
+}
+
+/* 覆盖 .history-entry-action 的 26px 方形图标尺寸，让带标签的链接按内容撑开。 */
+.history-entry-format .history-entry-action {
+    width: auto;
+    gap: 5px;
+    padding: 0 9px;
+}
+
 .history-entry-actions {
     display: flex;
     flex-wrap: wrap;
