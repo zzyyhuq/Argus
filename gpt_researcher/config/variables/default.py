@@ -28,7 +28,11 @@ DEFAULT_CONFIG: BaseConfig = {
     "MAX_SCRAPER_WORKERS": 15,
     "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # Minimum seconds between scraper requests (0 = no limit, useful for API rate limiting)
     "MAX_SUBTOPICS": 3,
-    "LANGUAGE": "chinese",
+    # Injected into the report prompt as "write the report in the following
+    # language: {LANGUAGE}". "chinese" alone is ambiguous between Simplified
+    # and Traditional, so a report built from Taiwan/Hong Kong sources came out
+    # in Traditional characters; name the script explicitly.
+    "LANGUAGE": "Simplified Chinese (简体中文)",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",
