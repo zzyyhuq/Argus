@@ -25,8 +25,8 @@ from .prompts import get_prompt_family
 from .skills.browser import BrowserManager
 from .skills.context_manager import ContextManager
 from .skills.curator import SourceCurator
+from .scraper.utils import is_junk_image_url
 from .skills.deep_research import DeepResearchSkill
-from .skills.image_generator import ImageGenerator
 from .skills.researcher import ResearchConductor
 from .skills.writer import ReportGenerator
 from .utils.enum import ReportSource, ReportType, Tone
@@ -192,9 +192,7 @@ class GPTResearcher:
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
 
-        # Initialize image generator (optional - only if configured)
-        self.image_generator: Optional[ImageGenerator] = ImageGenerator(self)
-        self.available_images: list = []  # Pre-generated images ready for embedding
+        self.available_images: list = []  # Source images selected for the report
         self._research_id: str = ""  # Unique ID for this research session
 
         # Handle MCP strategy configuration with backwards compatibility
@@ -383,21 +381,6 @@ class GPTResearcher:
             "context_length": len(self.context)
         })
         
-        # Pre-generate images if enabled (happens BEFORE report writing for better UX)
-        self.available_images = []
-        if self.image_generator and self.image_generator.is_enabled():
-            await self._log_event("research", step="planning_images")
-            # Convert context list to string for analysis
-            context_str = "\n\n".join(self.context) if isinstance(self.context, list) else str(self.context)
-            self.available_images = await self.image_generator.plan_and_generate_images(
-                context=context_str,
-                query=self.query,
-                research_id=self._generate_research_id(),
-            )
-            await self._log_event("research", step="images_pre_generated", details={
-                "images_count": len(self.available_images)
-            })
-        
         return self.context
 
     async def _handle_deep_research(self, on_progress=None):
@@ -466,9 +449,13 @@ class GPTResearcher:
         Returns:
             The generated report as a string.
         """
-        # Use pre-generated images if available (generated during conduct_research)
+        # Select source images lazily. Every report type funnels through here,
+        # including deep research, which returns from conduct_research() before
+        # the research-phase selection would have run.
+        if not self.available_images:
+            self.available_images = self._select_report_images()
+
         has_available_images = bool(self.available_images)
-        
         self._current_step = "report_writing"
         await self._log_event("research", step="writing_report", details={
             "existing_headers": existing_headers,
@@ -668,6 +655,33 @@ class GPTResearcher:
             images: List of image dictionaries to add.
         """
         self.research_images.extend(images)
+
+    def _select_report_images(self, limit: int = 3) -> list[dict[str, Any]]:
+        """Choose source images to embed in the report.
+
+        ``research_images`` holds bare URLs gathered per sub-query while
+        scraping. Page furniture (logos, icons, spacers) is filtered out first
+        -- see ``is_junk_image_url`` -- because the scraper's own scoring
+        cannot separate it from real content.
+
+        The limit is deliberately small: a research report reads better with
+        two or three relevant images than with a gallery of whatever the
+        sources happened to contain.
+
+        Args:
+            limit: Maximum number of images to offer the report writer.
+
+        Returns:
+            list[dict]: ``{url, alt_text}`` rows consumed by ``write_report``.
+        """
+        selected: list[dict[str, Any]] = []
+        for url in self.research_images:
+            if is_junk_image_url(url):
+                continue
+            selected.append({"url": url, "alt_text": "研究来源配图"})
+            if len(selected) >= limit:
+                break
+        return selected
 
     def get_research_sources(self) -> list[dict[str, Any]]:
         """Get all research sources collected during research.

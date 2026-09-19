@@ -3,7 +3,6 @@ from .researcher import ResearchConductor
 from .writer import ReportGenerator
 from .browser import BrowserManager
 from .curator import SourceCurator
-from .image_generator import ImageGenerator
 
 __all__ = [
     'ResearchConductor',
@@ -11,5 +10,4 @@ __all__ = [
     'ContextManager',
     'BrowserManager',
     'SourceCurator',
-    'ImageGenerator',
 ]

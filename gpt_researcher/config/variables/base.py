@@ -43,9 +43,3 @@ class BaseConfig(TypedDict):
     MCP_ALLOWED_ROOT_PATHS: List[str]
     MCP_STRATEGY: str
     REASONING_EFFORT: str
-    # Image generation settings
-    IMAGE_GENERATION_MODEL: Union[str, None]
-    IMAGE_GENERATION_MAX_IMAGES: int
-    IMAGE_GENERATION_ENABLED: bool
-    IMAGE_GENERATION_STYLE: str  # Image style: "dark", "light", or "auto"
-    IMAGE_GENERATION_PROVIDER: str  # Image provider: "google" or "modelslab"
