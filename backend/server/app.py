@@ -119,6 +119,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Serve the frontend without browser caching.
+#
+# index.html and scripts.js are edited together but cached independently, and
+# scripts.js carries a fixed ?v= query string, so a stale copy can outlive the
+# markup it was written for. That mismatch fails at page load -- the script
+# looks up DOM nodes the new markup no longer has -- and presents as the UI
+# silently doing nothing when you click. This is a single-user local app, so
+# not caching at all is cheaper than getting cache invalidation right.
+@app.middleware("http")
+async def no_cache_frontend_assets(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith(("/site", "/static")):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
 # Use default JSON response class
 
 # Mount static files for frontend
