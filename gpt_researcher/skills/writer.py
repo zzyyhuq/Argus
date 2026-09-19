@@ -82,9 +82,9 @@ class ReportGenerator:
         _ctx = "\n".join(context) if isinstance(context, list) else str(context or "")
         if not _ctx.strip():
             return (
-                f'I could not gather any source material for "{self.researcher.query}". '
-                "No sources were retrieved (searches may have returned nothing or been "
-                "blocked), so I am not able to produce a reliable, sourced report."
+                f'未能为「{self.researcher.query}」获取到任何来源资料。'
+                "本次检索没有返回结果（可能是搜索接口无响应、被限流或网络不可达），"
+                "因此无法生成有据可依的报告。"
             )
         
         # Log image availability
