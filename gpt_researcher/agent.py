@@ -87,7 +87,7 @@ class GPTResearcher:
         Args:
             query (str): The research query or question.
             report_type (str): Type of report to generate.
-            report_format (str): Format of the report (markdown, pdf, etc).
+            report_format (str): Format of the report (markdown, apa, etc).
             report_source (str): Source of information for the report (web, local, etc).
             tone (Tone): Tone of the report.
             source_urls (list[str], optional): List of specific URLs to use as sources.

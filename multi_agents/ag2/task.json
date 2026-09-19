@@ -4,7 +4,6 @@
   "max_revisions": 3,
   "publish_formats": {
     "markdown": true,
-    "pdf": true,
     "docx": true
   },
   "include_human_feedback": false,

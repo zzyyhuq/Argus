@@ -67,7 +67,7 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 - 🖥️ 包括易于使用的web界面 (HTML/CSS/JS)
 - 🔍 支持JavaScript网络资源抓取功能
 - 📂 追踪访问过和使用过的网络资源和来源
-- 📄 将研究报告导出为PDF或其他格式...
+- 📄 将研究报告导出为 Word、Markdown 等格式...
 
 ## 📖 文档
 

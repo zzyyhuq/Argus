@@ -27,7 +27,7 @@ LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.1420
 | Reviewer | `agents/reviewer.py` | Validates research correctness |
 | Reviser | `agents/reviser.py` | Revises based on feedback |
 | Writer | `agents/writer.py` | Compiles final report |
-| Publisher | `agents/publisher.py` | Exports to PDF, DOCX, Markdown |
+| Publisher | `agents/publisher.py` | Exports to DOCX, Markdown |
 
 ---
 

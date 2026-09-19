@@ -583,7 +583,6 @@ const GPTResearcher = (() => {
           ${timestampHTML}
         </div>
         <div class="history-entry-format">
-          ${links.pdf ? `<a href="${links.pdf}" class="history-entry-action" target="_blank" title="打开 PDF 报告"><i class="fas fa-file-pdf"></i> PDF</a>` : ''}
           ${links.docx ? `<a href="${links.docx}" class="history-entry-action" target="_blank" title="打开 Word 文档"><i class="fas fa-file-word"></i> Word</a>` : ''}
           ${links.md ? `<a href="${links.md}" class="history-entry-action" target="_blank" title="打开 Markdown 文件"><i class="fas fa-file-lines"></i> MD</a>` : ''}
           ${links.json ? `<a href="${links.json}" class="history-entry-action" target="_blank" title="打开 JSON 数据"><i class="fas fa-file-code"></i> JSON</a>` : ''}
@@ -730,7 +729,6 @@ const GPTResearcher = (() => {
 
     // Create links object with proper structure
     const links = {
-      pdf: downloadLinks.pdf || '',
       docx: downloadLinks.docx || '',
       md: downloadLinks.md || '',
       json: downloadLinks.json || ''
@@ -1234,11 +1232,11 @@ const GPTResearcher = (() => {
       return;
     }
 
-    const { pdf, docx, md, json } = data.output;
-    console.log('Received paths:', { pdf, docx, md, json });
+    const { docx, md, json } = data.output;
+    console.log('Received paths:', { docx, md, json });
 
     // Store these links for history
-    const currentLinks = { pdf, docx, md, json };
+    const currentLinks = { docx, md, json };
 
     // Helper function to safely update link
     const updateLink = (id, path) => {
@@ -1253,13 +1251,11 @@ const GPTResearcher = (() => {
     };
 
     // Update links in sticky download bar
-    updateLink('downloadLink', pdf);
     updateLink('downloadLinkWord', docx);
     updateLink('downloadLinkMd', md);
     updateLink('downloadLinkJson', json);
 
     // Update duplicate buttons above the report
-    updateLink('downloadLinkTop', pdf);
     updateLink('downloadLinkWordTop', docx);
     updateLink('downloadLinkMdTop', md);
     updateLink('downloadLinkJsonTop', json);

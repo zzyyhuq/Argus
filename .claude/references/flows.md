@@ -266,7 +266,7 @@ User Query
 │ Output                                                           │
 │   • Streamed via WebSocket (type: "report")                     │
 │   • Final via WebSocket (type: "report_complete")               │
-│   • Exported to PDF, DOCX, Markdown                             │
+│   • Exported to DOCX, Markdown                                  │
 │   • Saved to outputs/ directory                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```

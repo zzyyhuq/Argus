@@ -8,7 +8,7 @@ Looking for the AG2 version? See `multi_agents/ag2/` and the AG2 docs page.
 By using Langgraph, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. 
 Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this example showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
 
-An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
+An average run generates a 5-6 page research report in multiple formats such as Docx and Markdown.
 
 Please note: Multi-agents are utilizing the same configuration of models like GPT-Researcher does. However, only the SMART_LLM is used for the time being. Please refer to the [LLM config pages](https://docs.gptr.dev/docs/gpt-researcher/llms).
 
@@ -46,7 +46,7 @@ More specifically (as seen in the architecture diagram) the process is as follow
   - Reviewer - Validates the correctness of the draft given a set of criteria and provides feedback.
   - Revisor - Revises the draft until it is satisfactory based on the reviewer feedback.
 - Writer - Compiles and writes the final report including an introduction, conclusion and references section from the given research findings.
-- Publisher - Publishes the final report to multi formats such as PDF, Docx, Markdown, etc.
+- Publisher - Publishes the final report to multi formats such as Docx, Markdown, etc.
 
 ## How to run
 1. Install required packages found in this root folder including `langgraph`:
@@ -83,7 +83,6 @@ To change the research query and customize the report, edit the `task.json` file
   "max_plan_revisions": 3,
   "publish_formats": { 
     "markdown": true,
-    "pdf": true,
     "docx": true
   },
   "include_human_feedback": false,

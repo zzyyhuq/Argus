@@ -40,8 +40,7 @@ Base URL: `http://localhost:8000`
         "research_images": ["..."]
     },
     "report": "# Research Report\n\n...",
-    "docx_path": "outputs/task_123.docx",
-    "pdf_path": "outputs/task_123.pdf"
+    "docx_path": "outputs/task_123.docx"
 }
 ```
 
@@ -113,7 +112,7 @@ Base URL: `http://localhost:8000`
 | `logs` | `images_ready` | Images generated |
 | `report` | - | Streaming report chunks |
 | `report_complete` | - | Final complete report |
-| `path` | `pdf`, `docx`, `md` | Output file paths |
+| `path` | `docx`, `md` | Output file paths |
 | `error` | - | Error messages |
 | `human_feedback` | `request` | Request user input |
 
@@ -231,7 +230,6 @@ researcher = GPTResearcher(
 ```
 outputs/
 ├── task_{timestamp}_{query}.md
-├── task_{timestamp}_{query}.pdf
 ├── task_{timestamp}_{query}.docx
 └── images/
     └── {research_id}/

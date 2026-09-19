@@ -28,7 +28,6 @@
 | `index.html` | 页面结构 |
 | `scripts.js` | 全部前端逻辑，含 `BACKEND_MESSAGE_RULES`（后端英文进度消息的中文映射表） |
 | `styles.css` | 样式 |
-| `pdf_styles.css` | PDF 导出样式 |
 | `static/` | logo、favicon、Agent 头像等静态资源 |
 
 ## 界面语言
@@ -47,7 +46,7 @@
 
 - 研究查询输入，支持报告类型、语气、数据源等参数
 - 研究过程实时进度展示
-- 报告渲染与导出（PDF / Word / Markdown / JSON）
+- 报告渲染与导出（Word / Markdown / JSON）
 - 针对报告的追问对话
 - 研究历史记录（本地存储）
 - MCP 服务器配置

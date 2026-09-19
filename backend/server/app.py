@@ -30,7 +30,7 @@ from server.server_utils import (
 from server.agent_discovery import build_agent_discovery_document
 
 from server.websocket_manager import run_agent
-from utils import write_md_to_word, write_md_to_pdf
+from utils import write_md_to_word
 from gpt_researcher.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
@@ -363,7 +363,6 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
     )
 
     docx_path = await write_md_to_word(report_information[0], research_id)
-    pdf_path = await write_md_to_pdf(report_information[0], research_id)
     if research_request.report_type != "multi_agents":
         report, researcher = report_information
         response = {
@@ -375,11 +374,10 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                 # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
             },
             "report": report,
-            "docx_path": docx_path,
-            "pdf_path": pdf_path
+            "docx_path": docx_path
         }
     else:
-        response = { "research_id": research_id, "report": "", "docx_path": docx_path, "pdf_path": pdf_path }
+        response = { "research_id": research_id, "report": "", "docx_path": docx_path }
 
     return response
 

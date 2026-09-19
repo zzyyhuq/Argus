@@ -53,7 +53,6 @@ loguru>=0.7.2
 colorama>=0.4.6
 
 # Output Formats
-md2pdf>=1.0.1
 mistune>=3.0.2
 htmldocx>=0.0.6
 

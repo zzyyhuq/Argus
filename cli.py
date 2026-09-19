@@ -19,7 +19,7 @@ from uuid import uuid4
 from dotenv import load_dotenv
 
 from backend.report_type import DetailedReport
-from backend.utils import write_md_to_pdf, write_md_to_word
+from backend.utils import write_md_to_word
 from gpt_researcher import GPTResearcher
 from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
 from gpt_researcher.utils.llm import create_chat_completion
@@ -123,15 +123,9 @@ cli.add_argument(
 # =====================================
 
 cli.add_argument(
-    "--no-pdf",
-    action="store_true",
-    help="Skip PDF generation (generate markdown and DOCX only)."
-)
-
-cli.add_argument(
     "--no-docx",
     action="store_true",
-    help="Skip DOCX generation (generate markdown and PDF only)."
+    help="Skip DOCX generation (generate markdown only)."
 )
 
 # =============================================================================
@@ -335,17 +329,8 @@ async def main(args):
     md_path.write_text(final_markdown, encoding="utf-8")
     print(f"Report written to '{md_path}'")
 
-    # PDF/DOCX share the same stem so the three files stay grouped together.
+    # DOCX shares the markdown's stem so the files stay grouped together.
     shared_stem = md_path.stem
-
-    # Generate PDF if not disabled
-    if not args.no_pdf:
-        try:
-            pdf_path = await write_md_to_pdf(final_markdown, shared_stem)
-            if pdf_path:
-                print(f"PDF written to '{pdf_path}'")
-        except Exception as e:
-            print(f"Warning: PDF generation failed: {e}")
 
     # Generate DOCX if not disabled
     if not args.no_docx:

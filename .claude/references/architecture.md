@@ -64,7 +64,7 @@
 │  │  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐         │  │
 │  │  │ LLM Provider    │ │ Retrievers      │ │ Scrapers        │         │  │
 │  │  │ OpenAI,Anthropic│ │ Tavily,Google   │ │ BS4,Playwright  │         │  │
-│  │  │ Google,Groq...  │ │ Bing,MCP...     │ │ PDF,DOCX...     │         │  │
+│  │  │ Google,Groq...  │ │ Bing,MCP...     │ │ DOCX,MD...      │         │  │
 │  │  │ llm_provider/   │ │ retrievers/     │ │ scraper/        │         │  │
 │  │  └─────────────────┘ └─────────────────┘ └─────────────────┘         │  │
 │  │  ┌─────────────────┐                                                  │  │

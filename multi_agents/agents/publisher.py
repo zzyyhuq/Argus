@@ -1,5 +1,4 @@
 from .utils.file_formats import \
-    write_md_to_pdf, \
     write_md_to_word, \
     write_text_to_md
 
@@ -71,8 +70,6 @@ class PublisherAgent:
         return layout
 
     async def write_report_by_formats(self, layout:str, publish_formats: dict):
-        if publish_formats.get("pdf"):
-            await write_md_to_pdf(layout, self.output_dir)
         if publish_formats.get("docx"):
             await write_md_to_word(layout, self.output_dir)
         if publish_formats.get("markdown"):

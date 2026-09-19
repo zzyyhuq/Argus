@@ -14,9 +14,9 @@ from gpt_researcher import GPTResearcher
 # `server.server_utils` (backend/server/app.py prepends backend/ to sys.path).
 # Only the first can resolve `backend.utils`, so fall back to the bare name.
 try:
-    from backend.utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+    from backend.utils import write_md_to_word, write_text_to_md
 except ImportError:  # pragma: no cover - legacy sys.path-shimmed import
-    from utils import write_md_to_pdf, write_md_to_word, write_text_to_md
+    from utils import write_md_to_word, write_text_to_md
 from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
@@ -114,7 +114,7 @@ class Researcher:
         
         return {
             "output": {
-                **file_paths,  # Include PDF, DOCX, and MD paths
+                **file_paths,  # Include DOCX and MD paths
                 "json": json_relative_path
             }
         }
@@ -261,10 +261,9 @@ async def handle_chat_command(websocket, data: str):
         })
 
 async def generate_report_files(report: str, filename: str) -> Dict[str, str]:
-    pdf_path = await write_md_to_pdf(report, filename)
     docx_path = await write_md_to_word(report, filename)
     md_path = await write_text_to_md(report, filename)
-    return {"pdf": pdf_path, "docx": docx_path, "md": md_path}
+    return {"docx": docx_path, "md": md_path}
 
 
 async def send_file_paths(websocket, file_paths: Dict[str, str]):

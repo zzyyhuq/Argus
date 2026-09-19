@@ -16,7 +16,7 @@
 [![Skill](https://img.shields.io/badge/Claude%20Skill-skills.sh-blueviolet?style=flat&logo=anthropic&logoColor=white)](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
-[English](README.md) | [中文](README-zh_CN.md) | [日本語](README-ja_JP.md) | [한국어](README-ko_KR.md)
+[English](README.md) | [中文](README-zh_CN.md)
 
 </div>
 
@@ -81,7 +81,7 @@ Steps:
 - 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
-- 📄 Export reports to PDF, Word, and other formats.
+- 📄 Export reports to Word, Markdown, and other formats.
 
 ## 📖 Documentation
 
@@ -281,7 +281,7 @@ As AI evolves from prompt engineering and RAG to multi-agent systems, we're exci
 
 By using multi-agent frameworks, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this project showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
 
-An average run generates a 5-6 page research report in multiple formats such as PDF, Docx and Markdown.
+An average run generates a 5-6 page research report in multiple formats such as Docx and Markdown.
 
 Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) and [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) for more information.
 
