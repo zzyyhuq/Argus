@@ -3,7 +3,7 @@ import time
 
 from bs4 import BeautifulSoup
 
-from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
+from ..utils import extract_title, get_text_from_soup, clean_soup
 
 logger = logging.getLogger(__name__)
 
@@ -19,15 +19,15 @@ class BeautifulSoupScraper:
         self.session = session
 
     def scrape(self):
-        """Fetch the page and extract cleaned text, images and title.
+        """Fetch the page and extract cleaned text and title.
 
         Returns:
-            Tuple of (content, image_urls, title). Empty values are returned
-            when the page cannot be fetched or yields no usable content.
+            Tuple of (content, title). Empty values are returned when the page
+            cannot be fetched or yields no usable content.
         """
         response = self._fetch()
         if response is None:
-            return "", [], ""
+            return "", ""
 
         try:
             # response.encoding defaults to ISO-8859-1 when the Content-Type
@@ -44,16 +44,14 @@ class BeautifulSoupScraper:
 
             content = get_text_from_soup(soup)
 
-            image_urls = get_relevant_images(soup, self.link)
-
             # Extract the title using the utility function
             title = extract_title(soup)
 
-            return content, image_urls, title
+            return content, title
 
         except Exception as e:
             logger.error(f"Error parsing {self.link}: {e}")
-            return "", [], ""
+            return "", ""
 
     def _fetch(self):
         """GET the page, retrying once on transient failures.

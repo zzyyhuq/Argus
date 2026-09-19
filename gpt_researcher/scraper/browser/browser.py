@@ -30,7 +30,7 @@ def _is_pdf_url(url: str) -> bool:
         return False
     return urlparse(url).path.lower().endswith(".pdf")
 
-from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
+from ..utils import extract_title, get_text_from_soup, clean_soup
 
 FILE_DIR = Path(__file__).parent.parent
 
@@ -51,7 +51,7 @@ class BrowserScraper:
     def scrape(self) -> tuple:
         if not self.url:
             print("URL not specified")
-            return "", [], ""
+            return "", ""
 
         try:
             self.setup_driver()
@@ -59,15 +59,15 @@ class BrowserScraper:
             self._load_saved_cookies()
             self._add_header()
 
-            text, image_urls, title = self.scrape_text_with_selenium()
-            return text, image_urls, title
+            text, title = self.scrape_text_with_selenium()
+            return text, title
         except Exception as e:
             print(f"An error occurred during scraping: {str(e)}")
             print("Full stack trace:")
             print(traceback.format_exc())
             # Return empty content so the failure is dropped instead of the
             # error text being treated as page content downstream.
-            return "", [], ""
+            return "", ""
         finally:
             if self.driver:
                 self.driver.quit()
@@ -213,17 +213,17 @@ class BrowserScraper:
         except TimeoutException as e:
             print("Timed out waiting for page to load")
             print(f"Full stack trace:\n{traceback.format_exc()}")
-            return "Page load timed out", [], ""
+            return "Page load timed out", ""
 
         self._scroll_to_bottom()
 
         if _is_pdf_url(self.url):
             text = scrape_pdf_with_pymupdf(self.url)
-            return text, [], ""
+            return text, ""
         elif "arxiv" in self.url:
             doc_num = self.url.split("/")[-1]
             text = scrape_pdf_with_arxiv(doc_num)
-            return text, [], ""
+            return text, ""
         else:
             page_source = self.driver.execute_script(
                 "return document.documentElement.outerHTML;"
@@ -233,10 +233,9 @@ class BrowserScraper:
             soup = clean_soup(soup)
 
             text = get_text_from_soup(soup)
-            image_urls = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
-        return text, image_urls, title
+        return text, title
 
     def _scroll_to_bottom(self):
         """Scroll to the bottom of the page to load all content"""

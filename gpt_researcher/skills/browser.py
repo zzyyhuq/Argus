@@ -8,14 +8,13 @@ from gpt_researcher.utils.workers import WorkerPool
 
 from ..actions.utils import stream_output
 from ..actions.web_scraping import scrape_urls
-from ..scraper.utils import get_image_hash
 
 
 class BrowserManager:
     """Manages web browsing and content scraping for research.
 
-    This class handles URL scraping, content extraction, and image
-    selection during the research process.
+    This class handles URL scraping and content extraction during the
+    research process.
 
     Attributes:
         researcher: The parent GPTResearcher instance.
@@ -52,12 +51,10 @@ class BrowserManager:
                 self.researcher.websocket,
             )
 
-        scraped_content, images = await scrape_urls(
+        scraped_content = await scrape_urls(
             urls, self.researcher.cfg, self.worker_pool
         )
         self.researcher.add_research_sources(scraped_content)
-        new_images = self.select_top_images(images, k=4)  # Select top 4 images
-        self.researcher.add_research_images(new_images)
 
         if self.researcher.verbose:
             await stream_output(
@@ -68,48 +65,9 @@ class BrowserManager:
             )
             await stream_output(
                 "logs",
-                "scraping_images",
-                f"🖼️ Selected {len(new_images)} new images from {len(images)} total images",
-                self.researcher.websocket,
-                True,
-                new_images,
-            )
-            await stream_output(
-                "logs",
                 "scraping_complete",
                 f"🌐 Scraping complete",
                 self.researcher.websocket,
             )
 
         return scraped_content
-
-    def select_top_images(self, images: list[dict], k: int = 2) -> list[str]:
-        """
-        Select most relevant images and remove duplicates based on image content.
-
-        Args:
-            images (list[dict]): list of image dictionaries with 'url' and 'score' keys.
-            k (int): Number of top images to select if no high-score images are found.
-
-        Returns:
-            list[str]: list of selected image URLs.
-        """
-        unique_images = []
-        seen_hashes = set()
-        current_research_images = self.researcher.get_research_images()
-
-        # Process images in descending order of their scores
-        for img in sorted(images, key=lambda im: im["score"], reverse=True):
-            img_hash = get_image_hash(img['url'])
-            if (
-                img_hash
-                and img_hash not in seen_hashes
-                and img['url'] not in current_research_images
-            ):
-                seen_hashes.add(img_hash)
-                unique_images.append(img["url"])
-
-                if len(unique_images) == k:
-                    break
-
-        return unique_images

@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 import os
-from ..utils import get_relevant_images, extract_title
+from ..utils import extract_title
 
 class TavilyExtract:
 
@@ -38,39 +38,37 @@ class TavilyExtract:
         try:
             response = self.tavily_client.extract(urls=self.link)
             if not isinstance(response, dict):
-                return "", [], ""
+                return "", ""
 
             # failed_results may be missing, null, or a non-empty list.
             failed = response.get("failed_results") or []
             if failed:
-                return "", [], ""
+                return "", ""
 
             results = response.get("results") or []
             if not isinstance(results, list) or not results:
-                return "", [], ""
+                return "", ""
             first = results[0]
             if not isinstance(first, dict):
-                return "", [], ""
+                return "", ""
             # Prefer raw_content; never KeyError if the extract payload is partial.
             content = first.get("raw_content") or ""
             if not content:
-                return "", [], ""
+                return "", ""
 
-            # Optional HTML side-path for images/title. session may be unset
+            # Optional HTML side-path for the title. session may be unset
             # (constructor default session=None) — brick that off rather than
             # AttributeError inside the broad except.
-            image_urls = []
             title = ""
             if self.session is not None:
                 response_bs = self.session.get(self.link, timeout=4)
                 soup = BeautifulSoup(
                     response_bs.content, "lxml", from_encoding=response_bs.encoding
                 )
-                image_urls = get_relevant_images(soup, self.link)
                 title = extract_title(soup) or ""
 
-            return content, image_urls, title
+            return content, title
 
         except Exception as e:
             print("Error! : " + str(e))
-            return "", [], ""
+            return "", ""

@@ -31,13 +31,13 @@ class PyMuPDFScraper:
         except Exception:
             return False
 
-    def scrape(self) -> tuple[str, list[str], str]:
+    def scrape(self) -> tuple[str, str]:
         """
-        The `scrape` function uses PyMuPDFLoader to load a document from the provided link (either URL or local file)
-        and returns the document as a string.
+        The `scrape` function uses PyMuPDFLoader to load a document from the provided link
+        (either URL or local file) and returns its text and title.
 
         Returns:
-          str: A string representation of the loaded document.
+          tuple[str, str]: The loaded document's content and title.
         """
         try:
             if self.is_url():
@@ -72,16 +72,15 @@ class PyMuPDFScraper:
                 loader = PyMuPDFLoader(self.link)
                 doc = loader.load()
 
-            # Extract the content, image (if any), and title from the document.
-            image = []
+            # Extract the content and title from the document.
             # Retrieve content from ALL pages to ensure PDFs with cover pages pass validation.
             content = "\n".join(page.page_content for page in doc)
             title = doc[0].metadata.get("title", "") if doc else ""
-            return content, image, title
+            return content, title
 
         except requests.exceptions.Timeout:
             print(f"Download timed out. Please check the link : {self.link}")
-            return "", [], ""
+            return "", ""
         except Exception as e:
             print(f"Error loading PDF : {self.link} {e}")
-            return "", [], ""
+            return "", ""

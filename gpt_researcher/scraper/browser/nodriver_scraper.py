@@ -10,7 +10,7 @@ import requests
 import asyncio
 import logging
 
-from ..utils import get_relevant_images, extract_title, get_text_from_soup, clean_soup
+from ..utils import extract_title, get_text_from_soup, clean_soup
 
 
 class NoDriverScraper:
@@ -187,12 +187,11 @@ class NoDriverScraper:
         self.session = session
         self.debug = False
 
-    async def scrape_async(self) -> Tuple[str, list[dict], str]:
-        """Returns tuple of (text, image_urls, title)"""
+    async def scrape_async(self) -> Tuple[str, str]:
+        """Returns tuple of (text, title)"""
         if not self.url:
             return (
                 "A URL was not specified, cancelling request to browse website.",
-                [],
                 "",
             )
 
@@ -203,7 +202,7 @@ class NoDriverScraper:
                 browser = await self.get_browser()
             except ImportError as e:
                 self.logger.error(f"Failed to initialize browser: {str(e)}")
-                return str(e), [], ""
+                return str(e), ""
 
             page = await browser.get(self.url)
             if page is None:
@@ -211,7 +210,7 @@ class NoDriverScraper:
                 # a None result means the connection timed out. Decrement to
                 # avoid leaking the slot and deadlocking the browser pool.
                 browser.processing_count -= 1
-                return "Browser failed to open page (returned None)", [], ""
+                return "Browser failed to open page (returned None)", ""
             await browser.wait_or_timeout(page, "complete", 2)
             # wait for potential redirection
             await page.sleep(random.uniform(0.3, 0.7))
@@ -222,7 +221,6 @@ class NoDriverScraper:
             soup = BeautifulSoup(html, "lxml")
             clean_soup(soup)
             text = get_text_from_soup(soup)
-            image_urls = get_relevant_images(soup, self.url)
             title = extract_title(soup)
 
             if len(text) < 200:
@@ -242,14 +240,14 @@ class NoDriverScraper:
                         f"check screenshot at [{screenshot_path}] for more details."
                     )
 
-            return text, image_urls, title
+            return text, title
         except Exception as e:
             self.logger.error(
                 f"An error occurred during scraping: {str(e)}\n"
                 "Full stack trace:\n"
                 f"{traceback.format_exc()}"
             )
-            return str(e), [], ""
+            return str(e), ""
         finally:
             try:
                 if page and browser:

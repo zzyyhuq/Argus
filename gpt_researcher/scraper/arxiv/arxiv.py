@@ -7,7 +7,6 @@ Avoids langchain_community.ArxivRetriever, which still calls the removed
 from __future__ import annotations
 
 import re
-from typing import Any
 
 
 _ID_RE = re.compile(
@@ -36,7 +35,7 @@ class ArxivScraper:
         """Fetch paper abstract/content via arxiv.Client.
 
         Returns:
-            (context, images, title) matching other scrapers.
+            (context, title) matching other scrapers.
 
         When the query matches no paper (malformed/non-arXiv id, or empty
         client results), degrade to an empty result instead of raising so a
@@ -44,7 +43,7 @@ class ArxivScraper:
         """
         paper_id = _paper_id_from_link(self.link)
         if not paper_id:
-            return "", [], ""
+            return "", ""
 
         import arxiv
 
@@ -54,7 +53,7 @@ class ArxivScraper:
             paper = next(client.results(search))
         except StopIteration:
             # No matching paper — mirror other scrapers: empty degrade.
-            return "", [], ""
+            return "", ""
 
         authors = ", ".join(a.name for a in (paper.authors or []))
         published = paper.published.date().isoformat() if paper.published else ""
@@ -64,5 +63,4 @@ class ArxivScraper:
         context = (
             f"Published: {published}; Author: {authors}; Content: {summary}"
         )
-        image: list[Any] = []
-        return context, image, title
+        return context, title

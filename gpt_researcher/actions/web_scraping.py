@@ -11,7 +11,7 @@ logger = get_formatted_logger()
 
 async def scrape_urls(
     urls, cfg: Config, worker_pool: WorkerPool
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+) -> list[dict[str, Any]]:
     """
     Scrapes the urls
     Args:
@@ -19,11 +19,10 @@ async def scrape_urls(
         cfg: Config (optional)
 
     Returns:
-        tuple[list[dict[str, Any]], list[dict[str, Any]]]: tuple containing scraped content and images
+        list[dict[str, Any]]: Scraped page content
 
     """
     scraped_data = []
-    images = []
     user_agent = (
         cfg.user_agent
         if cfg
@@ -34,12 +33,6 @@ async def scrape_urls(
     try:
         scraper = Scraper(urls, user_agent, cfg.scraper, worker_pool=worker_pool)
         scraped_data = await scraper.run()
-        for item in scraped_data:
-            if not isinstance(item, dict):
-                continue
-            image_urls = item.get("image_urls")
-            if image_urls:
-                images.extend(image_urls)
     except Exception as e:
         print(f"{Fore.RED}Error in scrape_urls: {e}{Style.RESET_ALL}")
     finally:
@@ -48,7 +41,7 @@ async def scrape_urls(
         if scraper is not None and getattr(scraper, "session", None) is not None:
             scraper.session.close()
 
-    return scraped_data, images
+    return scraped_data
 
 
 async def filter_urls(urls: list[str], config: Config) -> list[str]:

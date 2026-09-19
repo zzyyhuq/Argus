@@ -206,7 +206,6 @@ class Scraper:
                     return {
                         "url": link,
                         "raw_content": None,
-                        "image_urls": [],
                         "title": "",
                     }
 
@@ -219,13 +218,9 @@ class Scraper:
 
                 # Get content
                 if hasattr(scraper, "scrape_async"):
-                    content, image_urls, title = await scraper.scrape_async()
+                    content, title = await scraper.scrape_async()
                 else:
-                    (
-                        content,
-                        image_urls,
-                        title,
-                    ) = await asyncio.get_running_loop().run_in_executor(
+                    content, title = await asyncio.get_running_loop().run_in_executor(
                         self.worker_pool.executor, scraper.scrape
                     )
 
@@ -235,7 +230,6 @@ class Scraper:
                 # Log results
                 self.logger.info(f"\nTitle: {title}")
                 self.logger.info(f"Content length: {len(content)} characters")
-                self.logger.info(f"Number of images: {len(image_urls)}")
                 self.logger.info(f"URL: {link}")
                 self.logger.info("=" * 50)
 
@@ -258,27 +252,25 @@ class Scraper:
                     return {
                         "url": link,
                         "raw_content": None,
-                        "image_urls": [],
                         "title": title,
                     }
 
                 return {
                     "url": link,
                     "raw_content": content,
-                    "image_urls": image_urls,
                     "title": title,
                 }
 
             except Exception as e:
                 self.logger.error(f"Error processing {link}: {str(e)}")
-                return {"url": link, "raw_content": None, "image_urls": [], "title": ""}
+                return {"url": link, "raw_content": None, "title": ""}
 
     def _reject(self, link, title, reason):
         """Treat a fetched-but-unusable page as a scrape failure, in the same
         shape a raised exception or too-short content already returns --
         downstream code (Scraper.run) drops any raw_content: None entry."""
         self.logger.warning(f"{reason} for {link}, treating as fetch failure")
-        return {"url": link, "raw_content": None, "image_urls": [], "title": title}
+        return {"url": link, "raw_content": None, "title": title}
 
 
     async def _retry_as_pdf(self, link, session):
@@ -291,7 +283,7 @@ class Scraper:
         instead of passing binary through).
         """
         scraper = PyMuPDFScraper(link, session)
-        content, image_urls, title = await asyncio.get_running_loop().run_in_executor(
+        content, title = await asyncio.get_running_loop().run_in_executor(
             self.worker_pool.executor, scraper.scrape
         )
         if not content or len(content) < 100:
@@ -300,7 +292,6 @@ class Scraper:
         return {
             "url": link,
             "raw_content": content,
-            "image_urls": image_urls,
             "title": title,
         }
 

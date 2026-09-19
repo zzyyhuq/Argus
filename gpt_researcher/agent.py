@@ -147,8 +147,7 @@ class GPTResearcher:
         self.document_urls = document_urls
         self.complement_source_urls = complement_source_urls
         self.query_domains = query_domains or []
-        self.research_sources = []  # The list of scraped sources including title, content and images
-        self.research_images = []  # The list of selected research images
+        self.research_sources = []  # The list of scraped sources including title and content
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
@@ -630,25 +629,6 @@ class GPTResearcher:
         )
 
     # Utility methods
-    def get_research_images(self, top_k: int = 10) -> list[dict[str, Any]]:
-        """Get the top research images collected during research.
-
-        Args:
-            top_k: Maximum number of images to return.
-
-        Returns:
-            List of image dictionaries.
-        """
-        return self.research_images[:top_k]
-
-    def add_research_images(self, images: list[dict[str, Any]]) -> None:
-        """Add images to the research image collection.
-
-        Args:
-            images: List of image dictionaries to add.
-        """
-        self.research_images.extend(images)
-
     def get_research_sources(self) -> list[dict[str, Any]]:
         """Get all research sources collected during research.
 

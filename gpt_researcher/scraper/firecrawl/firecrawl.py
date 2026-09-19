@@ -1,10 +1,6 @@
 import asyncio
 import os
 
-from bs4 import BeautifulSoup
-
-from ..utils import get_relevant_images
-
 # Module-level semaphore shared across all FireCrawl instances.
 # Limits concurrent API calls to avoid exceeding FireCrawl rate limits.
 # FireCrawl Free Tier allows 2 concurrent browsers; configurable via FIRECRAWL_CONCURRENCY.
@@ -55,14 +51,12 @@ class FireCrawl:
 
     def scrape(self) -> tuple:
         """
-        This function extracts content and title from a specified link using the FireCrawl Python SDK,
-        images from the link are extracted using the functions from `gpt_researcher/scraper/utils.py`.
+        This function extracts content and title from a specified link using the FireCrawl Python SDK.
 
         Returns:
-          The `scrape` method returns a tuple containing the extracted content, a list of image URLs, and
-        the title of the webpage specified by the `self.link` attribute. It uses the FireCrawl Python SDK to
-        extract and clean content from the webpage. If any exception occurs during the process, an error
-        message is printed and an empty result is returned.
+          The `scrape` method returns a tuple of the extracted content and the page title. If any
+        exception occurs during the process, an error message is printed and an empty result is
+        returned.
         """
 
         try:
@@ -73,36 +67,21 @@ class FireCrawl:
             # Fixed: Access metadata attributes directly (not as dict keys)
             if response.metadata and response.metadata.error:
                 print("Scrape failed! : " + str(response.metadata.error))
-                return "", [], ""
+                return "", ""
             elif response.metadata and response.metadata.status_code and response.metadata.status_code != 200:
                 print(f"Scrape failed! Status code: {response.metadata.status_code}")
-                return "", [], ""
+                return "", ""
 
             # Extract the content (markdown) and title from FireCrawl response
             # Fixed: Access attributes directly (not as dict keys)
             content = response.markdown if response.markdown else ""
             title = response.metadata.title if response.metadata and response.metadata.title else ""
 
-            # Optional image pass. Session may be None when FireCrawl is used
-            # outside Scraper; never attribute-error on session.get.
-            image_urls = []
-            if self.session is not None:
-                try:
-                    response_bs = self.session.get(self.link, timeout=4)
-                    soup = BeautifulSoup(
-                        response_bs.content,
-                        "lxml",
-                        from_encoding=response_bs.encoding,
-                    )
-                    image_urls = get_relevant_images(soup, self.link)
-                except Exception as img_err:
-                    print(f"FireCrawl image extraction skipped: {img_err}")
-
-            return content, image_urls, title
+            return content, title
 
         except Exception as e:
             print("Error! : " + str(e))
-            return "", [], ""
+            return "", ""
 
     async def scrape_async(self) -> tuple:
         """
@@ -114,7 +93,7 @@ class FireCrawl:
         across all FireCrawl instances (default: 2).
 
         Returns:
-            Tuple of (content, image_urls, title) — same as scrape().
+            Tuple of (content, title) — same as scrape().
         """
         async with _get_semaphore():
             loop = asyncio.get_running_loop()
