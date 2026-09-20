@@ -44,6 +44,16 @@ class Config:
 
         config_to_use = self.load_config(config_path)
         self._set_attributes(config_to_use)
+
+        # Take private copies of the kwargs dicts. load_config returns
+        # DEFAULT_CONFIG itself -- not a copy -- when no config file is given,
+        # so the nested dicts it holds would otherwise be shared by every Config
+        # instance. Config is built per researcher, so a write for one request
+        # (set_verbose stores into llm_kwargs, and a visitor-supplied API key
+        # goes there too) would bleed into every later request.
+        self.llm_kwargs = dict(self.llm_kwargs)
+        self.embedding_kwargs = dict(self.embedding_kwargs)
+
         self._set_embedding_attributes()
         self._set_llm_attributes()
         self._handle_deprecated_attributes()
