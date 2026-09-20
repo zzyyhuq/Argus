@@ -98,7 +98,10 @@
             <div class="form-group">
                 <label for="llmApiKey" class="field-label">DeepSeek 密钥</label>
                 <input type="password" class="form-control" id="llmApiKey" placeholder="sk-..." autocomplete="off" required>
-                <small class="field-hint">本站要求使用你自己的密钥，消耗你自己的额度。在 platform.deepseek.com 获取；密钥随请求发往本站服务器用于调用模型，本站不保存。</small>
+                <small class="field-hint">
+                    本站要求使用你自己的密钥，消耗你自己的额度。密钥随请求发往本站服务器用于调用模型，本站不保存。
+                    <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">获取 DeepSeek 密钥 →</a>
+                </small>
                 <label class="mcp-toggle-label" style="margin-top: var(--sp-2);">
                     <input type="checkbox" id="rememberApiKeys" class="mcp-toggle">
                     记住密钥（保存在本浏览器）
@@ -108,7 +111,10 @@
             <div class="form-group">
                 <label for="tavilyApiKey" class="field-label">Tavily 密钥（可选）</label>
                 <input type="password" class="form-control" id="tavilyApiKey" placeholder="tvly-..." autocomplete="off">
-                <small class="field-hint">不填则使用站点提供的搜索额度，每小时有限次；填入你自己的可解除限制。</small>
+                <small class="field-hint">
+                    不填则使用站点提供的搜索额度，每小时有限次；填入你自己的可解除限制。
+                    <a href="https://app.tavily.com/home" target="_blank" rel="noopener noreferrer">获取 Tavily 密钥 →</a>
+                </small>
             </div>
 
             <div class="form-grid">
