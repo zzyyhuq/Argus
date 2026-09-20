@@ -21,7 +21,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*  # Clean up apt lists to reduce image size
 
 # Stage 2: Python dependencies installation
-FROM install-browser AS gpt-researcher-install
+FROM install-browser AS argus-install
 
 ENV PIP_ROOT_USER_ACTION=ignore
 WORKDIR /usr/src/app
@@ -35,7 +35,7 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r multi_agents/requirements.txt --upgrade --prefer-binary
 
 # Stage 3: Final stage with non-root user and app
-FROM gpt-researcher-install AS gpt-researcher
+FROM argus-install AS argus
 
 # Basic server configuration
 ARG HOST=0.0.0.0
@@ -50,15 +50,15 @@ ENV WORKERS=${WORKERS}
 
 # Create a non-root user for security
 # NOTE: Don't use this if you are relying on `_check_pkg` to pip install packages dynamically.
-RUN useradd -ms /bin/bash gpt-researcher && \
-    chown -R gpt-researcher:gpt-researcher /usr/src/app && \
+RUN useradd -ms /bin/bash argus && \
+    chown -R argus:argus /usr/src/app && \
     # Add these lines to create and set permissions for outputs directory
     mkdir -p /usr/src/app/outputs && \
-    chown -R gpt-researcher:gpt-researcher /usr/src/app/outputs && \
+    chown -R argus:argus /usr/src/app/outputs && \
     chmod 777 /usr/src/app/outputs
-USER gpt-researcher
+USER argus
 WORKDIR /usr/src/app
 
 # Copy the rest of the application files with proper ownership
-COPY --chown=gpt-researcher:gpt-researcher ./ ./
+COPY --chown=argus:argus ./ ./
 CMD uvicorn main:app --host ${HOST} --port ${PORT} --workers ${WORKERS}
