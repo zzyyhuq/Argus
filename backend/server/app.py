@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from typing import Dict, List, Any
@@ -6,6 +7,8 @@ import logging
 import sys
 import warnings
 from pathlib import Path
+
+from .outputs_cleanup import periodic_cleanup
 
 # Suppress Pydantic V2 migration warnings
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
@@ -88,9 +91,18 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning(f"Frontend directory not found: {frontend_path}")
     
+    # Sweep expired report artifacts on a timer. outputs/ is served publicly and
+    # otherwise grows one .md/.docx/.json set per visitor, forever.
+    cleanup_task = asyncio.create_task(periodic_cleanup())
+
     logger.info("GPT Researcher API ready - local mode (no database persistence)")
     yield
     # Shutdown
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
     logger.info("Research API shutting down")
 
 # App initialization

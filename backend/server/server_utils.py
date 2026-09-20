@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import re
+import secrets
 import time
 import shutil
 import traceback
@@ -21,7 +22,6 @@ from pathlib import Path
 from datetime import datetime
 from fastapi import HTTPException
 import logging
-import hashlib
 
 from .multi_agent_runner import run_multi_agent_task
 from .rate_limit import build_limiter, client_key
@@ -121,13 +121,20 @@ class Researcher:
         }
 
 def sanitize_filename(filename: str) -> str:
-    # Split into components
-    prefix, timestamp, *task_parts = filename.split('_')
-    task = '_'.join(task_parts)
-    task_hash = hashlib.md5(task.encode('utf-8', errors='ignore')).hexdigest()[:10]
-            
-    # Reassemble and clean the filename
-    sanitized = f"{prefix}_{timestamp}_{task_hash}"
+    """Build a filename whose suffix cannot be derived from the query.
+
+    The suffix used to be ``md5(query)[:10]``, so anyone who knew what someone
+    else had asked could construct the ``/outputs`` URL and read their report --
+    that directory is served without any authentication. A random suffix makes
+    the name known only to the client the path was sent back to.
+
+    Note the query text is deliberately no longer used; the caller still passes
+    it in the ``task_<timestamp>_<query>`` shape this expects.
+    """
+    prefix, timestamp, *_ = filename.split('_')
+    # 40 bits of randomness
+    token = secrets.token_hex(5)
+    sanitized = f"{prefix}_{timestamp}_{token}"
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 
