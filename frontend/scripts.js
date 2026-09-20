@@ -629,6 +629,14 @@ const GPTResearcher = (() => {
     }
   };
 
+  // Make sure a chat-capable socket exists, without starting a research. No-op
+  // when a live socket is already open.
+  const ensureChatSocket = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) return;
+    dispose_socket?.();
+    dispose_socket = listenToSockEvents(false);
+  };
+
   // Load a research entry from history: restores the query and the settings it
   // ran with, brings the report back, and re-enables the download bar and chat.
   // Previously this only refilled the query — and reset the selects to their
@@ -684,6 +692,11 @@ const GPTResearcher = (() => {
         updateDownloadLink({ output: entry.links });
       }
       updateState('finished');
+      // updateState('finished') reveals the chat, but a socket only exists if a
+      // research was run on this page load — open a chat-only one now, otherwise
+      // the first message would take the reconnect path and show a spurious
+      // "connection lost" notice.
+      ensureChatSocket();
       showToast('已载入该次研究，可以继续阅读或提问。');
     } else {
       updateState('initial');
@@ -862,7 +875,12 @@ const GPTResearcher = (() => {
     dispose_socket = listenToSockEvents() // Assign the new dispose function
   }
 
-  const listenToSockEvents = () => {
+  // sendStart is false when the socket is opened only to carry chat traffic
+  // (a reconnect, or loading a history entry). Opening a socket must not
+  // implicitly launch a research — the guard below only skipped `start` while a
+  // research was already active, so every other reconnect fired one using
+  // whatever happened to be in the form.
+  const listenToSockEvents = (sendStart = true) => {
     const { protocol, host, pathname } = window.location
     const ws_uri = `${protocol === 'https:' ? 'wss:' : 'ws:'
       }//${host}${pathname}ws`
@@ -982,7 +1000,12 @@ const GPTResearcher = (() => {
       // Ensure the research icon is spinning when connection is established
       updateResearchIcon(true);
 
-      // If this is a reconnection and we're in research mode, don't send a new start command
+      // Only a research the visitor explicitly started sends `start`. A socket
+      // opened for chat must not launch one.
+      if (!sendStart) {
+        console.log("Socket opened for chat only — not sending a start command");
+        return;
+      }
       if (isResearchActive && lastRequestData) {
         console.log("Reconnected during active research, not sending new start command");
         return;
@@ -1980,8 +2003,8 @@ const GPTResearcher = (() => {
     // Try to reconnect after delay
     setTimeout(() => {
       try {
-        // Setup new WebSocket connection
-        dispose_socket = listenToSockEvents();
+        // Reconnect for chat only — a reconnection must never launch a research
+        dispose_socket = listenToSockEvents(false);
 
         // Set up a one-time handler to send the message after reconnection
         if (message) {
@@ -2022,6 +2045,15 @@ const GPTResearcher = (() => {
     const apiKeyError = validateApiKeySection();
     if (apiKeyError) {
       addChatMessage(apiKeyError, false);
+      return;
+    }
+
+    // Chat and research share the connection's single task slot. The server
+    // rejects the second command with "Task already running" and that notice is
+    // rendered in the progress panel, not here — so say it where the visitor is
+    // looking instead of letting the message vanish.
+    if (isResearchActive) {
+      addChatMessage('研究正在进行中，请等它完成后再提问。', false);
       return;
     }
 
