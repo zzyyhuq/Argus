@@ -72,11 +72,19 @@ def client_key(websocket) -> str:
     return getattr(client, "host", None) or "unknown"
 
 
-def build_limiter() -> RateLimiter:
-    """Build the limiter for research starts that use the server's quota."""
-    raw = os.getenv("RATE_LIMIT_PER_HOUR", "3").strip()
+def build_limiter(env_var: str = "RATE_LIMIT_PER_HOUR", default: int = 3) -> RateLimiter:
+    """Build a limiter from an environment variable.
+
+    Args:
+        env_var: Name of the environment variable holding the hourly limit.
+        default: Used when the variable is unset or not an integer.
+
+    Returns:
+        A limiter with that limit, or an unlimited one when the value is <= 0.
+    """
+    raw = os.getenv(env_var, str(default)).strip()
     try:
         limit = int(raw)
     except ValueError:
-        limit = 3
+        limit = default
     return RateLimiter(limit)

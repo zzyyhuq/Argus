@@ -61,17 +61,26 @@ class ChatAgentWithMemory:
         report: str,
         config_path="default",
         headers=None,
-        vector_store=None
+        vector_store=None,
+        api_keys=None
     ):
         self.report = report
         self.headers = headers
         self.config = Config(config_path)
+
+        # Visitor-supplied credentials for this chat session. Config is built per
+        # instance, so injecting here stays local to the request.
+        if api_keys and api_keys.get("llm"):
+            self.config.llm_kwargs["api_key"] = api_keys["llm"]
+
         self.vector_store = vector_store
         self.retriever = None
         self.search_metadata = None
-        
-        # Initialize Tavily client (optional - only if API key is available)
-        tavily_api_key = os.environ.get("TAVILY_API_KEY")
+
+        # Initialize Tavily client (optional - only if API key is available).
+        # The visitor's own key wins, so their chat searches bill their account
+        # rather than the site's quota.
+        tavily_api_key = (api_keys or {}).get("tavily") or os.environ.get("TAVILY_API_KEY")
         if tavily_api_key and TavilyClient is not None:
             self.tavily_client = TavilyClient(api_key=tavily_api_key)
         else:

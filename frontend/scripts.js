@@ -1957,6 +1957,14 @@ const GPTResearcher = (() => {
     const chatInput = document.getElementById('chatInput');
     if (!chatInput || !chatInput.value.trim()) return;
 
+    // Chat runs on the same visitor key as research, so check before showing the
+    // message as sent.
+    const apiKeyError = validateApiKeySection();
+    if (apiKeyError) {
+      addChatMessage(apiKeyError, false);
+      return;
+    }
+
     const message = chatInput.value.trim();
 
     // Add user message to chat
@@ -1969,8 +1977,14 @@ const GPTResearcher = (() => {
     // Add loading indicator
     const loadingId = addLoadingIndicator();
 
-    // Prepare the message to send
-    const messageToSend = `chat ${JSON.stringify({ message: message })}`;
+    // Prepare the message to send, carrying the visitor's keys so the chat also
+    // bills their account instead of the site's.
+    const chatPayload = { message: message };
+    const chatApiKeys = collectApiKeys();
+    if (chatApiKeys) {
+      Object.assign(chatPayload, chatApiKeys);
+    }
+    const messageToSend = `chat ${JSON.stringify(chatPayload)}`;
 
     // Send message through WebSocket
     if (socket && socket.readyState === WebSocket.OPEN) {

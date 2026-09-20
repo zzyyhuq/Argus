@@ -145,7 +145,11 @@ def _redact_secrets(raw: str) -> str:
     return _SECRET_FIELD_PATTERN.sub(r'\1"[redacted]"', raw)
 
 
-_rate_limiter = build_limiter()
+# Two budgets, because the shapes differ: a research start is one expensive call,
+# while a chat is a conversation whose searches fire only occasionally. Both are
+# skipped for visitors who bring their own Tavily key.
+_research_limiter = build_limiter("RATE_LIMIT_PER_HOUR", 3)
+_chat_limiter = build_limiter("RATE_LIMIT_CHAT_PER_HOUR", 20)
 
 
 async def handle_start_command(websocket, data: str, manager):
@@ -187,7 +191,7 @@ async def handle_start_command(websocket, data: str, manager):
     # Only visitors without their own search key draw on the server's Tavily
     # allowance, so only they are rate limited.
     if not tavily_key:
-        allowed, retry_after = await _rate_limiter.check(client_key(websocket))
+        allowed, retry_after = await _research_limiter.check(client_key(websocket))
         if not allowed:
             minutes = max(1, (retry_after + 59) // 60)
             await websocket.send_json({
@@ -251,11 +255,12 @@ async def handle_chat_command(websocket, data: str):
         message = chat_data.get("message", "")
         report = chat_data.get("report", "")
         messages = chat_data.get("messages", [])
-        
+        api_keys = chat_data.get("api_keys") or {}
+
         # If only message is provided, convert to messages format
         if message and not messages:
             messages = [{"role": "user", "content": message}]
-        
+
         if not messages:
             await websocket.send_json({
                 "type": "chat",
@@ -263,7 +268,7 @@ async def handle_chat_command(websocket, data: str):
                 "role": "assistant"
             })
             return
-        
+
         # Check if ChatAgentWithMemory is available
         if ChatAgentWithMemory is None:
             await websocket.send_json({
@@ -272,12 +277,39 @@ async def handle_chat_command(websocket, data: str):
                 "role": "assistant"
             })
             return
-        
+
+        # Same rule as research: no visitor key, no service. Without this the chat
+        # would be a free path onto the operator's balance and search quota.
+        if not api_keys.get("llm"):
+            await websocket.send_json({
+                "type": "chat",
+                "content": "请先填入你的 DeepSeek 密钥 —— 本站要求使用访客自己的密钥。",
+                "role": "assistant"
+            })
+            return
+
+        # Chat turns that use the site's Tavily quota are budgeted separately from
+        # research starts. Visitors with their own key spend their own and skip it.
+        if not api_keys.get("tavily"):
+            allowed, retry_after = await _chat_limiter.check(client_key(websocket))
+            if not allowed:
+                minutes = max(1, (retry_after + 59) // 60)
+                await websocket.send_json({
+                    "type": "chat",
+                    "content": (
+                        f"对话过于频繁。本站的搜索额度有限，请约 {minutes} 分钟后再试；"
+                        "填入你自己的 Tavily 密钥即可解除此限制。"
+                    ),
+                    "role": "assistant"
+                })
+                return
+
         # Create chat agent with the report context
         chat_agent = ChatAgentWithMemory(
             report=report,
             config_path="default",
-            headers=None
+            headers=None,
+            api_keys=api_keys,
         )
         
         # Process the chat
