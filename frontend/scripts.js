@@ -2483,36 +2483,29 @@ const GPTResearcher = (() => {
   };
 
   // --- Visitor-supplied API keys (BYOK) -------------------------------------
-  // Held in memory by default; written to browser storage only when the visitor
-  // ticks "记住密钥". Reuses the MCP section's markup and the storage helpers.
+  // The site requires every visitor to bring their own DeepSeek key, so these
+  // fields are always visible and validation always applies. Keys stay in
+  // memory unless "记住密钥" is ticked, which persists them via the storage
+  // helpers below.
   const API_KEYS_STORAGE = 'userApiKeys';
 
   const initApiKeySection = () => {
-    const enabled = document.getElementById('apiKeysEnabled');
-    const section = document.getElementById('apiKeysSection');
     const llmInput = document.getElementById('llmApiKey');
     const tavilyInput = document.getElementById('tavilyApiKey');
     const remember = document.getElementById('rememberApiKeys');
 
-    if (!enabled || !section || !llmInput) {
+    if (!llmInput) {
       console.warn('API key elements not found');
       return;
     }
 
-    enabled.addEventListener('change', () => {
-      section.style.display = enabled.checked ? 'block' : 'none';
-    });
-
-    // Restore previously saved keys and reflect that in the UI, so the visitor
-    // can see a key is already in place without re-pasting it.
+    // Restore previously saved keys so a returning visitor does not re-paste.
     const saved = getCookie(API_KEYS_STORAGE);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.llm) {
           llmInput.value = parsed.llm;
-          enabled.checked = true;
-          section.style.display = 'block';
           if (remember) remember.checked = true;
         }
         if (parsed.tavily && tavilyInput) {
@@ -2545,37 +2538,28 @@ const GPTResearcher = (() => {
     });
   };
 
-  // Returns an error message when the section is enabled but incomplete, else
-  // null. Called before the socket opens so we can stop the request cleanly.
+  // Returns an error message when the required key is missing, else null.
+  // Called before the socket opens so the request can stop cleanly.
   const validateApiKeySection = () => {
-    const enabled = document.getElementById('apiKeysEnabled');
-    if (!enabled || !enabled.checked) {
-      return null;
-    }
     const llmInput = document.getElementById('llmApiKey');
     if (!llmInput || !llmInput.value.trim()) {
-      return '请在「高级设置 → 使用我自己的 API 密钥」中填入 DeepSeek 密钥，或取消勾选该项。';
+      return '请先填入你的 DeepSeek 密钥 —— 本站要求使用访客自己的密钥。';
     }
     return null;
   };
 
   // Collect API key data
   const collectApiKeys = () => {
-    const enabled = document.getElementById('apiKeysEnabled');
-    if (!enabled || !enabled.checked) {
-      return null;
-    }
-
     const llmInput = document.getElementById('llmApiKey');
     const tavilyInput = document.getElementById('tavilyApiKey');
     const llm = llmInput ? llmInput.value.trim() : '';
-    const tavily = tavilyInput ? tavilyInput.value.trim() : '';
 
     if (!llm) {
       return null;  // validateApiKeySection already told the visitor
     }
 
     const keys = { llm: llm };
+    const tavily = tavilyInput ? tavilyInput.value.trim() : '';
     if (tavily) {
       keys.tavily = tavily;
     }

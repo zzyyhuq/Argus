@@ -148,18 +148,6 @@ def _redact_secrets(raw: str) -> str:
 _rate_limiter = build_limiter()
 
 
-def _require_user_llm_key() -> bool:
-    """Whether an anonymous request must supply its own LLM key.
-
-    Read from the environment rather than from Config: this is a deployment
-    switch consulted at the server edge, while Config is only constructed deeper
-    down, per researcher. Set ``REQUIRE_USER_LLM_KEY=true`` on a public
-    deployment so an anonymous visitor cannot spend the operator's balance
-    (~1.4 CNY per research).
-    """
-    return os.getenv("REQUIRE_USER_LLM_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
-
-
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
     (
@@ -185,11 +173,14 @@ async def handle_start_command(websocket, data: str, manager):
     llm_key = (api_keys or {}).get("llm")
     tavily_key = (api_keys or {}).get("tavily")
 
-    if not llm_key and _require_user_llm_key():
+    # Unconditional: the site serves no anonymous traffic. One research costs
+    # roughly 1.4 CNY on the operator's balance and the search quota behind it
+    # is smaller still, so there is no free tier to hand out.
+    if not llm_key:
         await websocket.send_json({
             "type": "logs",
             "content": "error",
-            "output": "本站要求使用你自己的 DeepSeek 密钥。请在「高级设置 → 使用我自己的 API 密钥」中填入后重试。",
+            "output": "请先填入你的 DeepSeek 密钥 —— 本站要求使用访客自己的密钥。",
         })
         return
 
