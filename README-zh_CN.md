@@ -1,22 +1,8 @@
 <div align="center">
-<!--<h1 style="display: flex; align-items: center; gap: 10px;">
-  <img src="https://github.com/assafelovic/argus/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
-  Argus
-</h1>-->
-<img src="https://github.com/assafelovic/argus/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
-
 
 ####
 
-[![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
-[![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
-[![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&label=Chat%20on%20Discord)](https://discord.gg/QgZXvJAccX)
-
-[![PyPI version](https://img.shields.io/pypi/v/argus?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/argus)
-![GitHub Release](https://img.shields.io/github/v/release/assafelovic/argus?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/argus/blob/master/docs/docs/examples/pip-run.ipynb)
-[![Docker Image Version](https://img.shields.io/docker/v/elestio/argus/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/argus)
-[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
+![GitHub Release](https://img.shields.io/github/v/release/zzyyhuq/Argus?style=flat&logo=github)
 
 [English](README.md) |
 [中文](README-zh_CN.md)
@@ -39,11 +25,8 @@
 
 ## 架构
 主要思想是运行“**计划者**”和“**执行**”代理，而**计划者**生成问题进行研究，“**执行**”代理根据每个生成的研究问题寻找最相关的信息。最后，“**计划者**”过滤和聚合所有相关信息并创建研究报告。<br /> <br /> 
-代理同时利用 gpt-40-mini 和 gpt-4o（128K 上下文）来完成一项研究任务。我们仅在必要时使用这两种方法对成本进行优化。**研究任务平均耗时约 3 分钟，成本约为 ~0.1 美元**。
+研究过程会按需调用不同规模的模型：轻量模型用于分类与摘要，长上下文模型用于报告撰写，两者经由统一的 provider 配置切换。
 
-<div align="center">
-<img align="center" height="500" src="https://cowriter-images.s3.amazonaws.com/architecture.png">
-</div>
 
 
 详细说明:
@@ -53,13 +36,8 @@
 * 对于每一个抓取的资源，根据相关信息进行汇总，并跟踪其来源。
 * 最后，对所有汇总的资料来源进行过滤和汇总，并生成最终研究报告。
 
-## 演示
-https://github.com/assafelovic/argus/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
-
 ## 教程
- - [运行原理](https://docs.gptr.dev/blog/building-argus)
- - [如何安装](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [现场演示](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+ - [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
 
 ## 特性
 - 📝 生成研究问题、大纲、资源和课题报告
@@ -86,7 +64,7 @@ https://github.com/assafelovic/argus/assets/13554167/a00c89a6-a295-4dd0-b58d-098
 > **步骤 1** - 下载项目
 
 ```bash
-$ git clone https://github.com/assafelovic/argus.git
+$ git clone https://github.com/zzyyhuq/Argus.git
 $ cd argus
 ```
 
@@ -146,31 +124,26 @@ Argus 支持 **LangSmith** 以增强链路追踪和可观测性，特别适用�
 ## 🚀 贡献
 我们非常欢迎您的贡献！如果您感兴趣，请查看 [contributing](CONTRIBUTING.md)。
 
-如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/argus-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/QgZXvJAccX) 联系我们。
-
-## ✉️ 支持 / 联系我们
-- [社区讨论区](https://discord.gg/spBgZmm3Xe)
-- 我们的邮箱: support@tavily.com
 
 ## 🛡 免责声明
 
-本项目 "Argus "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。我们根据 MIT 许可分享用于学术目的的代码。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
+本项目 "Argus "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。代码以 Apache 2.0 许可分享。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
 
 我们对客观研究主张的看法：
 1.  我们抓取系统的全部目的是减少不正确的事实。如何解决？我们抓取的网站越多，错误数据的可能性就越小。我们每项研究都会收集20条信息，它们全部错误的可能性极低。
 2. 我们的目标不是消除偏见，而是尽可能减少偏见。**作为一个社区，我们在这里探索最有效的人机互动**。
 3. 在研究过程中，人们也容易产生偏见，因为大多数人对自己研究的课题都有自己的看法。这个工具可以搜罗到许多观点，并均匀地解释各种不同的观点，而有偏见的人是绝对读不到这些观点的。
 
-**请注意，使用 GPT-4 语言模型可能会因使用令牌而产生高昂费用**。使用本项目即表示您承认有责任监控和管理自己的令牌使用情况及相关费用。强烈建议您定期检查 OpenAI API 的使用情况，并设置任何必要的限制或警报，以防止发生意外费用。
+**请注意：研究过程会调用付费的大模型 API，费用随用量产生。**使用本项目即表示您承认有责任监控和管理自己的令牌使用情况及相关费用。
 
 ---
 
 <p align="center">
-<a href="https://star-history.dera.page/#assafelovic/argus">
+<a href="https://star-history.dera.page/#zzyyhuq/Argus">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date" />
   </picture>
 </a>
 </p>

@@ -1,20 +1,8 @@
 <div align="center" id="top">
 
-<img src="https://github.com/assafelovic/argus/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
-
 ####
 
-[![Website](https://img.shields.io/badge/Official%20Website-gptr.dev-teal?style=for-the-badge&logo=world&logoColor=white&color=0891b2)](https://gptr.dev)
-[![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
-[![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=Discord&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
-
-
-[![PyPI version](https://img.shields.io/pypi/v/argus?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/argus)
-![GitHub Release](https://img.shields.io/github/v/release/assafelovic/argus?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/argus/blob/master/docs/docs/examples/pip-run.ipynb)
-[![Docker Image Version](https://img.shields.io/docker/v/elestio/argus/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/argus)
-[![Skill](https://img.shields.io/badge/Claude%20Skill-skills.sh-blueviolet?style=flat&logo=anthropic&logoColor=white)](https://skills.sh/assafelovic/argus/argus)
-[![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
+![GitHub Release](https://img.shields.io/github/v/release/zzyyhuq/Argus?style=flat&logo=github)
 
 [English](README.md) | [中文](README-zh_CN.md)
 
@@ -36,28 +24,10 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 - Limited web sources in existing services lead to misinformation and shallow results.
 - Selective web sources can introduce bias into research tasks.
 
-## Demo
-<a href="https://www.youtube.com/watch?v=f60rlc_QCxE" target="_blank" rel="noopener">
-  <img src="https://github.com/user-attachments/assets/ac2ec55f-b487-4b3f-ae6f-b8743ad296e4" alt="Demo video" width="800" target="_blank" />
-</a>
-
-## Install as Claude Skill
-
-Extend Claude's deep research capabilities by installing Argus as a [Claude Skill](https://skills.sh/assafelovic/argus/argus):
-
-```bash
-npx skills add assafelovic/argus
-```
-
-Once installed, Claude can leverage Argus's deep research capabilities directly within your conversations.
-
 ## Architecture
 
 The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
 
-<div align="center">
-<img align="center" height="600" src="https://github.com/assafelovic/argus/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
-</div>
 
 Steps:
 * Create a task-specific agent based on a research query.
@@ -67,18 +37,14 @@ Steps:
 * Filter and aggregate summaries into a final research report.
 
 ## Tutorials
- - [How it Works](https://docs.gptr.dev/blog/building-argus)
- - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
- - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
+ - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
 
 ## Features
 
 - 📝 Generate detailed research reports using web and local documents.
-- 🖼️ Smart image scraping and filtering for reports.
-- 🍌 **AI-generated inline images** using Google Gemini (Nano Banana) for visual illustrations.
 - 📜 Generate detailed reports exceeding 2,000 words.
 - 🌐 Aggregate over 20 sources for objective conclusions.
-- 🖥️ Frontend available in lightweight (HTML/CSS/JS) and production-ready (NextJS + Tailwind) versions.
+- 🖥️ Lightweight frontend (HTML/CSS/JS), served directly by the backend — no build step.
 - 🔍 JavaScript-enabled web scraping.
 - 📂 Maintains memory and context throughout research.
 - 📄 Export reports to Word, Markdown, and other formats.
@@ -99,7 +65,7 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 2. Clone the project and navigate to the directory:
 
     ```bash
-    git clone https://github.com/assafelovic/argus.git
+    git clone https://github.com/zzyyhuq/Argus.git
     cd argus
     ```
 
@@ -134,11 +100,6 @@ Visit [http://localhost:8000](http://localhost:8000) to start.
 
 For other setups (e.g., Poetry or virtual environments), check the [Getting Started page](https://docs.gptr.dev/docs/gpt-researcher/getting-started).
 
-## Run as PIP package
-```bash
-pip install argus
-
-```
 ### Example Usage:
 ```python
 ...
@@ -152,8 +113,6 @@ research_result = await researcher.conduct_research()
 report = await researcher.write_report()
 ...
 ```
-
-**For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
 ### 🔧 MCP Client
 Argus supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
@@ -190,26 +149,6 @@ async def mcp_research_example():
 
 > For comprehensive MCP documentation and advanced examples, visit the [MCP Integration Guide](https://docs.gptr.dev/docs/gpt-researcher/retrievers/mcp-configs).
 
-## 🍌 Inline Image Generation
-
-Argus can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
-
-```bash
-# Enable in your .env file
-IMAGE_GENERATION_ENABLED=true
-GOOGLE_API_KEY=your_google_api_key
-IMAGE_GENERATION_MODEL=models/gemini-2.5-flash-image
-```
-
-When enabled, the system will:
-1. Analyze your research context to identify visualization opportunities
-2. Pre-generate 2-3 relevant images during the research phase
-3. Embed them inline as the report is written
-
-Images are generated with dark-mode styling that matches the Argus UI, featuring professional infographic aesthetics with teal accents.
-
-[Learn more about Image Generation](https://docs.gptr.dev/docs/gpt-researcher/gptr/image_generation) in our documentation.
-
 ## ✨ Deep Research
 
 Argus now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
@@ -218,7 +157,6 @@ Argus now includes Deep Research - an advanced recursive research workflow that 
 - ⚡️ Concurrent processing for faster results
 - 🤝 Smart context management across research branches
 - ⏱️ Takes ~5 minutes per deep research
-- 💰 Costs ~$0.4 per research (using `o3-mini` on "high" reasoning effort)
 
 [Learn more about Deep Research](https://docs.gptr.dev/docs/gpt-researcher/gptr/deep_research) in our documentation.
 
@@ -239,11 +177,9 @@ If that doesn't work, try running it without the dash:
 docker compose up --build
 ```
 
-> **Step 4** - By default, if you haven't uncommented anything in your docker-compose file, this flow will start 2 processes:
- - the Python server running on localhost:8000<br>
- - the React app running on localhost:3000<br>
+> **Step 4** - By default this starts the Python server on localhost:8000.
 
-Visit localhost:3000 on any browser and enjoy researching!
+Visit localhost:8000 on any browser and enjoy researching!
 
 
 ## 📄 Research on Local Documents
@@ -258,32 +194,17 @@ export DOC_PATH="./my-docs"
 
 Step 2: 
  - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running Argus with the [PIP package](https://docs.tavily.com/guides/argus/argus#pip-package), pass the `report_source` argument as "local" when you instantiate the `Argus` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
-
-
-## 🤖 MCP Server
-
-We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
-
-The Argus MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, Argus MCP delivers deeper, more reliable research results.
-
-Features:
-- Deep research capabilities for AI assistants
-- Higher quality information with optimized context usage
-- Comprehensive results with better reasoning for LLMs
-- Claude Desktop integration
-
-For detailed installation and usage instructions, please visit the [official repository](https://github.com/assafelovic/gptr-mcp).
+ - If you're running Argus with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `Argus` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 
 ## 👪 Multi-Agent Assistant
-As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce multi-agent assistants built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/) and [AG2](https://github.com/ag2ai/ag2).
+As AI evolves from prompt engineering and RAG to multi-agent systems, we're excited to introduce multi-agent assistants built with [LangGraph](https://python.langchain.com/v0.1/docs/langgraph/).
 
 By using multi-agent frameworks, the research process can be significantly improved in depth and quality by leveraging multiple agents with specialized skills. Inspired by the recent [STORM](https://arxiv.org/abs/2402.14207) paper, this project showcases how a team of AI agents can work together to conduct research on a given topic, from planning to publication.
 
 An average run generates a 5-6 page research report in multiple formats such as Docx and Markdown.
 
-Check it out [here](https://github.com/assafelovic/argus/tree/master/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) and [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) for more information.
+Check it out [here](https://github.com/zzyyhuq/Argus/tree/main/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) for more information.
 
 ## 🔍 Observability
 
@@ -325,23 +246,14 @@ GPT-Researcher now features an enhanced frontend to improve the user experience 
 - Interactive display of research findings
 - Customizable settings for tailored research experiences
 
-Two deployment options are available:
-1. A lightweight static frontend served by FastAPI
-2. A feature-rich NextJS application for advanced functionality
-
-For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
+A lightweight frontend (HTML/CSS/JS) is served directly by FastAPI — no build step and no separate frontend process.
 
 ## 🚀 Contributing
-We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/argus/blob/master/CONTRIBUTING.md) if you're interested.
+We highly welcome contributions! Please check out [contributing](https://github.com/zzyyhuq/Argus/blob/master/CONTRIBUTING.md) if you're interested.
 
-Please check out our [roadmap](https://trello.com/b/3O7KBePw/argus-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
-<a href="https://github.com/assafelovic/argus/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=assafelovic/argus&max=1000" />
+<a href="https://github.com/zzyyhuq/Argus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=zzyyhuq/Argus&max=1000" />
 </a>
-## ✉️ Support / Contact us
-- [Community Discord](https://discord.gg/spBgZmm3Xe)
-- Author Email: assaf.elovic@gmail.com
-
 ## 🛡 Disclaimer
 
 This project, Argus, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
@@ -354,11 +266,11 @@ Our view on unbiased research claims:
 ---
 
 <p align="center">
-<a href="https://star-history.dera.page/#assafelovic/argus">
+<a href="https://star-history.dera.page/#zzyyhuq/Argus">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=zzyyhuq/Argus&type=Date" />
   </picture>
 </a>
 </p>
