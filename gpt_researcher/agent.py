@@ -79,6 +79,7 @@ class GPTResearcher:
         mcp_configs: list[dict] | None = None,
         mcp_max_iterations: int | None = None,
         mcp_strategy: str | None = None,
+        api_keys: dict | None = None,
         **kwargs
     ):
         """
@@ -133,6 +134,10 @@ class GPTResearcher:
                 - "fast" (default): Run MCP once with original query for best performance
                 - "deep": Run MCP for all sub-queries for maximum thoroughness  
                 - "disabled": Skip MCP entirely, use only web retrievers
+            api_keys (dict, optional): Visitor-supplied credentials for this
+                request only. Recognised keys: ``llm`` (injected into
+                ``cfg.llm_kwargs`` as ``api_key``) and ``tavily`` (injected into
+                ``headers`` so the retriever picks it up ahead of the env var).
         """
         self.kwargs = kwargs
         self.query = query
@@ -159,7 +164,20 @@ class GPTResearcher:
         self.visited_urls = visited_urls or set()
         self.verbose = verbose
         self.context = context or []
-        self.headers = headers or {}
+        # Copied because a visitor key is merged in below; sharing the caller's
+        # dict would risk carrying one request's key into another.
+        self.headers = dict(headers) if headers else {}
+
+        # Visitor-supplied credentials, scoped to this request. Config is built
+        # per instance (line above), so writing into cfg.llm_kwargs affects only
+        # this researcher -- the same non-global approach MCP takes. Deliberately
+        # not os.environ, which would leak across concurrent sessions (#1676).
+        if api_keys:
+            if api_keys.get("llm"):
+                self.cfg.llm_kwargs["api_key"] = api_keys["llm"]
+            if api_keys.get("tavily"):
+                self.headers["tavily_api_key"] = api_keys["tavily"]
+
         self.research_costs = 0.0
         self.step_costs: dict[str, float] = {}
         self._current_step: str = "general"

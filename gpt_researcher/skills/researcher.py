@@ -6,6 +6,7 @@ and context gathering.
 """
 
 import asyncio
+import inspect
 import logging
 import os
 import random
@@ -837,8 +838,18 @@ class ResearchConductor:
                 continue
 
             try:
-                # Instantiate the retriever with the sub-query
-                retriever = retriever_class(query, query_domains=query_domains)
+                # Instantiate the retriever with the sub-query. Pass the
+                # request-scoped headers so retrievers that accept them (e.g.
+                # Tavily) pick up a visitor-supplied key ahead of the env var.
+                # Not every retriever takes a headers argument -- Duckduckgo and
+                # Bocha are (query, query_domains) only -- so check first rather
+                # than making the call sites uniform.
+                if "headers" in inspect.signature(retriever_class.__init__).parameters:
+                    retriever = retriever_class(
+                        query, headers=self.researcher.headers, query_domains=query_domains
+                    )
+                else:
+                    retriever = retriever_class(query, query_domains=query_domains)
 
                 # Perform the search using the current retriever
                 search_results = await asyncio.to_thread(

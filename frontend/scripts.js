@@ -70,6 +70,9 @@ const GPTResearcher = (() => {
     // Initialize MCP functionality
     initMCPSection();
 
+    // Initialize the visitor API key section
+    initApiKeySection();
+
     // The download bar is now fixed in place with CSS
     // No need to set display property here
 
@@ -774,6 +777,15 @@ const GPTResearcher = (() => {
   };
 
   const startResearch = () => {
+    // Refuse to start when the visitor enabled the key section but left it
+    // incomplete — otherwise the request would silently fall back to the
+    // server's key, which is the opposite of what they asked for.
+    const apiKeyError = validateApiKeySection();
+    if (apiKeyError) {
+      showToast(apiKeyError);
+      return;
+    }
+
     document.getElementById('output').innerHTML = ''
     document.getElementById('reportContainer').innerHTML = ''
     dispose_socket?.() // Call previous dispose function if it exists
@@ -986,6 +998,14 @@ const GPTResearcher = (() => {
       if (mcpData) {
         Object.assign(requestData, mcpData);
         console.log('Including MCP configuration:', mcpData);
+      }
+
+      // Add the visitor's own API keys if they enabled that section.
+      // The payload itself is deliberately not logged — it carries credentials.
+      const apiKeyData = collectApiKeys();
+      if (apiKeyData) {
+        Object.assign(requestData, apiKeyData);
+        console.log('Including visitor API keys');
       }
 
       // Store the request data for potential reconnection
@@ -2460,6 +2480,106 @@ const GPTResearcher = (() => {
       console.error('Error adding preset:', error);
       showToast('添加预设配置失败');
     }
+  };
+
+  // --- Visitor-supplied API keys (BYOK) -------------------------------------
+  // Held in memory by default; written to browser storage only when the visitor
+  // ticks "记住密钥". Reuses the MCP section's markup and the storage helpers.
+  const API_KEYS_STORAGE = 'userApiKeys';
+
+  const initApiKeySection = () => {
+    const enabled = document.getElementById('apiKeysEnabled');
+    const section = document.getElementById('apiKeysSection');
+    const llmInput = document.getElementById('llmApiKey');
+    const tavilyInput = document.getElementById('tavilyApiKey');
+    const remember = document.getElementById('rememberApiKeys');
+
+    if (!enabled || !section || !llmInput) {
+      console.warn('API key elements not found');
+      return;
+    }
+
+    enabled.addEventListener('change', () => {
+      section.style.display = enabled.checked ? 'block' : 'none';
+    });
+
+    // Restore previously saved keys and reflect that in the UI, so the visitor
+    // can see a key is already in place without re-pasting it.
+    const saved = getCookie(API_KEYS_STORAGE);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.llm) {
+          llmInput.value = parsed.llm;
+          enabled.checked = true;
+          section.style.display = 'block';
+          if (remember) remember.checked = true;
+        }
+        if (parsed.tavily && tavilyInput) {
+          tavilyInput.value = parsed.tavily;
+        }
+      } catch (e) {
+        console.warn('Could not restore saved API keys:', e);
+        deleteCookie(API_KEYS_STORAGE);
+      }
+    }
+
+    // Persist (or clear) whenever a field changes or loses focus.
+    const persist = () => {
+      if (remember && remember.checked && llmInput.value.trim()) {
+        const payload = { llm: llmInput.value.trim() };
+        if (tavilyInput && tavilyInput.value.trim()) {
+          payload.tavily = tavilyInput.value.trim();
+        }
+        setCookie(API_KEYS_STORAGE, JSON.stringify(payload), 30);
+      } else {
+        deleteCookie(API_KEYS_STORAGE);
+      }
+    };
+
+    [llmInput, tavilyInput, remember].forEach((el) => {
+      if (el) {
+        el.addEventListener('change', persist);
+        el.addEventListener('blur', persist);
+      }
+    });
+  };
+
+  // Returns an error message when the section is enabled but incomplete, else
+  // null. Called before the socket opens so we can stop the request cleanly.
+  const validateApiKeySection = () => {
+    const enabled = document.getElementById('apiKeysEnabled');
+    if (!enabled || !enabled.checked) {
+      return null;
+    }
+    const llmInput = document.getElementById('llmApiKey');
+    if (!llmInput || !llmInput.value.trim()) {
+      return '请在「高级设置 → 使用我自己的 API 密钥」中填入 DeepSeek 密钥，或取消勾选该项。';
+    }
+    return null;
+  };
+
+  // Collect API key data
+  const collectApiKeys = () => {
+    const enabled = document.getElementById('apiKeysEnabled');
+    if (!enabled || !enabled.checked) {
+      return null;
+    }
+
+    const llmInput = document.getElementById('llmApiKey');
+    const tavilyInput = document.getElementById('tavilyApiKey');
+    const llm = llmInput ? llmInput.value.trim() : '';
+    const tavily = tavilyInput ? tavilyInput.value.trim() : '';
+
+    if (!llm) {
+      return null;  // validateApiKeySection already told the visitor
+    }
+
+    const keys = { llm: llm };
+    if (tavily) {
+      keys.tavily = tavily;
+    }
+    return { api_keys: keys };
   };
 
   // Collect MCP configuration data

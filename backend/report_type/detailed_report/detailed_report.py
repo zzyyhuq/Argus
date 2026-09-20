@@ -25,6 +25,7 @@ class DetailedReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        api_keys=None,
     ):
         self.query = query
         self.report_type = report_type
@@ -39,7 +40,11 @@ class DetailedReport:
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
         self.max_search_results = max_search_results
-        
+        # Kept on self rather than only handed to the first researcher: every
+        # subtopic spins up its own GPTResearcher (see _get_subtopic_report),
+        # and those must bill the same visitor key.
+        self.api_keys = api_keys
+
         # Generate a unique research ID for this report
         self.research_id = self._generate_research_id(query)
         
@@ -63,6 +68,10 @@ class DetailedReport:
             gpt_researcher_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
+
+        # Visitor-supplied credentials, scoped to this request
+        if api_keys:
+            gpt_researcher_params["api_keys"] = api_keys
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
 
@@ -154,7 +163,10 @@ class DetailedReport:
             source_urls=self.source_urls,
             # Propagate MCP configuration so follow-up researchers can use MCP
             mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy
+            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            # Same visitor credentials -- without this the subtopic researcher
+            # would silently fall back to the server's key
+            api_keys=self.api_keys,
         )
 
         # Propagate max_search_results override to subtopic researcher

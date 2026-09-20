@@ -24,6 +24,7 @@ import logging
 import hashlib
 
 from .multi_agent_runner import run_multi_agent_task
+from .rate_limit import build_limiter, client_key
 
 # Import chat agent
 try:
@@ -130,6 +131,35 @@ def sanitize_filename(filename: str) -> str:
     return re.sub(r"[^\w\s-]", "", sanitized).strip()
 
 
+# Credential fields an inbound frame may carry. Redacted before logging: frames
+# are logged truncated to their first 50 characters, but the visitor controls
+# field order, so truncation alone cannot be trusted to keep a key out of
+# logs/app.log (which is a persistent file, and bind-mounted under Docker).
+_SECRET_FIELD_PATTERN = re.compile(
+    r'("(?:api_keys|llm|tavily|tavily_api_key|api_key)"\s*:\s*)"[^"]*"'
+)
+
+
+def _redact_secrets(raw: str) -> str:
+    """Replace credential values in a raw frame with a placeholder."""
+    return _SECRET_FIELD_PATTERN.sub(r'\1"[redacted]"', raw)
+
+
+_rate_limiter = build_limiter()
+
+
+def _require_user_llm_key() -> bool:
+    """Whether an anonymous request must supply its own LLM key.
+
+    Read from the environment rather than from Config: this is a deployment
+    switch consulted at the server edge, while Config is only constructed deeper
+    down, per researcher. Set ``REQUIRE_USER_LLM_KEY=true`` on a public
+    deployment so an anonymous visitor cannot spend the operator's balance
+    (~1.4 CNY per research).
+    """
+    return os.getenv("REQUIRE_USER_LLM_KEY", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 async def handle_start_command(websocket, data: str, manager):
     json_data = json.loads(data[6:])
     (
@@ -145,11 +175,39 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        api_keys,
     ) = extract_command_data(json_data)
 
     if not task or not report_type:
         print("Error: Missing task or report_type")
         return
+
+    llm_key = (api_keys or {}).get("llm")
+    tavily_key = (api_keys or {}).get("tavily")
+
+    if not llm_key and _require_user_llm_key():
+        await websocket.send_json({
+            "type": "logs",
+            "content": "error",
+            "output": "本站要求使用你自己的 DeepSeek 密钥。请在「高级设置 → 使用我自己的 API 密钥」中填入后重试。",
+        })
+        return
+
+    # Only visitors without their own search key draw on the server's Tavily
+    # allowance, so only they are rate limited.
+    if not tavily_key:
+        allowed, retry_after = await _rate_limiter.check(client_key(websocket))
+        if not allowed:
+            minutes = max(1, (retry_after + 59) // 60)
+            await websocket.send_json({
+                "type": "logs",
+                "content": "error",
+                "output": (
+                    f"请求过于频繁。本站的搜索额度有限，请约 {minutes} 分钟后再试；"
+                    "填入你自己的 Tavily 密钥即可解除此限制。"
+                ),
+            })
+            return
 
     # Create logs handler with websocket and task
     logs_handler = CustomLogsHandler(websocket, task)
@@ -177,6 +235,7 @@ async def handle_start_command(websocket, data: str, manager):
         mcp_strategy,
         mcp_configs,
         max_search_results,
+        api_keys=api_keys,
     )
     report = str(report)
     file_paths = await generate_report_files(report, sanitized_filename)
@@ -355,14 +414,15 @@ async def handle_websocket_communication(websocket, manager):
         while True:
             try:
                 data = await websocket.receive_text()
-                logger.info(f"Received WebSocket message: {data[:50]}..." if len(data) > 50 else data)
+                preview = _redact_secrets(data)
+                logger.info(f"Received WebSocket message: {preview[:50]}..." if len(preview) > 50 else preview)
                 
                 if data == "ping":
                     await websocket.send_text("pong")
                 elif running_task and not running_task.done():
                     # discard any new request if a task is already running
                     logger.warning(
-                        f"Received request while task is already running. Request data preview: {data[: min(20, len(data))]}..."
+                        f"Received request while task is already running. Request data preview: {preview[: min(20, len(preview))]}..."
                     )
                     await websocket.send_json(
                         {
@@ -384,7 +444,7 @@ async def handle_websocket_communication(websocket, manager):
                     logger.info(f"Processing chat command")
                     running_task = run_long_running_task(handle_chat_command(websocket, data))
                 else:
-                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{data[:100]}...'" if len(data) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{data}'"
+                    error_msg = f"Error: Unknown command or not enough parameters provided. Received: '{preview[:100]}...'" if len(preview) > 100 else f"Error: Unknown command or not enough parameters provided. Received: '{preview}'"
                     logger.error(error_msg)
                     print(error_msg)
                     await websocket.send_json({
@@ -414,4 +474,5 @@ def extract_command_data(json_data: Dict) -> tuple:
         json_data.get("mcp_strategy", "fast"),
         json_data.get("mcp_configs", []),
         json_data.get("max_search_results"),
+        json_data.get("api_keys", {}),
     )

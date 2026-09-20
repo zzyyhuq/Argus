@@ -149,6 +149,39 @@
                         </div>
                     </div>
 
+                    <!-- API Key Section -->
+                    <div class="mcp-section">
+                        <div class="mcp-header">
+                            <label for="apiKeysEnabled" class="mcp-toggle-label">
+                                <input type="checkbox" id="apiKeysEnabled" class="mcp-toggle">
+                                使用我自己的 API 密钥
+                            </label>
+                        </div>
+                        <small class="field-hint">填入你自己的密钥，消耗你自己的额度。</small>
+
+                        <div id="apiKeysSection" class="mcp-config-section" style="display: none;">
+                            <div class="mcp-config-group">
+                                <label for="llmApiKey" class="field-label">DeepSeek 密钥（必填）</label>
+                                <input type="password" class="form-control" id="llmApiKey" placeholder="sk-..." autocomplete="off">
+                                <small class="field-hint">在 platform.deepseek.com 获取。密钥随请求发往本站服务器用于调用 API，本站不保存。</small>
+                            </div>
+
+                            <div class="mcp-config-group">
+                                <label for="tavilyApiKey" class="field-label">Tavily 密钥（可选）</label>
+                                <input type="password" class="form-control" id="tavilyApiKey" placeholder="tvly-..." autocomplete="off">
+                                <small class="field-hint">不填则使用站点提供的搜索额度（每小时有限次）。填入你自己的可解除限制。</small>
+                            </div>
+
+                            <div class="mcp-config-group">
+                                <label for="rememberApiKeys" class="mcp-toggle-label">
+                                    <input type="checkbox" id="rememberApiKeys" class="mcp-toggle">
+                                    记住密钥（保存在本浏览器）
+                                </label>
+                                <small class="field-hint">默认不保存；勾选后写入本浏览器的 localStorage。共用电脑时请勿勾选。</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- MCP Configuration Section -->
                     <div class="mcp-section">
                         <div class="mcp-header">

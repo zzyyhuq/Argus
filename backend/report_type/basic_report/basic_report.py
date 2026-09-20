@@ -22,6 +22,7 @@ class BasicReport:
         mcp_configs=None,
         mcp_strategy=None,
         max_search_results=None,
+        api_keys=None,
     ):
         self.query = query
         self.query_domains = query_domains
@@ -56,6 +57,10 @@ class BasicReport:
             gpt_researcher_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             gpt_researcher_params["mcp_strategy"] = mcp_strategy
+
+        # Visitor-supplied credentials, scoped to this request
+        if api_keys:
+            gpt_researcher_params["api_keys"] = api_keys
 
         self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
 
