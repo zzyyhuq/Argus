@@ -678,6 +678,8 @@ const GPTResearcher = (() => {
       // DOM is the source of truth for copying; reportContent is local to the
       // socket handler and deliberately not touched here.
       writeReport({ output: report, type: 'report' }, reportConverter, true, false);
+      // Hand the loaded report to the chat too, so it is grounded in this research
+      currentReportText = report;
       if (entry.links) {
         updateDownloadLink({ output: entry.links });
       }
@@ -827,6 +829,7 @@ const GPTResearcher = (() => {
     // Reset report variables
     allReports = '';
     currentReport = '';
+    currentReportText = '';
     isFirstReport = true;
 
     // Hide the download bar
@@ -904,6 +907,8 @@ const GPTResearcher = (() => {
       } else if (data.type === 'report') {
         // Add to reportContent for history
         reportContent += data.output;
+        // Keep the module-level copy in sync so the chat can ground itself in it
+        currentReportText = reportContent;
 
         // Get the current report_type
         const report_type = document.querySelector('select[name="report_type"]').value;
@@ -1261,6 +1266,12 @@ const GPTResearcher = (() => {
 
   // Fix issues with code block formatting
   reportConverter.setOption('literalMidWordUnderscores', true);
+
+  // The full markdown of the report currently on screen. Module scope so the chat
+  // can send it along: the server grounds a chat in this text (it builds a vector
+  // store from it), and the chat payload previously omitted it entirely — so the
+  // model was handed an empty report and replied that it had no context.
+  let currentReportText = '';
 
   const writeReport = (data, converter, isFinal = false, append = false) => {
     const reportContainer = document.getElementById('reportContainer');
@@ -2027,8 +2038,14 @@ const GPTResearcher = (() => {
     const loadingId = addLoadingIndicator();
 
     // Prepare the message to send, carrying the visitor's keys so the chat also
-    // bills their account instead of the site's.
+    // bills their account instead of the site's, plus the report text so the
+    // model can actually answer about this research rather than saying it sees
+    // nothing. The server builds a vector store from `report` and retrieves the
+    // relevant passages per question.
     const chatPayload = { message: message };
+    if (currentReportText) {
+      chatPayload.report = currentReportText;
+    }
     const chatApiKeys = collectApiKeys();
     if (chatApiKeys) {
       Object.assign(chatPayload, chatApiKeys);
