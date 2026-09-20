@@ -11,6 +11,15 @@ logger = logging.getLogger(__name__)
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 MAX_CONTENT_BYTES = 10 * 1024 * 1024  # Skip pages larger than 10MB
 
+# (connect, read) timeouts for the page fetch, matching PyMuPDFScraper's shape.
+#
+# Connect is the one that matters on this network: hosts that are unreachable
+# (blocked or unroutable) fail at connect, and a flat 10s spent twice -- once per
+# attempt -- is pure waiting, observed as ~21s per dead URL. Reachable hosts
+# finish the handshake in well under a second, so 5s costs nothing. Read stays
+# generous so a slow but working page with a large body is not cut off.
+FETCH_TIMEOUT = (5, 30)
+
 
 class BeautifulSoupScraper:
 
@@ -65,7 +74,7 @@ class BeautifulSoupScraper:
 
         for attempt in (1, 2):
             try:
-                response = self.session.get(self.link, timeout=10)
+                response = self.session.get(self.link, timeout=FETCH_TIMEOUT)
             except Exception as e:
                 logger.warning(f"Request failed for {self.link} (attempt {attempt}): {e}")
                 if attempt == 1:
