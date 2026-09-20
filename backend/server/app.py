@@ -34,7 +34,7 @@ from server.agent_discovery import build_agent_discovery_document
 
 from server.websocket_manager import run_agent
 from utils import write_md_to_word
-from gpt_researcher.utils.enum import Tone
+from argus.utils.enum import Tone
 from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
@@ -95,7 +95,7 @@ async def lifespan(app: FastAPI):
     # otherwise grows one .md/.docx/.json set per visitor, forever.
     cleanup_task = asyncio.create_task(periodic_cleanup())
 
-    logger.info("GPT Researcher API ready - local mode (no database persistence)")
+    logger.info("Argus API ready - local mode (no database persistence)")
     yield
     # Shutdown
     cleanup_task.cancel()
@@ -189,7 +189,7 @@ async def serve_frontend():
 
 @app.get("/.well-known/agent-discovery.json")
 async def agent_discovery(request: Request):
-    """Advertise GPT Researcher services via the Agent Discovery Protocol."""
+    """Advertise Argus services via the Agent Discovery Protocol."""
     origin = str(request.base_url).rstrip("/")
     domain = request.url.hostname or request.headers.get("host", "")
     contact = os.getenv("AGENT_DISCOVERY_CONTACT")

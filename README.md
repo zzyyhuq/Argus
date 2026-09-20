@@ -1,6 +1,6 @@
 <div align="center" id="top">
 
-<img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
+<img src="https://github.com/assafelovic/argus/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
 ####
 
@@ -9,26 +9,26 @@
 [![Discord](https://img.shields.io/discord/1127851779011391548?logo=discord&logoColor=white&label=Discord&color=34b76a&style=for-the-badge)](https://discord.gg/QgZXvJAccX)
 
 
-[![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
-![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
-[![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
-[![Skill](https://img.shields.io/badge/Claude%20Skill-skills.sh-blueviolet?style=flat&logo=anthropic&logoColor=white)](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher)
+[![PyPI version](https://img.shields.io/pypi/v/argus?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/argus)
+![GitHub Release](https://img.shields.io/github/v/release/assafelovic/argus?style=flat&logo=github)
+[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/argus/blob/master/docs/docs/examples/pip-run.ipynb)
+[![Docker Image Version](https://img.shields.io/docker/v/elestio/argus/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/argus)
+[![Skill](https://img.shields.io/badge/Claude%20Skill-skills.sh-blueviolet?style=flat&logo=anthropic&logoColor=white)](https://skills.sh/assafelovic/argus/argus)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
 [English](README.md) | [中文](README-zh_CN.md)
 
 </div>
 
-# 🔎 GPT Researcher
+# 🔎 Argus
 
-**GPT Researcher the first open deep research agent designed for both web and local research on any given task.** 
+**Argus the first open deep research agent designed for both web and local research on any given task.** 
 
-The agent produces detailed, factual, and unbiased research reports with citations. GPT Researcher provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, GPT Researcher addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
+The agent produces detailed, factual, and unbiased research reports with citations. Argus provides a full suite of customization options to create tailor made and domain specific research agents. Inspired by the recent [Plan-and-Solve](https://arxiv.org/abs/2305.04091) and [RAG](https://arxiv.org/abs/2005.11401) papers, Argus addresses misinformation, speed, determinism, and reliability by offering stable performance and increased speed through parallelized agent work.
 
 **Our mission is to empower individuals and organizations with accurate, unbiased, and factual information through AI.**
 
-## Why GPT Researcher?
+## Why Argus?
 
 - Objective conclusions for manual research can take weeks, requiring vast resources and time.
 - LLMs trained on outdated information can hallucinate, becoming irrelevant for current research tasks.
@@ -43,20 +43,20 @@ The agent produces detailed, factual, and unbiased research reports with citatio
 
 ## Install as Claude Skill
 
-Extend Claude's deep research capabilities by installing GPT Researcher as a [Claude Skill](https://skills.sh/assafelovic/gpt-researcher/gpt-researcher):
+Extend Claude's deep research capabilities by installing Argus as a [Claude Skill](https://skills.sh/assafelovic/argus/argus):
 
 ```bash
-npx skills add assafelovic/gpt-researcher
+npx skills add assafelovic/argus
 ```
 
-Once installed, Claude can leverage GPT Researcher's deep research capabilities directly within your conversations.
+Once installed, Claude can leverage Argus's deep research capabilities directly within your conversations.
 
 ## Architecture
 
 The core idea is to utilize 'planner' and 'execution' agents. The planner generates research questions, while the execution agents gather relevant information. The publisher then aggregates all findings into a comprehensive report.
 
 <div align="center">
-<img align="center" height="600" src="https://github.com/assafelovic/gpt-researcher/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
+<img align="center" height="600" src="https://github.com/assafelovic/argus/assets/13554167/4ac896fd-63ab-4b77-9688-ff62aafcc527">
 </div>
 
 Steps:
@@ -67,7 +67,7 @@ Steps:
 * Filter and aggregate summaries into a final research report.
 
 ## Tutorials
- - [How it Works](https://docs.gptr.dev/blog/building-gpt-researcher)
+ - [How it Works](https://docs.gptr.dev/blog/building-argus)
  - [How to Install](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
  - [Live Demo](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
@@ -99,8 +99,8 @@ See the [Documentation](https://docs.gptr.dev/docs/gpt-researcher/getting-starte
 2. Clone the project and navigate to the directory:
 
     ```bash
-    git clone https://github.com/assafelovic/gpt-researcher.git
-    cd gpt-researcher
+    git clone https://github.com/assafelovic/argus.git
+    cd argus
     ```
 
 3. Set up API keys by exporting them or storing them in a `.env` file.
@@ -136,16 +136,16 @@ For other setups (e.g., Poetry or virtual environments), check the [Getting Star
 
 ## Run as PIP package
 ```bash
-pip install gpt-researcher
+pip install argus
 
 ```
 ### Example Usage:
 ```python
 ...
-from gpt_researcher import GPTResearcher
+from argus import Argus
 
 query = "why is Nvidia stock going up?"
-researcher = GPTResearcher(query=query)
+researcher = Argus(query=query)
 # Conduct research on the given query
 research_result = await researcher.conduct_research()
 # Write the report
@@ -156,14 +156,14 @@ report = await researcher.write_report()
 **For more examples and configurations, please refer to the [PIP documentation](https://docs.gptr.dev/docs/gpt-researcher/gptr/pip-package) page.**
 
 ### 🔧 MCP Client
-GPT Researcher supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
+Argus supports MCP integration to connect with specialized data sources like GitHub repositories, databases, and custom APIs. This enables research from data sources alongside web search.
 
 ```bash
 export RETRIEVER=tavily,mcp  # Enable hybrid web + MCP research
 ```
 
 ```python
-from gpt_researcher import GPTResearcher
+from argus import Argus
 import asyncio
 import os
 
@@ -171,7 +171,7 @@ async def mcp_research_example():
     # Enable MCP with web search
     os.environ["RETRIEVER"] = "tavily,mcp"
     
-    researcher = GPTResearcher(
+    researcher = Argus(
         query="What are the top open source web research agents?",
         mcp_configs=[
             {
@@ -192,7 +192,7 @@ async def mcp_research_example():
 
 ## 🍌 Inline Image Generation
 
-GPT Researcher can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
+Argus can automatically generate and embed AI-created illustrations in your research reports using Google's Gemini models (Nano Banana).
 
 ```bash
 # Enable in your .env file
@@ -206,13 +206,13 @@ When enabled, the system will:
 2. Pre-generate 2-3 relevant images during the research phase
 3. Embed them inline as the report is written
 
-Images are generated with dark-mode styling that matches the GPT Researcher UI, featuring professional infographic aesthetics with teal accents.
+Images are generated with dark-mode styling that matches the Argus UI, featuring professional infographic aesthetics with teal accents.
 
 [Learn more about Image Generation](https://docs.gptr.dev/docs/gpt-researcher/gptr/image_generation) in our documentation.
 
 ## ✨ Deep Research
 
-GPT Researcher now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
+Argus now includes Deep Research - an advanced recursive research workflow that explores topics with agentic depth and breadth. This feature employs a tree-like exploration pattern, diving deeper into subtopics while maintaining a comprehensive view of the research subject.
 
 - 🌳 Tree-like exploration with configurable depth and breadth
 - ⚡️ Concurrent processing for faster results
@@ -248,7 +248,7 @@ Visit localhost:3000 on any browser and enjoy researching!
 
 ## 📄 Research on Local Documents
 
-You can instruct the GPT Researcher to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
+You can instruct the Argus to run research tasks based on your local documents. Currently supported file formats are: PDF, plain text, CSV, Excel, Markdown, PowerPoint, and Word documents.
 
 Step 1: Add the env variable `DOC_PATH` pointing to the folder where your documents are located.
 
@@ -258,14 +258,14 @@ export DOC_PATH="./my-docs"
 
 Step 2: 
  - If you're running the frontend app on localhost:8000, simply select "My Documents" from the "Report Source" Dropdown Options.
- - If you're running GPT Researcher with the [PIP package](https://docs.tavily.com/guides/gpt-researcher/gpt-researcher#pip-package), pass the `report_source` argument as "local" when you instantiate the `GPTResearcher` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
+ - If you're running Argus with the [PIP package](https://docs.tavily.com/guides/argus/argus#pip-package), pass the `report_source` argument as "local" when you instantiate the `Argus` class [code sample here](https://docs.gptr.dev/docs/gpt-researcher/context/tailored-research).
 
 
 ## 🤖 MCP Server
 
 We've moved our MCP server to a dedicated repository: [gptr-mcp](https://github.com/assafelovic/gptr-mcp).
 
-The GPT Researcher MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, GPT Researcher MCP delivers deeper, more reliable research results.
+The Argus MCP Server enables AI applications like Claude to conduct deep research. While LLM apps can access web search tools with MCP, Argus MCP delivers deeper, more reliable research results.
 
 Features:
 - Deep research capabilities for AI assistants
@@ -283,29 +283,29 @@ By using multi-agent frameworks, the research process can be significantly impro
 
 An average run generates a 5-6 page research report in multiple formats such as Docx and Markdown.
 
-Check it out [here](https://github.com/assafelovic/gpt-researcher/tree/master/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) and [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) for more information.
+Check it out [here](https://github.com/assafelovic/argus/tree/master/multi_agents) or head over to our documentation for [LangGraph](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/langgraph) and [AG2](https://docs.gptr.dev/docs/gpt-researcher/multi_agents/ag2) for more information.
 
 ## 🔍 Observability
 
-GPT Researcher supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
+Argus supports **LangSmith** for enhanced tracing and observability, making it easier to debug and optimize complex multi-agent workflows.
 
 To enable tracing:
 1. Set the following environment variables:
    ```bash
    export LANGCHAIN_TRACING_V2=true
    export LANGCHAIN_API_KEY=your_api_key
-   export LANGCHAIN_PROJECT="gpt-researcher"
+   export LANGCHAIN_PROJECT="argus"
    ```
 2. Run your research tasks as usual. All LangGraph-based agent interactions will be automatically traced and visualized in your LangSmith dashboard.
 
 #### Monocle Tracing
 
-GPT Researcher also supports [Monocle](https://github.com/monocle2ai/monocle), an OpenTelemetry-based tracer for agentic applications. It records each run end-to-end: LLM calls, agent steps, and tool invocations, with their inputs, outputs, timings, and token counts.
+Argus also supports [Monocle](https://github.com/monocle2ai/monocle), an OpenTelemetry-based tracer for agentic applications. It records each run end-to-end: LLM calls, agent steps, and tool invocations, with their inputs, outputs, timings, and token counts.
 
 Monocle is an opt-in extra and is off by default. Install it, then add the following to your `.env` file:
 
 ```bash
-pip install "gpt-researcher[monocle]"
+pip install "argus[monocle]"
 ```
 
 ```bash
@@ -332,11 +332,11 @@ Two deployment options are available:
 For detailed setup instructions and more information about the frontend features, please visit our [documentation page](https://docs.gptr.dev/docs/gpt-researcher/frontend/introduction).
 
 ## 🚀 Contributing
-We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/gpt-researcher/blob/master/CONTRIBUTING.md) if you're interested.
+We highly welcome contributions! Please check out [contributing](https://github.com/assafelovic/argus/blob/master/CONTRIBUTING.md) if you're interested.
 
-Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
-<a href="https://github.com/assafelovic/gpt-researcher/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=assafelovic/gpt-researcher&max=1000" />
+Please check out our [roadmap](https://trello.com/b/3O7KBePw/argus-roadmap) page and reach out to us via our [Discord community](https://discord.gg/QgZXvJAccX) if you're interested in joining our mission.
+<a href="https://github.com/assafelovic/argus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=assafelovic/argus&max=1000" />
 </a>
 ## ✉️ Support / Contact us
 - [Community Discord](https://discord.gg/spBgZmm3Xe)
@@ -344,21 +344,21 @@ Please check out our [roadmap](https://trello.com/b/3O7KBePw/gpt-researcher-road
 
 ## 🛡 Disclaimer
 
-This project, GPT Researcher, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
+This project, Argus, is an experimental application and is provided "as-is" without any warranty, express or implied. We are sharing codes for academic purposes under the Apache 2 license. Nothing herein is academic advice, and NOT a recommendation to use in academic or research papers.
 
 Our view on unbiased research claims:
-1. The main goal of GPT Researcher is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
+1. The main goal of Argus is to reduce incorrect and biased facts. How? We assume that the more sites we scrape the less chances of incorrect data. By scraping multiple sites per research, and choosing the most frequent information, the chances that they are all wrong is extremely low.
 2. We do not aim to eliminate biases; we aim to reduce it as much as possible. **We are here as a community to figure out the most effective human/llm interactions.**
 3. In research, people also tend towards biases as most have already opinions on the topics they research about. This tool scrapes many opinions and will evenly explain diverse views that a biased person would never have read.
 
 ---
 
 <p align="center">
-<a href="https://star-history.dera.page/#assafelovic/gpt-researcher">
+<a href="https://star-history.dera.page/#assafelovic/argus">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
   </picture>
 </a>
 </p>

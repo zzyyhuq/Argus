@@ -72,7 +72,7 @@ class EditorAgent:
 
         final_drafts = [
             chain.ainvoke(self._create_task_input(
-                research_state, query, title), config={"tags": ["gpt-researcher"]})
+                research_state, query, title), config={"tags": ["argus"]})
             for query in queries
         ]
         research_results = [

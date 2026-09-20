@@ -7,10 +7,10 @@ from typing import List, Dict, Any
 
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import InMemoryVectorStore
-from gpt_researcher.memory import Memory
-from gpt_researcher.config.config import Config
-from gpt_researcher.utils.llm import create_chat_completion
-from gpt_researcher.utils.tools import create_chat_completion_with_tools, create_search_tool
+from argus.memory import Memory
+from argus.config.config import Config
+from argus.utils.llm import create_chat_completion
+from argus.utils.tools import create_chat_completion_with_tools, create_search_tool
 try:
     from tavily import TavilyClient
 except ImportError:  # optional dependency for chat web search
@@ -29,7 +29,7 @@ logging.basicConfig(
     ]
 )
 
-# Note: LLM client is now handled through GPT Researcher's unified LLM system
+# Note: LLM client is now handled through Argus's unified LLM system
 # This supports all configured providers (OpenAI, Google Gemini, Anthropic, etc.)
 
 def get_tools():
@@ -269,23 +269,23 @@ class ChatAgentWithMemory:
 
             # Format system prompt with the report context
             system_prompt = f"""
-            You are GPT Researcher, an autonomous research agent created by an open source community at https://github.com/assafelovic/gpt-researcher, homepage: https://gptr.dev. 
-            To learn more about GPT Researcher you can suggest to check out: https://docs.gptr.dev.
-            
-            This is a chat about a research report that you created. Answer based on the given context and report.
+            You are an autonomous research assistant, chatting with the user about a research report you produced earlier.
+            Answer based on the given context and report.
             You must include citations to your answer based on the report.
-            
-            You may use the quick_search tool when the user asks about information that might require current data 
+
+            You may use the quick_search tool when the user asks about information that might require current data
             not found in the report, such as recent events, updated statistics, or news. If there's no report available,
             you can use the quick_search tool to find information online.
-            
-            You must respond in markdown format. You must make it readable with paragraphs, tables, etc when possible. 
+
+            You must respond in markdown format. You must make it readable with paragraphs, tables, etc when possible.
             Remember that you're answering in a chat not a report.
-            
+
+            You must respond in Simplified Chinese (简体中文).
+
             Assume the current time is: {datetime.now()}.
-            
+
             Report: {report_context}
-            
+
             """
             
             # Format message history for OpenAI input

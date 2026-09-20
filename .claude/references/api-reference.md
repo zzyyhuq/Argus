@@ -160,11 +160,11 @@ ws.onmessage = (event) => {
 ### Basic Usage
 
 ```python
-from gpt_researcher import GPTResearcher
+from argus import Argus
 import asyncio
 
 async def main():
-    researcher = GPTResearcher(
+    researcher = Argus(
         query="What are the latest AI developments?",
         report_type="research_report",
     )
@@ -181,7 +181,7 @@ asyncio.run(main())
 ### With MCP
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Research topic",
     mcp_configs=[{
         "name": "github",
@@ -200,13 +200,13 @@ class MockWebSocket:
     async def send_json(self, data):
         print(f"[{data['type']}] {data.get('output', '')}")
 
-researcher = GPTResearcher(
+researcher = Argus(
     query="Research topic",
     websocket=MockWebSocket(),
 )
 ```
 
-### GPTResearcher Parameters
+### Argus Parameters
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|

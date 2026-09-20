@@ -17,7 +17,7 @@ MCP (Model Context Protocol) enables research from specialized data sources (Git
 ## Configuration
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="...",
     mcp_configs=[
         {
@@ -56,7 +56,7 @@ researcher = GPTResearcher(
 
 ## Processing Logic
 
-**File:** `gpt_researcher/skills/researcher.py`
+**File:** `argus/skills/researcher.py`
 
 ```python
 # At start of research (for 'fast' strategy)

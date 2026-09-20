@@ -1,9 +1,9 @@
 <div align="center">
 <!--<h1 style="display: flex; align-items: center; gap: 10px;">
-  <img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
-  GPT Researcher
+  <img src="https://github.com/assafelovic/argus/assets/13554167/a45bac7c-092c-42e5-8eb6-69acbf20dde5" alt="Logo" width="25">
+  Argus
 </h1>-->
-<img src="https://github.com/assafelovic/gpt-researcher/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
+<img src="https://github.com/assafelovic/argus/assets/13554167/20af8286-b386-44a5-9a83-3be1365139c3" alt="Logo" width="80">
 
 
 ####
@@ -12,25 +12,25 @@
 [![Documentation](https://img.shields.io/badge/Documentation-DOCS-f472b6?logo=googledocs&logoColor=white&style=for-the-badge)](https://docs.gptr.dev)
 [![Discord Follow](https://img.shields.io/discord/1127851779011391548?style=for-the-badge&logo=discord&label=Chat%20on%20Discord)](https://discord.gg/QgZXvJAccX)
 
-[![PyPI version](https://img.shields.io/pypi/v/gpt-researcher?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/gpt-researcher)
-![GitHub Release](https://img.shields.io/github/v/release/assafelovic/gpt-researcher?style=flat&logo=github)
-[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/gpt-researcher/blob/master/docs/docs/examples/pip-run.ipynb)
-[![Docker Image Version](https://img.shields.io/docker/v/elestio/gpt-researcher/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/gpt-researcher)
+[![PyPI version](https://img.shields.io/pypi/v/argus?logo=pypi&logoColor=white&style=flat)](https://badge.fury.io/py/argus)
+![GitHub Release](https://img.shields.io/github/v/release/assafelovic/argus?style=flat&logo=github)
+[![Open In Colab](https://img.shields.io/static/v1?message=Open%20in%20Colab&logo=googlecolab&labelColor=grey&color=yellow&label=%20&style=flat&logoSize=40)](https://colab.research.google.com/github/assafelovic/argus/blob/master/docs/docs/examples/pip-run.ipynb)
+[![Docker Image Version](https://img.shields.io/docker/v/elestio/argus/latest?arch=amd64&style=flat&logo=docker&logoColor=white&color=1D63ED)](https://hub.docker.com/r/gptresearcher/argus)
 [![Twitter Follow](https://img.shields.io/twitter/follow/assaf_elovic?style=social)](https://twitter.com/assaf_elovic)
 
 [English](README.md) |
 [中文](README-zh_CN.md)
 </div>
 
-# 🔎 GPT Researcher
+# 🔎 Argus
 
-**GPT Researcher 是一个智能体代理，专为各种任务的综合在线研究而设计。**
+**Argus 是一个智能体代理，专为各种任务的综合在线研究而设计。**
 
-代理可以生成详细、正式且客观的研究报告，并提供自定义选项，专注于相关资源、结构框架和经验报告。受最近发表的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和[RAG](https://arxiv.org/abs/2005.11401) 论文的启发，GPT Researcher 解决了速度、确定性和可靠性等问题，通过并行化的代理运行，而不是同步操作，提供了更稳定的性能和更高的速度。
+代理可以生成详细、正式且客观的研究报告，并提供自定义选项，专注于相关资源、结构框架和经验报告。受最近发表的[Plan-and-Solve](https://arxiv.org/abs/2305.04091) 和[RAG](https://arxiv.org/abs/2005.11401) 论文的启发，Argus 解决了速度、确定性和可靠性等问题，通过并行化的代理运行，而不是同步操作，提供了更稳定的性能和更高的速度。
 
 **我们的使命是利用人工智能的力量，为个人和组织提供准确、客观和事实的信息。**
 
-## 为什么选择GPT Researcher?
+## 为什么选择Argus?
 
 - 因为人工研究任务形成客观结论可能需要时间和经历，有时甚至需要数周才能找到正确的资源和信息。
 - 目前的LLM是根据历史和过时的信息进行训练的，存在严重的幻觉风险，因此几乎无法胜任研究任务。
@@ -54,10 +54,10 @@
 * 最后，对所有汇总的资料来源进行过滤和汇总，并生成最终研究报告。
 
 ## 演示
-https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
+https://github.com/assafelovic/argus/assets/13554167/a00c89a6-a295-4dd0-b58d-098a31c40fda
 
 ## 教程
- - [运行原理](https://docs.gptr.dev/blog/building-gpt-researcher)
+ - [运行原理](https://docs.gptr.dev/blog/building-argus)
  - [如何安装](https://www.loom.com/share/04ebffb6ed2a4520a27c3e3addcdde20?sid=da1848e8-b1f1-42d1-93c3-5b0b9c3b24ea)
  - [现场演示](https://www.loom.com/share/6a3385db4e8747a1913dd85a7834846f?sid=a740fd5b-2aa3-457e-8fb7-86976f59f9b8)
 
@@ -86,8 +86,8 @@ https://github.com/assafelovic/gpt-researcher/assets/13554167/a00c89a6-a295-4dd0
 > **步骤 1** - 下载项目
 
 ```bash
-$ git clone https://github.com/assafelovic/gpt-researcher.git
-$ cd gpt-researcher
+$ git clone https://github.com/assafelovic/argus.git
+$ cd argus
 ```
 
 <br />
@@ -114,8 +114,8 @@ $ export TAVILY_API_KEY={Your Tavily API Key here}
 # $ export LANGCHAIN_API_KEY={Your LangChain API Key here}
 ```
 
-- **LLM，我们推荐使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**，但您也可以使用 [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) 支持的任何其他 LLM 模型（包括开源），只需在 gpt_researcher/config/variables/default.py 中更改 llm 模型和提供者即可。请按照 [这份指南](https://python.langchain.com/docs/integrations/llms/) 学习如何将 LLM 与 Langchain 集成。
-- **对于搜索引擎，我们推荐使用 [Tavily Search API](https://app.tavily.com)（已针对 LLM 进行优化）**，但您也可以选择其他搜索引擎，只需将 gpt_researcher/config/variables/default.py 中的搜索提供程序更改为 "duckduckgo"、"googleAPI"、"searchapi"、"googleSerp "或 "searx "即可。然后在 gpt_researcher/config/variables/default.py 文件中添加相应的 env API 密钥。
+- **LLM，我们推荐使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**，但您也可以使用 [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai) 支持的任何其他 LLM 模型（包括开源），只需在 argus/config/variables/default.py 中更改 llm 模型和提供者即可。请按照 [这份指南](https://python.langchain.com/docs/integrations/llms/) 学习如何将 LLM 与 Langchain 集成。
+- **对于搜索引擎，我们推荐使用 [Tavily Search API](https://app.tavily.com)（已针对 LLM 进行优化）**，但您也可以选择其他搜索引擎，只需将 argus/config/variables/default.py 中的搜索提供程序更改为 "duckduckgo"、"googleAPI"、"searchapi"、"googleSerp "或 "searx "即可。然后在 argus/config/variables/default.py 文件中添加相应的 env API 密钥。
 - **我们强烈建议使用 [OpenAI GPT](https://platform.openai.com/docs/guides/gpt) 模型和 [Tavily Search API](https://app.tavily.com) 以获得最佳性能。**
 <br />
 
@@ -132,21 +132,21 @@ $ uvicorn main:app --reload
 
 ## 🔍 可观测性
 
-GPT Researcher 支持 **LangSmith** 以增强链路追踪和可观测性，特别适用于调试和优化复杂的多智能体工作流。
+Argus 支持 **LangSmith** 以增强链路追踪和可观测性，特别适用于调试和优化复杂的多智能体工作流。
 
 要开启追踪：
 1. 设置以下环境变量：
    ```bash
    export LANGCHAIN_TRACING_V2=true
    export LANGCHAIN_API_KEY=您的_API_KEY
-   export LANGCHAIN_PROJECT="gpt-researcher"
+   export LANGCHAIN_PROJECT="argus"
    ```
 2. 正常运行研究任务。所有基于 LangGraph 的智能体交互将自动被追踪，并可在您的 LangSmith 控制台中查看可视化结果。
 
 ## 🚀 贡献
 我们非常欢迎您的贡献！如果您感兴趣，请查看 [contributing](CONTRIBUTING.md)。
 
-如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/gpt-researcher-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/QgZXvJAccX) 联系我们。
+如果您有兴趣加入我们的任务，请查看我们的 [路线图](https://trello.com/b/3O7KBePw/argus-roadmap) 页面，并通过我们的 [Discord 社区](https://discord.gg/QgZXvJAccX) 联系我们。
 
 ## ✉️ 支持 / 联系我们
 - [社区讨论区](https://discord.gg/spBgZmm3Xe)
@@ -154,7 +154,7 @@ GPT Researcher 支持 **LangSmith** 以增强链路追踪和可观测性，特�
 
 ## 🛡 免责声明
 
-本项目 "GPT Researcher "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。我们根据 MIT 许可分享用于学术目的的代码。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
+本项目 "Argus "是一个实验性应用程序，按 "现状 "提供，不做任何明示或暗示的保证。我们根据 MIT 许可分享用于学术目的的代码。本文不提供任何学术建议，也不建议在学术或研究论文中使用。
 
 我们对客观研究主张的看法：
 1.  我们抓取系统的全部目的是减少不正确的事实。如何解决？我们抓取的网站越多，错误数据的可能性就越小。我们每项研究都会收集20条信息，它们全部错误的可能性极低。
@@ -166,11 +166,11 @@ GPT Researcher 支持 **LangSmith** 以增强链路追踪和可观测性，特�
 ---
 
 <p align="center">
-<a href="https://star-history.dera.page/#assafelovic/gpt-researcher">
+<a href="https://star-history.dera.page/#assafelovic/argus">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/gpt-researcher&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
+    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=assafelovic/argus&type=Date" />
   </picture>
 </a>
 </p>

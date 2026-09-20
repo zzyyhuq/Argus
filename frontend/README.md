@@ -1,6 +1,6 @@
 # 前端界面
 
-本目录是 GPT Researcher 的网页界面，由 FastAPI 后端直接提供静态文件，**没有独立的前端服务**。
+本目录是 Argus 的网页界面，由 FastAPI 后端直接提供静态文件，**没有独立的前端服务**。
 
 ## 运行
 
@@ -34,13 +34,13 @@
 
 界面为**中文硬编码**，不含语言切换。
 
-后端通过 websocket 推送的研究进度提示，其文案写在 Python 源码里（`gpt_researcher/skills/*.py`）。
+后端通过 websocket 推送的研究进度提示，其文案写在 Python 源码里（`argus/skills/*.py`）。
 这些消息在浏览器端由 `scripts.js` 的 `BACKEND_MESSAGE_RULES` + `translateBackendMessage()`
 统一转换，接入点是 `addAgentResponse()`——**所有**后端日志消息都经过这一个函数。
 
 新增后端消息时，记得同步添加一条映射规则，否则该条会以英文显示。
 
-生成的**研究报告**语言由 `gpt_researcher/config/variables/default.py` 的 `LANGUAGE` 控制（当前为 `chinese`）。
+生成的**研究报告**语言由 `argus/config/variables/default.py` 的 `LANGUAGE` 控制（当前为 `chinese`）。
 
 ## 功能
 
@@ -53,5 +53,5 @@
 
 ## 历史说明
 
-本目录曾并存一套 Next.js 前端（`nextjs/`，即 npm 包 `gpt-researcher-ui`），
+本目录曾并存一套 Next.js 前端（`nextjs/`，即 npm 包 `argus-ui`），
 已于结构精简时移除。当前后端提供的界面自始至终都是这里的静态版本。

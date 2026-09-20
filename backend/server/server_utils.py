@@ -8,8 +8,8 @@ import shutil
 import traceback
 from typing import Awaitable, Dict, List, Any
 from fastapi.responses import JSONResponse, FileResponse
-from gpt_researcher.document.document import DocumentLoader
-from gpt_researcher import GPTResearcher
+from argus.document.document import DocumentLoader
+from argus import Argus
 # This module is imported under two different package names: as
 # `backend.server.server_utils` (main.py / the Procfile entrypoint) and as
 # `server.server_utils` (backend/server/app.py prepends backend/ to sys.path).
@@ -95,7 +95,7 @@ class Researcher:
         self.research_id = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(query)}"
         # Initialize logs handler with research ID
         self.logs_handler = CustomLogsHandler(None, self.research_id)
-        self.researcher = GPTResearcher(
+        self.researcher = Argus(
             query=query,
             report_type=report_type,
             websocket=self.logs_handler

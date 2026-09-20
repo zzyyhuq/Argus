@@ -25,14 +25,14 @@ if os.environ.get("MONOCLE_TRACING", "").strip().lower() in ("1", "true", "yes",
     except ImportError as exc:
         raise RuntimeError(
             "MONOCLE_TRACING is enabled but monocle_apptrace is not installed. "
-            'Install the "monocle" extra: pip install "gpt-researcher[monocle]".'
+            'Install the "monocle" extra: pip install "argus[monocle]".'
         ) from exc
-    setup_monocle_telemetry(workflow_name="gpt-researcher", monocle_exporters_list=_exporters)
+    setup_monocle_telemetry(workflow_name="argus", monocle_exporters_list=_exporters)
 
 from multi_agents.agents import ChiefEditorAgent
 import asyncio
 import json
-from gpt_researcher.utils.enum import Tone
+from argus.utils.enum import Tone
 
 # Run with LangSmith if API key is set
 if os.environ.get("LANGCHAIN_API_KEY"):

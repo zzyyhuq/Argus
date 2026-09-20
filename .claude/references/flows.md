@@ -56,7 +56,7 @@ async def run_agent(task, report_type, report_source, source_urls, ...):
 
 ### 3. Research Phase
 
-**File:** `gpt_researcher/agent.py`
+**File:** `argus/agent.py`
 
 ```python
 async def conduct_research(self, on_progress=None):
@@ -92,7 +92,7 @@ async def conduct_research(self, on_progress=None):
 
 ### 4. Sub-Query Processing
 
-**File:** `gpt_researcher/skills/researcher.py`
+**File:** `argus/skills/researcher.py`
 
 ```python
 async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
@@ -125,7 +125,7 @@ async def _process_sub_query(self, sub_query: str, scraped_data: list = [], quer
 
 ### 5. Report Generation
 
-**File:** `gpt_researcher/actions/report_generation.py`
+**File:** `argus/actions/report_generation.py`
 
 ```python
 async def generate_report(
@@ -179,7 +179,7 @@ User Query
     │
     ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ GPTResearcher.__init__()                                         │
+│ Argus.__init__()                                         │
 │   • Loads Config (env → json → defaults)                        │
 │   • Initializes skills: ResearchConductor, ReportGenerator, etc │
 │   • Initializes retrievers based on RETRIEVER env var           │

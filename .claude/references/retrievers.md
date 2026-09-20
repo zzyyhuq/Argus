@@ -9,7 +9,7 @@
 
 ## Available Retrievers
 
-**Directory:** `gpt_researcher/retrievers/`
+**Directory:** `argus/retrievers/`
 
 | Retriever | Class | API Key Env Var |
 |-----------|-------|-----------------|
@@ -35,26 +35,26 @@
 | MCP | `MCPRetriever` | Per-server |
 | Custom | `CustomRetriever` | User-defined |
 
-> The authoritative list is the `match` statement in `gpt_researcher/actions/retriever.py` (`get_retriever`).
+> The authoritative list is the `match` statement in `argus/actions/retriever.py` (`get_retriever`).
 
 ---
 
 ## Retriever Selection
 
-**File:** `gpt_researcher/actions/retriever.py`
+**File:** `argus/actions/retriever.py`
 
 ```python
 def get_retriever(retriever: str):
     """Get a retriever class by name."""
     match retriever:
         case "tavily":
-            from gpt_researcher.retrievers import TavilySearch
+            from argus.retrievers import TavilySearch
             return TavilySearch
         case "google":
-            from gpt_researcher.retrievers import GoogleSearch
+            from argus.retrievers import GoogleSearch
             return GoogleSearch
         case "mcp":
-            from gpt_researcher.retrievers import MCPRetriever
+            from argus.retrievers import MCPRetriever
             return MCPRetriever
         # ... etc
 
@@ -77,7 +77,7 @@ def get_retrievers(headers: dict[str, str], cfg) -> list:
 
 ### Step 1: Create Retriever File
 
-**File:** `gpt_researcher/retrievers/my_retriever/my_retriever.py`
+**File:** `argus/retrievers/my_retriever/my_retriever.py`
 
 ```python
 class MyRetriever:
@@ -100,17 +100,17 @@ class MyRetriever:
 
 ### Step 2: Register in retriever.py
 
-**File:** `gpt_researcher/actions/retriever.py`
+**File:** `argus/actions/retriever.py`
 
 ```python
 case "my_retriever":
-    from gpt_researcher.retrievers.my_retriever import MyRetriever
+    from argus.retrievers.my_retriever import MyRetriever
     return MyRetriever
 ```
 
 ### Step 3: Export in __init__.py
 
-**File:** `gpt_researcher/retrievers/__init__.py`
+**File:** `argus/retrievers/__init__.py`
 
 ```python
 from .my_retriever import MyRetriever
@@ -124,7 +124,7 @@ RETRIEVER=tavily,my_retriever
 ```
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="...",
     # Will use both Tavily and your custom retriever
 )

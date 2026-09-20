@@ -26,7 +26,7 @@
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    GPTResearcher (gpt_researcher/agent.py)                   │
+│                    Argus (argus/agent.py)                   │
 │                                                                              │
 │  ┌───────────────────────────────────────────────────────────────────────┐  │
 │  │                         SKILLS LAYER                                   │  │
@@ -79,7 +79,7 @@
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                        CONFIGURATION LAYER                                   │
-│                     gpt_researcher/config/                                   │
+│                     argus/config/                                   │
 │                                                                              │
 │     Environment Variables  →  JSON Config File  →  Default Values            │
 │           (highest)              (medium)            (lowest)                │
@@ -96,20 +96,20 @@
 
 | Need | Primary File | Key Classes/Functions |
 |------|--------------|----------------------|
-| Main orchestrator | `gpt_researcher/agent.py` | `GPTResearcher` |
-| Research logic | `gpt_researcher/skills/researcher.py` | `ResearchConductor` |
-| Report writing | `gpt_researcher/skills/writer.py` | `ReportGenerator` |
-| Context/embeddings | `gpt_researcher/skills/context_manager.py` | `ContextManager` |
-| Source ranking | `gpt_researcher/skills/curator.py` | `SourceCurator` |
-| Deep research | `gpt_researcher/skills/deep_research.py` | `DeepResearchSkill` |
-| Image generation | `gpt_researcher/skills/image_generator.py` | `ImageGenerator` |
-| All prompts | `gpt_researcher/prompts.py` | `PromptFamily` |
-| Configuration | `gpt_researcher/config/config.py` | `Config` |
-| Config defaults | `gpt_researcher/config/variables/default.py` | `DEFAULT_CONFIG` |
-| Config types | `gpt_researcher/config/variables/base.py` | `BaseConfig` |
+| Main orchestrator | `argus/agent.py` | `Argus` |
+| Research logic | `argus/skills/researcher.py` | `ResearchConductor` |
+| Report writing | `argus/skills/writer.py` | `ReportGenerator` |
+| Context/embeddings | `argus/skills/context_manager.py` | `ContextManager` |
+| Source ranking | `argus/skills/curator.py` | `SourceCurator` |
+| Deep research | `argus/skills/deep_research.py` | `DeepResearchSkill` |
+| Image generation | `argus/skills/image_generator.py` | `ImageGenerator` |
+| All prompts | `argus/prompts.py` | `PromptFamily` |
+| Configuration | `argus/config/config.py` | `Config` |
+| Config defaults | `argus/config/variables/default.py` | `DEFAULT_CONFIG` |
+| Config types | `argus/config/variables/base.py` | `BaseConfig` |
 | API server | `backend/server/app.py` | FastAPI `app` |
 | WebSocket mgmt | `backend/server/websocket_manager.py` | `WebSocketManager`, `run_agent` |
 | Report types | `backend/report_type/` | `BasicReport`, `DetailedReport` |
-| Search engines | `gpt_researcher/retrievers/` | `TavilySearch`, `GoogleSearch`, etc. |
-| Web scraping | `gpt_researcher/scraper/` | Various scrapers |
-| Enums | `gpt_researcher/utils/enum.py` | `ReportType`, `ReportSource`, `Tone` |
+| Search engines | `argus/retrievers/` | `TavilySearch`, `GoogleSearch`, etc. |
+| Web scraping | `argus/scraper/` | Various scrapers |
+| Enums | `argus/utils/enum.py` | `ReportType`, `ReportSource`, `Tone` |

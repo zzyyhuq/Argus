@@ -1,4 +1,4 @@
-const GPTResearcher = (() => {
+const Argus = (() => {
   let isResearchActive = false;
   let connectionTimeout = null;
   let conversationHistory = [];
@@ -1119,7 +1119,7 @@ const GPTResearcher = (() => {
   // 后端消息中文化
   //
   // 后端通过 websocket 推送的研究进度提示，文案写在 Python 源码里
-  // （gpt_researcher/skills/*.py 等），前端只是原样渲染。
+  // （argus/skills/*.py 等），前端只是原样渲染。
   // 这里用规则表在渲染前做替换，从而不改动核心库 Python 代码。
   //
   // 实现要点：
@@ -2477,7 +2477,7 @@ const GPTResearcher = (() => {
           <i class="fas fa-times"></i>
         </button>
         <h3>模型上下文协议（MCP）</h3>
-        <p>MCP 让 GPT Researcher 能通过统一协议连接外部工具和数据源。</p>
+        <p>MCP 让 Argus 能通过统一协议连接外部工具和数据源。</p>
 
         <h4 class="highlight">能带来什么：</h4>
         <ul>
@@ -2727,4 +2727,4 @@ const GPTResearcher = (() => {
   }
 })()
 
-window.addEventListener('DOMContentLoaded', GPTResearcher.init)
+window.addEventListener('DOMContentLoaded', Argus.init)

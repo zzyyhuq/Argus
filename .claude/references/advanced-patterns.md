@@ -15,7 +15,7 @@
 def cost_callback(cost: float):
     print(f"API call cost: ${cost}")
 
-researcher = GPTResearcher(query="...")
+researcher = Argus(query="...")
 researcher.add_costs = cost_callback  # Override cost tracking
 ```
 
@@ -33,7 +33,7 @@ class CustomWebSocket:
         if data['type'] == 'logs':
             print(f"Progress: {data['output']}")
 
-researcher = GPTResearcher(query="...", websocket=CustomWebSocket())
+researcher = Argus(query="...", websocket=CustomWebSocket())
 ```
 
 ---
@@ -48,7 +48,7 @@ from langchain.document_loaders import DirectoryLoader
 loader = DirectoryLoader('./docs', glob="**/*.md")
 documents = loader.load()
 
-researcher = GPTResearcher(
+researcher = Argus(
     query="Summarize the documentation",
     report_source="langchain_documents",
     documents=documents,
@@ -62,7 +62,7 @@ from langchain.vectorstores import Chroma
 
 vectorstore = Chroma.from_documents(documents, embeddings)
 
-researcher = GPTResearcher(
+researcher = Argus(
     query="Find relevant information",
     report_source="langchain_vectorstore",
     vector_store=vectorstore,
@@ -77,7 +77,7 @@ researcher = GPTResearcher(
 ### Restricting Search Domains
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Company news",
     query_domains=["reuters.com", "bloomberg.com", "wsj.com"],
 )
@@ -86,7 +86,7 @@ researcher = GPTResearcher(
 ### Using Specific Source URLs
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Analyze these articles",
     source_urls=[
         "https://example.com/article1",

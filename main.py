@@ -1,6 +1,6 @@
 import sys
 
-# Windows consoles default to a legacy codepage (GBK on zh-CN). gpt_researcher
+# Windows consoles default to a legacy codepage (GBK on zh-CN). argus
 # logs LLM request/response bodies, so any character outside that codepage
 # raises UnicodeEncodeError inside the LLM call and burns through all retries.
 # Force UTF-8 before any handler binds to these streams.

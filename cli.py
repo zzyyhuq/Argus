@@ -1,5 +1,5 @@
 """
-Provides a command line interface for the GPTResearcher class.
+Provides a command line interface for the Argus class.
 
 Usage:
 
@@ -20,9 +20,9 @@ from dotenv import load_dotenv
 
 from backend.report_type import DetailedReport
 from backend.utils import write_md_to_word
-from gpt_researcher import GPTResearcher
-from gpt_researcher.utils.enum import ReportSource, ReportType, Tone
-from gpt_researcher.utils.llm import create_chat_completion
+from argus import Argus
+from argus.utils.enum import ReportSource, ReportType, Tone
+from argus.utils.llm import create_chat_completion
 
 # =============================================================================
 # CLI
@@ -156,7 +156,7 @@ def _sanitize_filename(name: str, max_len: int = 60) -> str:
 async def _generate_task_title(
     query: str,
     report: str,
-    researcher: GPTResearcher | None,
+    researcher: Argus | None,
 ) -> str:
     """Ask the configured fast LLM to produce a concise title for the report.
 
@@ -204,7 +204,7 @@ def _build_frontmatter(
     task_id: str,
     title: str,
     args: argparse.Namespace,
-    researcher: GPTResearcher | None,
+    researcher: Argus | None,
 ) -> str:
     """Build a YAML frontmatter block prepended to the markdown report.
 
@@ -263,7 +263,7 @@ async def main(args):
     """
     query_domains = args.query_domains.split(",") if args.query_domains else []
 
-    researcher: GPTResearcher | None = None
+    researcher: Argus | None = None
 
     if args.report_type == 'detailed_report':
         detailed_report = DetailedReport(
@@ -274,9 +274,9 @@ async def main(args):
         )
 
         report = await detailed_report.run()
-        # DetailedReport owns an internal GPTResearcher; reuse it so we can
+        # DetailedReport owns an internal Argus; reuse it so we can
         # surface sources_count / total_cost and reuse the fast LLM for the title.
-        researcher = getattr(detailed_report, "gpt_researcher", None)
+        researcher = getattr(detailed_report, "argus", None)
     else:
         # Convert the simple keyword to the full Tone enum value
         tone_map = {
@@ -297,7 +297,7 @@ async def main(args):
             "pessimistic": Tone.Pessimistic
         }
 
-        researcher = GPTResearcher(
+        researcher = Argus(
             query=args.query,
             query_domains=query_domains,
             report_type=args.report_type,

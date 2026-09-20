@@ -1,20 +1,20 @@
 # Core Components & Method Signatures
 
 ## Table of Contents
-- [GPTResearcher](#gptresearcher)
+- [Argus](#gptresearcher)
 - [ResearchConductor](#researchconductor)
 - [ReportGenerator](#reportgenerator)
 
 ---
 
-## GPTResearcher
+## Argus
 
-**File:** `gpt_researcher/agent.py`
+**File:** `argus/agent.py`
 
 The main orchestrator class. Full initialization signature:
 
 ```python
-class GPTResearcher:
+class Argus:
     def __init__(
         self,
         query: str,                              # Research question (required)
@@ -87,13 +87,13 @@ def add_costs(self, cost: float) -> None:
 
 ## ResearchConductor
 
-**File:** `gpt_researcher/skills/researcher.py`
+**File:** `argus/skills/researcher.py`
 
 Manages the research process:
 
 ```python
 class ResearchConductor:
-    def __init__(self, researcher: GPTResearcher):
+    def __init__(self, researcher: Argus):
         self.researcher = researcher
         self.logger = logging.getLogger(__name__)
 
@@ -159,11 +159,11 @@ class ResearchConductor:
 
 ## ReportGenerator
 
-**File:** `gpt_researcher/skills/writer.py`
+**File:** `argus/skills/writer.py`
 
 ```python
 class ReportGenerator:
-    def __init__(self, researcher: GPTResearcher):
+    def __init__(self, researcher: Argus):
         self.researcher = researcher
         self.research_params = {
             "query": researcher.query,

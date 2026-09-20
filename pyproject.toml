@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "gpt-researcher"
+name = "argus"
 version = "0.14.7"
-description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
+description = "Argus is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = ["Assaf Elovic <assaf.elovic@gmail.com>"]
 license = "MIT"
 readme = "README.md"
@@ -17,12 +17,12 @@ python_files = "test_*.py"
 asyncio_fixture_loop_scope = "function"
 
 [tool.uv.sources]
-gpt-researcher = { workspace = true }
+argus = { workspace = true }
 
 [project]
-name = "gpt-researcher"
+name = "argus"
 version = "0.14.7"
-description = "GPT Researcher is an autonomous agent designed for comprehensive online research on a variety of tasks."
+description = "Argus is an autonomous agent designed for comprehensive online research on a variety of tasks."
 authors = [{ name = "Assaf Elovic", email = "assaf.elovic@gmail.com" }]
 license = { text = "MIT" }
 readme = "README.md"
@@ -198,7 +198,7 @@ requirements-txt = [
     "selenium",
 ]
 # Optional agent observability via Monocle. Install with:
-#   pip install "gpt-researcher[monocle]"
+#   pip install "argus[monocle]"
 # then enable at runtime with MONOCLE_TRACING=true. Not pulled by a plain install.
 monocle = [
     "monocle_apptrace",

@@ -22,7 +22,7 @@ LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.1420
 |-------|------|------|
 | Human | - | Oversees and provides feedback |
 | Chief Editor | `agents/orchestrator.py` | Master coordinator via LangGraph |
-| Researcher | Uses GPTResearcher | Deep research on topics |
+| Researcher | Uses Argus | Deep research on topics |
 | Editor | `agents/editor.py` | Plans outline and structure |
 | Reviewer | `agents/reviewer.py` | Validates research correctness |
 | Reviser | `agents/reviser.py` | Revises based on feedback |
@@ -34,7 +34,7 @@ LangGraph-based system inspired by [STORM paper](https://arxiv.org/abs/2402.1420
 ## Workflow
 
 ```
-1. Browser (GPTResearcher) → Initial research
+1. Browser (Argus) → Initial research
 2. Editor → Plans report outline
 3. For each outline topic (parallel):
    a. Researcher → In-depth subtopic research

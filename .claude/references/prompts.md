@@ -8,7 +8,7 @@
 
 ## PromptFamily Class
 
-**File:** `gpt_researcher/prompts.py`
+**File:** `argus/prompts.py`
 
 All prompts are centralized in the `PromptFamily` class. This allows for model-specific prompt variations.
 

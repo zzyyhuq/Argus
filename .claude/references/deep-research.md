@@ -26,7 +26,7 @@ DEEP_RESEARCH_CONCURRENCY=2  # Parallel tasks
 
 ## DeepResearchSkill
 
-**File:** `gpt_researcher/skills/deep_research.py`
+**File:** `argus/skills/deep_research.py`
 
 ```python
 class DeepResearchSkill:
@@ -56,7 +56,7 @@ class DeepResearchSkill:
 ## Usage
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Comprehensive analysis of quantum computing",
     report_type="deep",  # Triggers deep research
 )

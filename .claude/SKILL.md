@@ -1,22 +1,22 @@
 ---
-name: gpt-researcher
-description: GPT Researcher is an autonomous deep research agent that conducts web and local research, producing detailed reports with citations. Use this skill when helping developers understand, extend, debug, or integrate with GPT Researcher - including adding features, understanding the architecture, working with the API, customizing research workflows, adding new retrievers, integrating MCP data sources, or troubleshooting research pipelines.
+name: argus
+description: Argus is an autonomous deep research agent that conducts web and local research, producing detailed reports with citations. Use this skill when helping developers understand, extend, debug, or integrate with Argus - including adding features, understanding the architecture, working with the API, customizing research workflows, adding new retrievers, integrating MCP data sources, or troubleshooting research pipelines.
 ---
 
-# GPT Researcher Development Skill
+# Argus Development Skill
 
-GPT Researcher is an LLM-based autonomous agent using a planner-executor-publisher pattern with parallelized agent work for speed and reliability.
+Argus is an LLM-based autonomous agent using a planner-executor-publisher pattern with parallelized agent work for speed and reliability.
 
 ## Quick Start
 
 ### Basic Python Usage
 
 ```python
-from gpt_researcher import GPTResearcher
+from argus import Argus
 import asyncio
 
 async def main():
-    researcher = GPTResearcher(
+    researcher = Argus(
         query="What are the latest AI developments?",
         report_type="research_report",  # or detailed_report, deep, outline_report
         report_source="web",            # or local, hybrid
@@ -31,12 +31,12 @@ asyncio.run(main())
 ### Run Servers
 
 ```bash
-# Backend
-python -m uvicorn backend.server.server:app --reload --port 8000
-
-# Frontend
-cd frontend/nextjs && npm install && npm run dev
+# Backend (serves the static frontend at /)
+python -m uvicorn main:app --reload --port 8000
 ```
+
+There is no separate frontend server: `frontend/` is plain HTML/CSS/JS mounted by
+the FastAPI app. (The former Next.js frontend has been removed.)
 
 ---
 
@@ -44,21 +44,21 @@ cd frontend/nextjs && npm install && npm run dev
 
 | Need | Primary File | Key Classes |
 |------|--------------|-------------|
-| Main orchestrator | `gpt_researcher/agent.py` | `GPTResearcher` |
-| Research logic | `gpt_researcher/skills/researcher.py` | `ResearchConductor` |
-| Report writing | `gpt_researcher/skills/writer.py` | `ReportGenerator` |
-| All prompts | `gpt_researcher/prompts.py` | `PromptFamily` |
-| Configuration | `gpt_researcher/config/config.py` | `Config` |
-| Config defaults | `gpt_researcher/config/variables/default.py` | `DEFAULT_CONFIG` |
+| Main orchestrator | `argus/agent.py` | `Argus` |
+| Research logic | `argus/skills/researcher.py` | `ResearchConductor` |
+| Report writing | `argus/skills/writer.py` | `ReportGenerator` |
+| All prompts | `argus/prompts.py` | `PromptFamily` |
+| Configuration | `argus/config/config.py` | `Config` |
+| Config defaults | `argus/config/variables/default.py` | `DEFAULT_CONFIG` |
 | API server | `backend/server/app.py` | FastAPI `app` |
-| Search engines | `gpt_researcher/retrievers/` | Various retrievers |
+| Search engines | `argus/retrievers/` | Various retrievers |
 
 ---
 
 ## Architecture Overview
 
 ```
-User Query → GPTResearcher.__init__()
+User Query → Argus.__init__()
                 │
                 ▼
          choose_agent() → (agent_type, role_prompt)
@@ -85,21 +85,21 @@ User Query → GPTResearcher.__init__()
 
 ### Adding a New Feature (8-Step Pattern)
 
-1. **Config** → Add to `gpt_researcher/config/variables/default.py`
-2. **Provider** → Create in `gpt_researcher/llm_provider/my_feature/`
-3. **Skill** → Create in `gpt_researcher/skills/my_feature.py`
-4. **Agent** → Integrate in `gpt_researcher/agent.py`
-5. **Prompts** → Update `gpt_researcher/prompts.py`
+1. **Config** → Add to `argus/config/variables/default.py`
+2. **Provider** → Create in `argus/llm_provider/my_feature/`
+3. **Skill** → Create in `argus/skills/my_feature.py`
+4. **Agent** → Integrate in `argus/agent.py`
+5. **Prompts** → Update `argus/prompts.py`
 6. **WebSocket** → Events via `stream_output()`
 7. **Frontend** → Handle events in `useWebSocket.ts`
-8. **Docs** → Create `docs/docs/gpt-researcher/gptr/my_feature.md`
+8. **Docs** → Create `docs/docs/argus/gptr/my_feature.md`
 
 **For complete feature addition guide with Image Generation case study**: See [references/adding-features.md](references/adding-features.md)
 
 ### Adding a New Retriever
 
 ```python
-# 1. Create: gpt_researcher/retrievers/my_retriever/my_retriever.py
+# 1. Create: argus/retrievers/my_retriever/my_retriever.py
 class MyRetriever:
     def __init__(self, query: str, headers: dict = None):
         self.query = query
@@ -108,12 +108,12 @@ class MyRetriever:
         # Return: [{"title": str, "href": str, "body": str}]
         pass
 
-# 2. Register in gpt_researcher/actions/retriever.py
+# 2. Register in argus/actions/retriever.py
 case "my_retriever":
-    from gpt_researcher.retrievers.my_retriever import MyRetriever
+    from argus.retrievers.my_retriever import MyRetriever
     return MyRetriever
 
-# 3. Export in gpt_researcher/retrievers/__init__.py
+# 3. Export in argus/retrievers/__init__.py
 ```
 
 **For complete retriever documentation**: See [references/retrievers.md](references/retrievers.md)
@@ -144,13 +144,13 @@ class WebSocketHandler:
     async def send_json(self, data):
         print(f"[{data['type']}] {data.get('output', '')}")
 
-researcher = GPTResearcher(query="...", websocket=WebSocketHandler())
+researcher = Argus(query="...", websocket=WebSocketHandler())
 ```
 
 ### MCP Data Sources
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Open source AI projects",
     mcp_configs=[{
         "name": "github",
@@ -167,7 +167,7 @@ researcher = GPTResearcher(
 ### Deep Research Mode
 
 ```python
-researcher = GPTResearcher(
+researcher = Argus(
     query="Comprehensive analysis of quantum computing",
     report_type="deep",  # Triggers recursive tree-like exploration
 )

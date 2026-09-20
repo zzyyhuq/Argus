@@ -21,7 +21,7 @@
 
 ### Step 1: Add Configuration
 
-**File:** `gpt_researcher/config/variables/default.py`
+**File:** `argus/config/variables/default.py`
 
 ```python
 DEFAULT_CONFIG: BaseConfig = {
@@ -31,7 +31,7 @@ DEFAULT_CONFIG: BaseConfig = {
 }
 ```
 
-**File:** `gpt_researcher/config/variables/base.py`
+**File:** `argus/config/variables/base.py`
 
 ```python
 class BaseConfig(TypedDict):
@@ -42,7 +42,7 @@ class BaseConfig(TypedDict):
 
 ### Step 2: Create Provider
 
-**File:** `gpt_researcher/llm_provider/my_feature/my_provider.py`
+**File:** `argus/llm_provider/my_feature/my_provider.py`
 
 ```python
 class MyFeatureProvider:
@@ -58,11 +58,11 @@ class MyFeatureProvider:
         pass
 ```
 
-Export in `gpt_researcher/llm_provider/__init__.py`.
+Export in `argus/llm_provider/__init__.py`.
 
 ### Step 3: Create Skill
 
-**File:** `gpt_researcher/skills/my_feature.py`
+**File:** `argus/skills/my_feature.py`
 
 ```python
 class MyFeatureSkill:
@@ -85,16 +85,16 @@ class MyFeatureSkill:
         return results
 ```
 
-Export in `gpt_researcher/skills/__init__.py`.
+Export in `argus/skills/__init__.py`.
 
 ### Step 4: Integrate into Agent
 
-**File:** `gpt_researcher/agent.py`
+**File:** `argus/agent.py`
 
 ```python
 def __init__(self, ...):
     if self.cfg.my_feature_enabled:
-        from gpt_researcher.skills import MyFeatureSkill
+        from argus.skills import MyFeatureSkill
         self.my_feature = MyFeatureSkill(self)
     else:
         self.my_feature = None
@@ -108,7 +108,7 @@ async def conduct_research(self, ...):
 
 ### Step 5: Update Prompts
 
-**File:** `gpt_researcher/prompts.py`
+**File:** `argus/prompts.py`
 
 ```python
 @staticmethod
@@ -122,17 +122,20 @@ Already handled via `stream_output()` in skill.
 
 ### Step 7: Frontend (if needed)
 
-**File:** `frontend/nextjs/hooks/useWebSocket.ts`
+**File:** `frontend/scripts.js` (the `socket.onmessage` handler)
 
-```typescript
+```javascript
 if (data.content === 'my_feature_start') {
     setStatus('processing');
 }
 ```
 
+Note: if the new step emits user-visible English text via `stream_output`, add a
+rule to `BACKEND_MESSAGE_RULES` in `frontend/scripts.js` so it renders in Chinese.
+
 ### Step 8: Documentation
 
-Create `docs/docs/gpt-researcher/gptr/my_feature.md`.
+Create `docs/docs/argus/gptr/my_feature.md`.
 
 ---
 
@@ -142,7 +145,7 @@ This section shows the **actual implementation** of the Image Generation feature
 
 ### 1. Configuration Added
 
-**File:** `gpt_researcher/config/variables/default.py`
+**File:** `argus/config/variables/default.py`
 
 ```python
 DEFAULT_CONFIG: BaseConfig = {
@@ -156,7 +159,7 @@ DEFAULT_CONFIG: BaseConfig = {
 
 ### 2. Provider Created
 
-**File:** `gpt_researcher/llm_provider/image/image_generator.py`
+**File:** `argus/llm_provider/image/image_generator.py`
 
 ```python
 class ImageGeneratorProvider:
@@ -198,7 +201,7 @@ class ImageGeneratorProvider:
 
 ### 3. Skill Created
 
-**File:** `gpt_researcher/skills/image_generator.py`
+**File:** `argus/skills/image_generator.py`
 
 ```python
 class ImageGenerator:
@@ -256,16 +259,16 @@ class ImageGenerator:
 
 ### 4. Agent Integration
 
-**File:** `gpt_researcher/agent.py`
+**File:** `argus/agent.py`
 
 ```python
-class GPTResearcher:
+class Argus:
     def __init__(self, ...):
         # ... existing init ...
         
         # Initialize image generator if enabled
         if self.cfg.image_generation_enabled:
-            from gpt_researcher.skills import ImageGenerator
+            from argus.skills import ImageGenerator
             self.image_generator = ImageGenerator(self)
         else:
             self.image_generator = None
@@ -299,7 +302,7 @@ class GPTResearcher:
 
 ### 5. Prompt Updated
 
-**File:** `gpt_researcher/prompts.py`
+**File:** `argus/prompts.py`
 
 ```python
 @staticmethod
@@ -327,12 +330,12 @@ AVAILABLE IMAGES - Embed where relevant using ![Title](URL):
 ```python
 # tests/test_my_feature.py
 import pytest
-from gpt_researcher import GPTResearcher
+from argus import Argus
 
 @pytest.mark.asyncio
 async def test_my_feature_disabled():
     """Test that feature is skipped when disabled."""
-    researcher = GPTResearcher(query="test")
+    researcher = Argus(query="test")
     # MY_FEATURE_ENABLED defaults to False
     assert researcher.my_feature is None
 
@@ -342,7 +345,7 @@ async def test_my_feature_enabled(monkeypatch):
     monkeypatch.setenv("MY_FEATURE_ENABLED", "true")
     monkeypatch.setenv("MY_API_KEY", "test-key")
     
-    researcher = GPTResearcher(query="test")
+    researcher = Argus(query="test")
     assert researcher.my_feature is not None
     assert researcher.my_feature.is_enabled()
 ```
@@ -357,5 +360,5 @@ python -m pytest tests/
 python -m pytest tests/test_my_feature.py -v
 
 # With coverage
-python -m pytest tests/ --cov=gpt_researcher
+python -m pytest tests/ --cov=argus
 ```

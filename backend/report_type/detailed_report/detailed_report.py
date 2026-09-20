@@ -4,7 +4,7 @@ import time
 from typing import List, Dict, Set, Optional, Any
 from fastapi import WebSocket
 
-from gpt_researcher import GPTResearcher
+from argus import Argus
 
 
 class DetailedReport:
@@ -41,7 +41,7 @@ class DetailedReport:
         self.complement_source_urls = complement_source_urls
         self.max_search_results = max_search_results
         # Kept on self rather than only handed to the first researcher: every
-        # subtopic spins up its own GPTResearcher (see _get_subtopic_report),
+        # subtopic spins up its own Argus (see _get_subtopic_report),
         # and those must bill the same visitor key.
         self.api_keys = api_keys
 
@@ -49,7 +49,7 @@ class DetailedReport:
         self.research_id = self._generate_research_id(query)
         
         # Initialize researcher with optional MCP parameters
-        gpt_researcher_params = {
+        argus_params = {
             "query": self.query,
             "query_domains": self.query_domains,
             "report_type": "research_report",
@@ -65,19 +65,19 @@ class DetailedReport:
 
         # Add MCP parameters if provided
         if mcp_configs is not None:
-            gpt_researcher_params["mcp_configs"] = mcp_configs
+            argus_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
-            gpt_researcher_params["mcp_strategy"] = mcp_strategy
+            argus_params["mcp_strategy"] = mcp_strategy
 
         # Visitor-supplied credentials, scoped to this request
         if api_keys:
-            gpt_researcher_params["api_keys"] = api_keys
+            argus_params["api_keys"] = api_keys
 
-        self.gpt_researcher = GPTResearcher(**gpt_researcher_params)
+        self.argus = Argus(**argus_params)
 
         # Override max_search_results_per_query if provided by user
         if max_search_results is not None:
-            self.gpt_researcher.cfg.max_search_results_per_query = int(max_search_results)
+            self.argus.cfg.max_search_results_per_query = int(max_search_results)
         self.existing_headers: List[Dict] = []
         self.global_context: List[str] = []
         self.global_written_sections: List[str] = []
@@ -93,19 +93,19 @@ class DetailedReport:
     async def run(self) -> str:
         await self._initial_research()
         subtopics = await self._get_all_subtopics()
-        report_introduction = await self.gpt_researcher.write_introduction()
+        report_introduction = await self.argus.write_introduction()
         _, report_body = await self._generate_subtopic_reports(subtopics)
-        self.gpt_researcher.visited_urls.update(self.global_urls)
+        self.argus.visited_urls.update(self.global_urls)
         report = await self._construct_detailed_report(report_introduction, report_body)
         return report
 
     async def _initial_research(self) -> None:
-        await self.gpt_researcher.conduct_research()
-        self.global_context = self.gpt_researcher.context
-        self.global_urls = self.gpt_researcher.visited_urls
+        await self.argus.conduct_research()
+        self.global_context = self.argus.context
+        self.global_urls = self.argus.visited_urls
 
     async def _get_all_subtopics(self) -> List[Dict]:
-        subtopics_data = await self.gpt_researcher.get_subtopics()
+        subtopics_data = await self.argus.get_subtopics()
 
         all_subtopics = []
         if subtopics_data and subtopics_data.subtopics:
@@ -146,7 +146,7 @@ class DetailedReport:
 
     async def _get_subtopic_report(self, subtopic: Dict) -> Dict[str, str]:
         current_subtopic_task = subtopic.get("task")
-        subtopic_assistant = GPTResearcher(
+        subtopic_assistant = Argus(
             query=current_subtopic_task,
             query_domains=self.query_domains,
             report_type="subtopic_report",
@@ -156,14 +156,14 @@ class DetailedReport:
             parent_query=self.query,
             subtopics=self.subtopics,
             visited_urls=self.global_urls,
-            agent=self.gpt_researcher.agent,
-            role=self.gpt_researcher.role,
+            agent=self.argus.agent,
+            role=self.argus.role,
             tone=self.tone,
             complement_source_urls=self.complement_source_urls,
             source_urls=self.source_urls,
             # Propagate MCP configuration so follow-up researchers can use MCP
-            mcp_configs=self.gpt_researcher.mcp_configs,
-            mcp_strategy=self.gpt_researcher.mcp_strategy,
+            mcp_configs=self.argus.mcp_configs,
+            mcp_strategy=self.argus.mcp_strategy,
             # Same visitor credentials -- without this the subtopic researcher
             # would silently fall back to the server's key
             api_keys=self.api_keys,
@@ -181,7 +181,7 @@ class DetailedReport:
         if not isinstance(draft_section_titles, str):
             draft_section_titles = str(draft_section_titles)
 
-        parse_draft_section_titles = self.gpt_researcher.extract_headers(draft_section_titles)
+        parse_draft_section_titles = self.argus.extract_headers(draft_section_titles)
         parse_draft_section_titles_text = [header.get(
             "text", "") for header in parse_draft_section_titles]
 
@@ -195,22 +195,22 @@ class DetailedReport:
             relevant_written_contents=relevant_contents,
         )
 
-        self.global_written_sections.extend(self.gpt_researcher.extract_sections(subtopic_report))
+        self.global_written_sections.extend(self.argus.extract_sections(subtopic_report))
         self.global_context = list(set(self._hashable_context(subtopic_assistant.context)))
         self.global_urls.update(subtopic_assistant.visited_urls)
 
         self.existing_headers.append({
             "subtopic task": current_subtopic_task,
-            "headers": self.gpt_researcher.extract_headers(subtopic_report),
+            "headers": self.argus.extract_headers(subtopic_report),
         })
 
         return {"topic": subtopic, "report": subtopic_report}
 
     async def _construct_detailed_report(self, introduction: str, report_body: str) -> str:
-        toc = self.gpt_researcher.table_of_contents(report_body)
-        conclusion = await self.gpt_researcher.write_report_conclusion(report_body)
-        conclusion_with_references = self.gpt_researcher.add_references(
-            conclusion, self.gpt_researcher.visited_urls)
+        toc = self.argus.table_of_contents(report_body)
+        conclusion = await self.argus.write_report_conclusion(report_body)
+        conclusion_with_references = self.argus.add_references(
+            conclusion, self.argus.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         
         # Note: Images are now pre-generated during conduct_research() and embedded during write_report()
