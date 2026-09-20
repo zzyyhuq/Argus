@@ -113,7 +113,7 @@ cli.add_argument(
     "--report_source",
     type=str,
     help="The source of information for the report.",
-    choices=["web", "local", "hybrid", "azure", "langchain_documents",
+    choices=["web", "local", "hybrid", "langchain_documents",
              "langchain_vectorstore", "static"],
     default="web"
 )

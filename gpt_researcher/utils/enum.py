@@ -36,7 +36,6 @@ class ReportSource(Enum):
     Attributes:
         Web: Search and scrape content from the web.
         Local: Use local documents and files.
-        Azure: Use Azure blob storage documents.
         LangChainDocuments: Use LangChain document objects.
         LangChainVectorStore: Use LangChain vector store for retrieval.
         Static: Use pre-defined static content.
@@ -44,7 +43,6 @@ class ReportSource(Enum):
     """
     Web = "web"
     Local = "local"
-    Azure = "azure"
     LangChainDocuments = "langchain_documents"
     LangChainVectorStore = "langchain_vectorstore"
     Static = "static"

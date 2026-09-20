@@ -1,2 +1,17 @@
 .git
-output/
+.claude
+.github
+.venv
+__pycache__
+*.pyc
+
+# 运行时产物：报告与日志由容器自己生成，不该被打进镜像
+outputs/
+logs/
+data/
+
+# 本地配置与密钥
+.env
+
+# 与运行无关
+docs/

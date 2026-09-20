@@ -185,16 +185,6 @@ class ResearchConductor:
                 self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains),
             )
             research_data = self.researcher.prompt_family.join_local_web_documents(docs_context, web_context)
-        elif self.researcher.report_source == ReportSource.Azure.value:
-            from ..document.azure_document_loader import AzureDocumentLoader
-            azure_loader = AzureDocumentLoader(
-                container_name=os.getenv("AZURE_CONTAINER_NAME"),
-                connection_string=os.getenv("AZURE_CONNECTION_STRING")
-            )
-            azure_files = await azure_loader.load()
-            document_data = await DocumentLoader(azure_files).load()  # Reuse existing loader
-            research_data = await self._get_context_by_web_search(self.researcher.query, document_data)
-            
         elif self.researcher.report_source == ReportSource.LangChainDocuments.value:
             langchain_documents_data = await LangChainDocumentLoader(
                 self.researcher.documents
