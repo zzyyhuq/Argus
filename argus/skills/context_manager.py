@@ -1,7 +1,6 @@
-"""Context manager skill for Argus.
+"""Argus 的上下文管理技能。
 
-This module provides the ContextManager class that handles context
-retrieval, compression, and similarity matching for research queries.
+本模块提供 ContextManager 类，负责研究查询的上下文检索、压缩与相似度匹配。
 """
 
 import asyncio
@@ -16,33 +15,32 @@ from ..context.compression import (
 
 
 class ContextManager:
-    """Manages context retrieval and compression for research.
+    """负责研究过程中的上下文检索与压缩。
 
-    This class handles finding similar content based on queries,
-    managing context from various sources, and compressing content
-    for efficient processing.
+    本类按查询查找相似内容、管理来自不同来源的上下文，
+    并对内容进行压缩以提升处理效率。
 
-    Attributes:
-        researcher: The parent Argus instance.
+    属性：
+        researcher: 持有该管理器的父级 Argus 实例。
     """
 
     def __init__(self, researcher):
-        """Initialize the ContextManager.
+        """初始化 ContextManager。
 
-        Args:
-            researcher: The Argus instance that owns this manager.
+        参数：
+            researcher: 持有该管理器的 Argus 实例。
         """
         self.researcher = researcher
 
     async def get_similar_content_by_query(self, query: str, pages: list) -> str:
-        """Get similar content from pages based on the query.
+        """按查询从页面中取出相似内容。
 
-        Args:
-            query: The search query to find similar content for.
-            pages: List of page content to search through.
+        参数：
+            query: 用于查找相似内容的搜索查询。
+            pages: 待检索的页面内容列表。
 
-        Returns:
-            Compressed context string of relevant content.
+        返回：
+            压缩后的相关内容上下文字符串。
         """
         if self.researcher.verbose:
             await stream_output(
@@ -64,14 +62,14 @@ class ContextManager:
         )
 
     async def get_similar_content_by_query_with_vectorstore(self, query: str, filter: dict | None) -> str:
-        """Get similar content from vectorstore based on the query.
+        """按查询从 vectorstore 中取出相似内容。
 
-        Args:
-            query: The search query to find similar content for.
-            filter: Optional filter dictionary for vectorstore queries.
+        参数：
+            query: 用于查找相似内容的搜索查询。
+            filter: 可选的 vectorstore 查询过滤条件字典。
 
-        Returns:
-            Compressed context string of relevant content from vectorstore.
+        返回：
+            来自 vectorstore 的压缩相关上下文字符串。
         """
         if self.researcher.verbose:
             await stream_output(
@@ -93,19 +91,18 @@ class ContextManager:
         written_contents: List[Dict],
         max_results: int = 10
     ) -> List[str]:
-        """Get similar written contents based on draft section titles.
+        """根据草稿章节标题取出相似的已写内容。
 
-        Searches for relevant previously written content that matches
-        the current subtopic and draft section titles.
+        查找与当前子主题及草稿章节标题相匹配的、此前已写好的相关内容。
 
-        Args:
-            current_subtopic: The current subtopic being written.
-            draft_section_titles: List of draft section title strings.
-            written_contents: List of previously written content dictionaries.
-            max_results: Maximum number of results to return.
+        参数：
+            current_subtopic: 当前正在撰写的子主题。
+            draft_section_titles: 草稿章节标题字符串列表。
+            written_contents: 此前已写内容的字典列表。
+            max_results: 最多返回的结果数量。
 
-        Returns:
-            List of relevant written content strings.
+        返回：
+            相关已写内容的字符串列表。
         """
         all_queries = [current_subtopic] + draft_section_titles
 
@@ -125,16 +122,16 @@ class ContextManager:
         similarity_threshold: float = 0.5,
         max_results: int = 10
     ) -> List[str]:
-        """Get similar written contents for a single query.
+        """针对单个查询取出相似的已写内容。
 
-        Args:
-            query: The query to find similar content for.
-            written_contents: List of written content dictionaries.
-            similarity_threshold: Minimum similarity score threshold.
-            max_results: Maximum number of results to return.
+        参数：
+            query: 用于查找相似内容的查询。
+            written_contents: 已写内容的字典列表。
+            similarity_threshold: 相似度得分的最低阈值。
+            max_results: 最多返回的结果数量。
 
-        Returns:
-            List of similar written content strings.
+        返回：
+            相似已写内容的字符串列表。
         """
         if self.researcher.verbose:
             await stream_output(

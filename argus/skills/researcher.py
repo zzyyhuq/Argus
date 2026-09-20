@@ -1,8 +1,7 @@
-"""Research conductor skill for Argus.
+"""Argus 的研究编排技能。
 
-This module provides the ResearchConductor class that manages and
-coordinates the research process including query planning, web searching,
-and context gathering.
+本模块提供 ResearchConductor 类，管理与编排整个研究流程，
+包括查询规划、网络搜索与上下文收集。
 """
 
 import asyncio
@@ -20,40 +19,39 @@ from ..utils.logging_config import get_json_handler
 
 
 class ResearchConductor:
-    """Manages and coordinates the research process.
+    """管理与编排研究流程。
 
-    This class handles the main research workflow including planning
-    research queries, conducting web searches, managing MCP retrievers,
-    and gathering context from various sources.
+    本类承接主要的研究工作流：规划研究查询、执行网络搜索、
+    管理 MCP retriever，以及从各类来源收集上下文。
 
-    Attributes:
-        researcher: The parent Argus instance.
-        logger: Logger for research events.
-        json_handler: Handler for JSON logging.
+    属性：
+        researcher: 持有该编排器的父级 Argus 实例。
+        logger: 研究事件所用的 logger。
+        json_handler: JSON 日志的 handler。
     """
 
     def __init__(self, researcher):
-        """Initialize the ResearchConductor.
+        """初始化 ResearchConductor。
 
-        Args:
-            researcher: The Argus instance that owns this conductor.
+        参数：
+            researcher: 持有该编排器的 Argus 实例。
         """
         self.researcher = researcher
         self.logger = logging.getLogger('research')
         self.json_handler = get_json_handler()
-        # Add cache for MCP results to avoid redundant calls
+        # 缓存 MCP 结果，避免重复调用
         self._mcp_results_cache = None
-        # Guards cache population when research passes run concurrently
+        # 研究流程并发执行时，用它保证缓存只被填充一次
         self._mcp_cache_lock = asyncio.Lock()
-        # Track MCP query count for balanced mode
+        # 统计 MCP 查询次数，供 balanced 模式使用
         self._mcp_query_count = 0
 
     async def plan_research(self, query, query_domains=None):
-        """Gets the sub-queries from the query
-        Args:
-            query: original query
-        Returns:
-            List of queries
+        """从查询里拆出子查询
+        参数：
+            query: 原始查询
+        返回：
+            查询列表
         """
         await stream_output(
             "logs",
@@ -79,7 +77,7 @@ class ResearchConductor:
         )
 
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
-        # Remove duplicate logging - this will be logged once in conduct_research instead
+        # 不再重复打日志 —— 该信息统一在 conduct_research 中记录一次
 
         outline = await plan_research_outline(
             query=query,
@@ -89,27 +87,26 @@ class ResearchConductor:
             parent_query=self.researcher.parent_query,
             report_type=self.researcher.report_type,
             cost_callback=self.researcher.add_costs,
-            retriever_names=retriever_names,  # Pass retriever names for MCP optimization
+            retriever_names=retriever_names,  # 传入 retriever 名称，用于 MCP 优化
             **self.researcher.kwargs
         )
         self.logger.info(f"Research outline planned: {outline}")
         return outline
 
     async def conduct_research(self):
-        """Runs the Argus to conduct research"""
+        """驱动 Argus 执行研究"""
         if self.json_handler:
             self.json_handler.update_content("query", self.researcher.query)
         
         self.logger.info(f"Starting research for query: {self.researcher.query}")
         
-        # Log active retrievers once at the start of research
+        # 在研究开始时记录一次当前生效的 retriever
         retriever_names = [r.__name__ for r in self.researcher.retrievers]
         self.logger.info(f"Active retrievers: {retriever_names}")
-        
-        # Note: visited_urls is deliberately NOT cleared here. It may be
-        # shared with a parent researcher (e.g. detailed reports pass their
-        # accumulated URLs into each subtopic researcher) so that already
-        # scraped URLs are not fetched again.
+
+        # 注意：这里刻意不清空 visited_urls。它可能与父级研究器共享
+        # （例如详细报告会把已累积的 URL 传给每个子主题研究器），
+        # 以免已经抓取过的 URL 被重复抓取。
         research_data = []
 
         if self.researcher.verbose:
@@ -126,7 +123,7 @@ class ResearchConductor:
                 self.researcher.websocket
             )
 
-        # Choose agent and role if not already defined
+        # 尚未定义时，才选择 agent 与角色
         if not (self.researcher.agent and self.researcher.role):
             self.researcher.agent, self.researcher.role = await choose_agent(
                 query=self.researcher.query,
@@ -137,17 +134,17 @@ class ResearchConductor:
                 prompt_family=self.researcher.prompt_family
             )
                 
-        # Check if MCP retrievers are configured
+        # 检查是否配置了 MCP retriever
         has_mcp_retriever = any("mcpretriever" in r.__name__.lower() for r in self.researcher.retrievers)
         if has_mcp_retriever:
             self.logger.info("MCP retrievers configured and will be used with standard research flow")
 
-        # Conduct research based on the source type
+        # 按来源类型分别开展研究
         if self.researcher.source_urls:
             self.logger.info("Using provided source URLs")
             research_data = await self._get_context_by_urls(self.researcher.source_urls)
-            # `research_data and len(research_data) == 0` can never be true --
-            # a truthy value is never empty -- so this notification never fired.
+            # `research_data and len(research_data) == 0` 永远不可能为真 ——
+            # 真值不可能为空 —— 所以这条提示以前从未触发过。
             if not research_data and self.researcher.verbose:
                 await stream_output(
                     "logs",
@@ -170,7 +167,7 @@ class ResearchConductor:
                 self.researcher.vector_store.load(document_data)
 
             research_data = await self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains)
-        # Hybrid search including both local documents and web sources
+        # 混合检索：同时使用本地文档与网络来源
         elif self.researcher.report_source == ReportSource.Hybrid.value:
             if self.researcher.document_urls:
                 document_data = await OnlineDocumentLoader(self.researcher.document_urls).load()
@@ -178,8 +175,8 @@ class ResearchConductor:
                 document_data = await DocumentLoader(self.researcher.cfg.doc_path).load()
             if self.researcher.vector_store:
                 self.researcher.vector_store.load(document_data)
-            # The local-docs pass and the web pass are independent, so run
-            # them concurrently; visited_urls still dedupes across both.
+            # 本地文档与网络这两遍检索彼此独立，因此并发执行；
+            # visited_urls 仍会在两者之间完成去重。
             docs_context, web_context = await asyncio.gather(
                 self._get_context_by_web_search(self.researcher.query, document_data, self.researcher.query_domains),
                 self._get_context_by_web_search(self.researcher.query, [], self.researcher.query_domains),
@@ -197,14 +194,14 @@ class ResearchConductor:
         elif self.researcher.report_source == ReportSource.LangChainVectorStore.value:
             research_data = await self._get_context_by_vectorstore(self.researcher.query, self.researcher.vector_store_filter)
 
-        # Rank and curate the sources
+        # 对来源进行排序与筛选
         self.researcher.context = research_data
         if self.researcher.cfg.curate_sources:
             self.logger.info("Curating sources")
             curated = await self.researcher.source_curator.curate_sources(research_data)
-            # curate_sources() returns List[dict] with Title/Content/Source keys.
-            # Normalize to str so downstream code that expects researcher.context
-            # to be a string (e.g. "\n".join, .split(), len()) doesn't crash.
+            # curate_sources() 返回带 Title/Content/Source 键的 List[dict]。
+            # 这里统一转成 str，避免下游那些认定 researcher.context 是字符串的代码
+            # （如 "\n".join、.split()、len()）报错。
             if isinstance(curated, list):
                 self.researcher.context = "\n\n".join(
                     "Title: {title}\nContent: {content}\nSource: {source}".format(
@@ -232,7 +229,7 @@ class ResearchConductor:
         return self.researcher.context
 
     async def _get_context_by_urls(self, urls):
-        """Scrapes and compresses the context from the given urls"""
+        """抓取并压缩给定 url 的上下文"""
         self.logger.info(f"Getting context from URLs: {urls}")
         
         new_search_urls = await self._get_new_urls(urls)
@@ -249,19 +246,19 @@ class ResearchConductor:
         )
         return context
 
-    # Add logging to other methods similarly...
+    # 其余方法可照此方式补充日志……
 
     async def _get_context_by_vectorstore(self, query, filter: dict | None = None):
         """
-        Generates the context for the research task by searching the vectorstore
-        Returns:
-            context: List of context
+        通过检索 vectorstore 生成研究任务所需的上下文
+        返回：
+            context: 上下文列表
         """
         self.logger.info(f"Starting vectorstore search for query: {query}")
         context = []
-        # Generate Sub-Queries including original query
+        # 生成子查询，并把原始查询一并纳入
         sub_queries = await self.plan_research(query)
-        # If this is not part of a sub researcher, add original query to research for better results
+        # 若不是子研究器的一部分，则把原始查询也加进来以获得更好的结果
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
@@ -275,7 +272,7 @@ class ResearchConductor:
                 sub_queries,
             )
 
-        # Using asyncio.gather to process the sub_queries asynchronously
+        # 用 asyncio.gather 并发处理这些子查询
         context = await asyncio.gather(
             *[
                 self._process_sub_query_with_vectorstore(sub_query, filter)
@@ -286,9 +283,9 @@ class ResearchConductor:
 
     async def _get_context_by_web_search(self, query, scraped_data: list | None = None, query_domains: list | None = None):
         """
-        Generates the context for the research task by searching the query and scraping the results
-        Returns:
-            context: List of context
+        通过检索查询并抓取结果，生成研究任务所需的上下文
+        返回：
+            context: 上下文列表
         """
         self.logger.info(f"Starting web search for query: {query}")
         
@@ -297,18 +294,18 @@ class ResearchConductor:
         if query_domains is None:
             query_domains = []
 
-        # **CONFIGURABLE MCP OPTIMIZATION: Control MCP strategy**
+        # **可配置的 MCP 优化：控制 MCP 策略**
         mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
-        
-        # Get MCP strategy configuration
+
+        # 读取 MCP 策略配置
         mcp_strategy = self._get_mcp_strategy()
-        
-        # Lock so concurrent research passes (e.g. hybrid mode) populate the
-        # MCP cache once instead of racing to run the same MCP research twice.
+
+        # 加锁，使并发的多轮研究（如 hybrid 模式）只填充一次 MCP 缓存，
+        # 而不是抢着把同一份 MCP 研究跑两遍。
         async with self._mcp_cache_lock:
             if mcp_retrievers and self._mcp_results_cache is None:
                 if mcp_strategy == "disabled":
-                    # MCP disabled - skip MCP research entirely
+                    # MCP 已禁用 —— 完全跳过 MCP 研究
                     self.logger.info("MCP disabled by strategy, skipping MCP research")
                     if self.researcher.verbose:
                         await stream_output(
@@ -318,7 +315,7 @@ class ResearchConductor:
                             self.researcher.websocket,
                         )
                 elif mcp_strategy == "fast":
-                    # Fast: Run MCP once with original query
+                    # fast：只用原始查询跑一次 MCP
                     self.logger.info("MCP fast strategy: Running once with original query")
                     if self.researcher.verbose:
                         await stream_output(
@@ -328,12 +325,12 @@ class ResearchConductor:
                             self.researcher.websocket,
                         )
 
-                    # Execute MCP research once with the original query
+                    # 用原始查询执行一次 MCP 研究
                     mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
                     self._mcp_results_cache = mcp_context
                     self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
                 elif mcp_strategy == "deep":
-                    # Deep: Will run MCP for all queries (original behavior) - defer to per-query execution
+                    # deep：所有查询都跑 MCP（原有行为）—— 交给每个查询各自执行
                     self.logger.info("MCP deep strategy: Will run for all queries")
                     if self.researcher.verbose:
                         await stream_output(
@@ -342,19 +339,19 @@ class ResearchConductor:
                             f"🔍 MCP Deep: Will run for each sub-query (thorough mode)",
                             self.researcher.websocket,
                         )
-                    # Don't cache - let each sub-query run MCP individually
+                    # 不缓存 —— 让每个子查询各自跑 MCP
                 else:
-                    # Unknown strategy - default to fast
+                    # 策略无法识别 —— 默认按 fast 处理
                     self.logger.warning(f"Unknown MCP strategy '{mcp_strategy}', defaulting to fast")
                     mcp_context = await self._execute_mcp_research_for_queries([query], mcp_retrievers)
                     self._mcp_results_cache = mcp_context
                     self.logger.info(f"MCP results cached: {len(mcp_context)} total context entries")
 
-        # Generate Sub-Queries including original query
+        # 生成子查询，并把原始查询一并纳入
         sub_queries = await self.plan_research(query, query_domains)
         self.logger.info(f"Generated sub-queries: {sub_queries}")
-        
-        # If this is not part of a sub researcher, add original query to research for better results
+
+        # 若不是子研究器的一部分，则把原始查询也加进来以获得更好的结果
         if self.researcher.report_type != "subtopic_report":
             sub_queries.append(query)
 
@@ -368,7 +365,7 @@ class ResearchConductor:
                 sub_queries,
             )
 
-        # Using asyncio.gather to process the sub_queries asynchronously
+        # 用 asyncio.gather 并发处理这些子查询
         try:
             context = await asyncio.gather(
                 *[
@@ -377,7 +374,7 @@ class ResearchConductor:
                 ]
             )
             self.logger.info(f"Gathered context from {len(context)} sub-queries")
-            # Filter out empty results and join the context
+            # 过滤掉空结果，再把上下文拼接起来
             context = [c for c in context if c]
             if context:
                 combined_context = " ".join(context)
@@ -390,40 +387,40 @@ class ResearchConductor:
 
     def _get_mcp_strategy(self) -> str:
         """
-        Get the MCP strategy configuration.
-        
-        Priority:
-        1. Instance-level setting (self.researcher.mcp_strategy)
-        2. Config file setting (self.researcher.cfg.mcp_strategy) 
-        3. Default value ("fast")
-        
-        Returns:
-            str: MCP strategy
-                "disabled" = Skip MCP entirely
-                "fast" = Run MCP once with original query (default)
-                "deep" = Run MCP for all sub-queries
+        读取 MCP 策略配置。
+
+        优先级：
+        1. 实例级设置（self.researcher.mcp_strategy）
+        2. 配置文件设置（self.researcher.cfg.mcp_strategy）
+        3. 默认值（"fast"）
+
+        返回：
+            str: MCP 策略
+                "disabled" = 完全跳过 MCP
+                "fast" = 只用原始查询跑一次 MCP（默认）
+                "deep" = 所有子查询都跑 MCP
         """
-        # Check instance-level setting first
+        # 先看实例级设置
         if hasattr(self.researcher, 'mcp_strategy') and self.researcher.mcp_strategy is not None:
             return self.researcher.mcp_strategy
-        
-        # Check config setting
+
+        # 再看配置项
         if hasattr(self.researcher.cfg, 'mcp_strategy'):
             return self.researcher.cfg.mcp_strategy
-        
-        # Default to fast mode
+
+        # 默认走 fast 模式
         return "fast"
 
     async def _execute_mcp_research_for_queries(self, queries: list, mcp_retrievers: list) -> list:
         """
-        Execute MCP research for a list of queries.
-        
-        Args:
-            queries: List of queries to research
-            mcp_retrievers: List of MCP retriever classes
-            
-        Returns:
-            list: Combined MCP context entries from all queries
+        对一组查询执行 MCP 研究。
+
+        参数：
+            queries: 待研究的查询列表
+            mcp_retrievers: MCP retriever 类的列表
+
+        返回：
+            list: 汇总所有查询得到的 MCP 上下文条目
         """
         all_mcp_context = []
         
@@ -471,11 +468,10 @@ class ResearchConductor:
         return all_mcp_context
 
     def _tavily_mcp_redundant_with_direct(self, mcp_retrievers, non_mcp_retrievers) -> bool:
-        """True when MCP would only re-query Tavily while direct Tavily is active.
+        """当直连 Tavily 已在生效、MCP 只会重复查询 Tavily 时返回 True。
 
-        The frontend Tavily Web Search MCP preset hits the same API as
-        `TavilySearch` and adds extra LLM tool-selection cost for no new data
-        when both run together (#1875).
+        前端的 Tavily Web Search MCP 预设与 `TavilySearch` 打的是同一套 API，
+        两者同时运行时并不会带来新数据，反而额外增加 LLM 选择工具的开销（#1875）。
         """
         if not mcp_retrievers or not non_mcp_retrievers:
             return False
@@ -487,7 +483,7 @@ class ResearchConductor:
         configs = getattr(self.researcher, "mcp_configs", None) or []
         if not configs:
             return False
-        # If every configured MCP server is a Tavily MCP package, treat as redundant.
+        # 若配置的每个 MCP server 都是 Tavily 的 MCP 包，就视为冗余。
         def _is_tavily_mcp(cfg: dict) -> bool:
             name = str(cfg.get("name", "")).lower()
             args = " ".join(str(a) for a in (cfg.get("args") or [])).lower()
@@ -499,7 +495,7 @@ class ResearchConductor:
 
 
     async def _process_sub_query(self, sub_query: str, scraped_data: list = [], query_domains: list = []):
-        """Takes in a sub query and scrapes urls based on it and gathers context."""
+        """接收一个子查询，据此抓取 url 并汇总上下文。"""
         if self.json_handler:
             self.json_handler.log_event("sub_query", {
                 "query": sub_query,
@@ -515,11 +511,11 @@ class ResearchConductor:
             )
 
         try:
-            # Identify MCP retrievers
+            # 区分出 MCP retriever
             mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" in r.__name__.lower()]
             non_mcp_retrievers = [r for r in self.researcher.retrievers if "mcpretriever" not in r.__name__.lower()]
 
-            # Avoid dual Tavily path (direct retriever + tavily-mcp) under default RETRIEVER=tavily.
+            # 在默认 RETRIEVER=tavily 下，避免走上双份 Tavily 的路径（直连 retriever + tavily-mcp）。
             if self._tavily_mcp_redundant_with_direct(mcp_retrievers, non_mcp_retrievers):
                 self.logger.warning(
                     "Skipping LLM MCP Tavily path because TavilySearch is already configured as a direct retriever; set RETRIEVER without tavily or use non-Tavily MCP servers to keep MCP."
@@ -533,20 +529,20 @@ class ResearchConductor:
                     )
                 mcp_retrievers = []
             
-            # Initialize context components
+            # 初始化上下文的各个组成部分
             mcp_context = []
             web_context = ""
-            
-            # Get MCP strategy configuration
+
+            # 读取 MCP 策略配置
             mcp_strategy = self._get_mcp_strategy()
-            
-            # **CONFIGURABLE MCP PROCESSING**
+
+            # **可配置的 MCP 处理**
             if mcp_retrievers:
                 if mcp_strategy == "disabled":
-                    # MCP disabled - skip entirely
+                    # MCP 已禁用 —— 完全跳过
                     self.logger.info(f"MCP disabled for sub-query: {sub_query}")
                 elif mcp_strategy == "fast" and self._mcp_results_cache is not None:
-                    # Fast: Use cached results
+                    # fast：直接复用缓存结果
                     mcp_context = self._mcp_results_cache.copy()
                     
                     if self.researcher.verbose:
@@ -559,7 +555,7 @@ class ResearchConductor:
                     
                     self.logger.info(f"Reused {len(mcp_context)} cached MCP results for sub-query: {sub_query}")
                 elif mcp_strategy == "deep":
-                    # Deep: Run MCP for every sub-query
+                    # deep：每个子查询都跑一遍 MCP
                     self.logger.info(f"Running deep MCP research for: {sub_query}")
                     if self.researcher.verbose:
                         await stream_output(
@@ -571,7 +567,7 @@ class ResearchConductor:
                     
                     mcp_context = await self._execute_mcp_research_for_queries([sub_query], mcp_retrievers)
                 else:
-                    # Fallback: if no cache and not deep mode, run MCP for this query
+                    # 兜底：没有缓存且不是 deep 模式时，就为当前查询跑一次 MCP
                     self.logger.warning("MCP cache not available, falling back to per-sub-query execution")
                     if self.researcher.verbose:
                         await stream_output(
@@ -583,20 +579,20 @@ class ResearchConductor:
                     
                     mcp_context = await self._execute_mcp_research_for_queries([sub_query], mcp_retrievers)
             
-            # Get web search context using non-MCP retrievers (if no scraped data provided)
+            # 用非 MCP 的 retriever 获取网络搜索上下文（未提供抓取数据时）
             if not scraped_data:
                 scraped_data = await self._scrape_data_by_urls(sub_query, query_domains)
                 self.logger.info(f"Scraped data size: {len(scraped_data)}")
 
-            # Get similar content based on scraped data
+            # 基于抓取到的数据取出相似内容
             if scraped_data:
                 web_context = await self.researcher.context_manager.get_similar_content_by_query(sub_query, scraped_data)
                 self.logger.info(f"Web content found for sub-query: {len(str(web_context)) if web_context else 0} chars")
 
-            # Combine MCP context with web context intelligently
+            # 智能合并 MCP 上下文与网络上下文
             combined_context = self._combine_mcp_and_web_context(mcp_context, web_context, sub_query)
             
-            # Log context combination results
+            # 记录上下文合并结果
             if combined_context:
                 context_length = len(str(combined_context))
                 self.logger.info(f"Combined context for '{sub_query}': {context_length} chars")
@@ -645,28 +641,28 @@ class ResearchConductor:
 
     async def _execute_mcp_research(self, retriever, query):
         """
-        Execute MCP research using the new two-stage approach.
-        
-        Args:
-            retriever: The MCP retriever class
-            query: The search query
-            
-        Returns:
-            list: MCP research results
+        用新的两阶段方式执行 MCP 研究。
+
+        参数：
+            retriever: MCP retriever 类
+            query: 搜索查询
+
+        返回：
+            list: MCP 研究结果
         """
         retriever_name = retriever.__name__
         
         self.logger.info(f"Executing MCP research with {retriever_name} for query: {query}")
         
         try:
-            # Instantiate the MCP retriever with proper parameters
-            # Pass the researcher instance (self.researcher) which contains both cfg and mcp_configs
+            # 用合适的参数实例化 MCP retriever
+            # 传入 researcher 实例（self.researcher），它同时持有 cfg 与 mcp_configs
             retriever_instance = retriever(
                 query=query, 
                 headers=self.researcher.headers,
                 query_domains=self.researcher.query_domains,
                 websocket=self.researcher.websocket,
-                researcher=self.researcher  # Pass the entire researcher instance
+                researcher=self.researcher  # 传入整个 researcher 实例
             )
             
             if self.researcher.verbose:
@@ -677,7 +673,7 @@ class ResearchConductor:
                     self.researcher.websocket,
                 )
             
-            # Execute the two-stage MCP search
+            # 执行两阶段的 MCP 搜索
             results = retriever_instance.search(
                 max_results=self.researcher.cfg.max_search_results_per_query
             )
@@ -719,24 +715,24 @@ class ResearchConductor:
 
     def _combine_mcp_and_web_context(self, mcp_context: list, web_context: str, sub_query: str) -> str:
         """
-        Intelligently combine MCP and web research context.
-        
-        Args:
-            mcp_context: List of MCP context entries
-            web_context: Web research context string  
-            sub_query: The sub-query being processed
-            
-        Returns:
-            str: Combined context string
+        智能合并 MCP 与网络两路研究上下文。
+
+        参数：
+            mcp_context: MCP 上下文条目列表
+            web_context: 网络研究上下文字符串
+            sub_query: 当前正在处理的子查询
+
+        返回：
+            str: 合并后的上下文字符串
         """
         combined_parts = []
-        
-        # Add web context first if available
+
+        # 有网络上下文就先放进去
         if web_context and web_context.strip():
             combined_parts.append(web_context.strip())
             self.logger.debug(f"Added web context: {len(web_context)} chars")
-        
-        # Add MCP context with proper formatting
+
+        # 再按统一格式加入 MCP 上下文
         if mcp_context:
             mcp_formatted = []
             
@@ -746,7 +742,7 @@ class ResearchConductor:
                 title = item.get("title", f"MCP Result {i+1}")
                 
                 if content and content.strip():
-                    # Create a well-formatted context entry
+                    # 构造格式规整的上下文条目
                     if url and url != f"mcp://llm_analysis":
                         citation = f"\n\n*Source: {title} ({url})*"
                     else:
@@ -756,12 +752,12 @@ class ResearchConductor:
                     mcp_formatted.append(formatted_content)
             
             if mcp_formatted:
-                # Join MCP results with clear separation
+                # 用明显的分隔符拼接 MCP 结果
                 mcp_section = "\n\n---\n\n".join(mcp_formatted)
                 combined_parts.append(mcp_section)
                 self.logger.debug(f"Added {len(mcp_context)} MCP context entries")
         
-        # Combine all parts
+        # 把各部分组合起来
         if combined_parts:
             final_context = "\n\n".join(combined_parts)
             self.logger.info(f"Combined context for '{sub_query}': {len(final_context)} total chars")
@@ -771,13 +767,13 @@ class ResearchConductor:
             return ""
 
     async def _process_sub_query_with_vectorstore(self, sub_query: str, filter: dict | None = None):
-        """Takes in a sub query and gathers context from the user provided vector store
+        """接收一个子查询，从用户提供的 vector store 中汇总上下文
 
-        Args:
-            sub_query (str): The sub-query generated from the original query
+        参数：
+            sub_query (str): 由原始查询生成的子查询
 
-        Returns:
-            str: The context gathered from search
+        返回：
+            str: 从检索中汇总到的上下文
         """
         if self.researcher.verbose:
             await stream_output(
@@ -792,9 +788,9 @@ class ResearchConductor:
         return context
 
     async def _get_new_urls(self, url_set_input):
-        """Gets the new urls from the given url set.
-        Args: url_set_input (set[str]): The url set to get the new urls from
-        Returns: list[str]: The new urls from the given url set
+        """从给定的 url 集合中取出尚未处理过的 url。
+        参数：url_set_input (set[str]): 用来取新 url 的 url 集合
+        返回：list[str]: 取自该 url 集合的新 url
         """
 
         new_urls = []
@@ -820,20 +816,19 @@ class ResearchConductor:
         if query_domains is None:
             query_domains = []
 
-        # Iterate through the currently set retrievers
-        # This allows the method to work when retrievers are temporarily modified
+        # 遍历当前生效的 retriever
+        # 这样即使 retriever 被临时改动，本方法依然可用
         for retriever_class in self.researcher.retrievers:
-            # Skip MCP retrievers as they don't provide URLs for scraping
+            # 跳过 MCP retriever，它们不提供可供抓取的 URL
             if "mcpretriever" in retriever_class.__name__.lower():
                 continue
 
             try:
-                # Instantiate the retriever with the sub-query. Pass the
-                # request-scoped headers so retrievers that accept them (e.g.
-                # Tavily) pick up a visitor-supplied key ahead of the env var.
-                # Not every retriever takes a headers argument -- Duckduckgo and
-                # Bocha are (query, query_domains) only -- so check first rather
-                # than making the call sites uniform.
+                # 用子查询实例化 retriever。传入请求级的 headers，
+                # 这样接受该参数的 retriever（如 Tavily）会优先使用访问者提供的 key，
+                # 而不是环境变量里的 key。并非所有 retriever 都接受 headers 参数
+                # —— Duckduckgo 与 Bocha 只接受 (query, query_domains) ——
+                # 所以先做检查，而不是强行统一各调用点。
                 if "headers" in inspect.signature(retriever_class.__init__).parameters:
                     retriever = retriever_class(
                         query, headers=self.researcher.headers, query_domains=query_domains
@@ -841,7 +836,7 @@ class ResearchConductor:
                 else:
                     retriever = retriever_class(query, query_domains=query_domains)
 
-                # Perform the search using the current retriever
+                # 用当前 retriever 执行搜索
                 search_results = await asyncio.to_thread(
                     retriever.search, max_results=self.researcher.cfg.max_search_results_per_query
                 )
@@ -849,14 +844,13 @@ class ResearchConductor:
                 if not search_results:
                     continue
 
-                # Does this retriever return URLs to scrape, or content it
-                # already fetched? Prefer an explicit declaration
-                # (BaseRetriever.requires_scraping); fall back to the legacy
-                # length heuristic when the retriever does not declare, so
-                # third-party and user-defined retrievers are unaffected.
+                # 这个 retriever 返回的是待抓取的 URL，还是它自己已经取回的正文？
+                # 优先采用显式声明（BaseRetriever.requires_scraping）；
+                # 当 retriever 没有声明时，回退到旧的按长度判断的做法，
+                # 这样第三方与用户自定义的 retriever 不受影响。
                 requires_scraping = getattr(retriever, "requires_scraping", None)
 
-                # Separate results that already have content from those needing scraping
+                # 把已有正文的结果与仍需抓取的结果分开
                 for result in search_results:
                     url = result.get("href") or result.get("url")
                     raw_content = result.get("raw_content")
@@ -865,13 +859,12 @@ class ResearchConductor:
                         continue
 
                     if requires_scraping is True:
-                        # Declared: anything alongside the URL is a preview,
-                        # however long, so the page is still fetched. This is
-                        # what stops a long snippet from being mistaken for
-                        # article text and the citation being lost.
+                        # 已声明该行为：随 URL 一起返回的内容一律只是预览，
+                        # 无论多长，页面仍需抓取。这样才不会把长摘要误当成正文，
+                        # 也就不会把引用来源弄丢。
                         new_search_urls.append(url)
                     elif requires_scraping is False:
-                        # Declared: the retriever fetched the content itself.
+                        # 已声明该行为：正文由 retriever 自己取回。
                         if raw_content:
                             prefetched_content.append({
                                 "url": url,
@@ -881,7 +874,7 @@ class ResearchConductor:
                         else:
                             new_search_urls.append(url)
                     elif raw_content and len(raw_content) > 100:
-                        # Undeclared: legacy behaviour, unchanged.
+                        # 未声明该行为：沿用旧逻辑，不做改动。
                         prefetched_content.append({
                             "url": url,
                             "raw_content": raw_content,
@@ -892,7 +885,7 @@ class ResearchConductor:
             except Exception as e:
                 self.logger.error(f"Error searching with {retriever_class.__name__}: {e}")
 
-        # Get unique URLs
+        # 取得去重后的 URL
         new_search_urls = await self._get_new_urls(new_search_urls)
         random.shuffle(new_search_urls)
 
@@ -900,22 +893,22 @@ class ResearchConductor:
 
     async def _scrape_data_by_urls(self, sub_query, query_domains: list | None = None):
         """
-        Runs a sub-query across multiple retrievers and scrapes the resulting URLs.
-        Retrievers that already provide full content (e.g. PubMed Central) have their
-        content passed through directly without re-scraping.
+        在多个 retriever 上执行子查询，并抓取得到的 URL。
+        对已经提供完整正文的 retriever（如 PubMed Central），
+        其内容直接透传，不再重复抓取。
 
-        Args:
-            sub_query (str): The sub-query to search for.
+        参数：
+            sub_query (str): 待检索的子查询。
 
-        Returns:
-            list: A list of scraped content results.
+        返回：
+            list: 抓取结果列表。
         """
         if query_domains is None:
             query_domains = []
 
         new_search_urls, prefetched_content = await self._search_relevant_source_urls(sub_query, query_domains)
 
-        # Log the research process if verbose mode is on
+        # 开启 verbose 模式时记录研究过程
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -924,10 +917,10 @@ class ResearchConductor:
                 self.researcher.websocket,
             )
 
-        # Scrape URLs that need fetching (skip those already provided by retrievers)
+        # 只抓取需要获取正文的 URL（跳过 retriever 已提供内容的那些）
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_search_urls)
 
-        # Merge pre-fetched content from retrievers that already provide full text
+        # 合并那些已提供完整正文的 retriever 预取到的内容
         scraped_content.extend(prefetched_content)
 
         if self.researcher.vector_store:
@@ -937,14 +930,14 @@ class ResearchConductor:
 
     async def _search(self, retriever, query):
         """
-        Perform a search using the specified retriever.
-        
-        Args:
-            retriever: The retriever class to use
-            query: The search query
-            
-        Returns:
-            list: Search results
+        用指定的 retriever 执行一次搜索。
+
+        参数：
+            retriever: 要使用的 retriever 类
+            query: 搜索查询
+
+        返回：
+            list: 搜索结果
         """
         retriever_name = retriever.__name__
         is_mcp_retriever = "mcpretriever" in retriever_name.lower()
@@ -952,7 +945,7 @@ class ResearchConductor:
         self.logger.info(f"Searching with {retriever_name} for query: {query}")
         
         try:
-            # Instantiate the retriever
+            # 实例化 retriever
             retriever_instance = retriever(
                 query=query, 
                 headers=self.researcher.headers,
@@ -961,7 +954,7 @@ class ResearchConductor:
                 researcher=self.researcher if is_mcp_retriever else None
             )
             
-            # Log MCP server configurations if using MCP retriever
+            # 使用 MCP retriever 时记录 MCP server 配置
             if is_mcp_retriever and self.researcher.verbose:
                 await stream_output(
                     "logs",
@@ -970,18 +963,18 @@ class ResearchConductor:
                     self.researcher.websocket,
                 )
             
-            # Perform the search
+            # 执行搜索
             if hasattr(retriever_instance, 'search'):
                 results = retriever_instance.search(
                     max_results=self.researcher.cfg.max_search_results_per_query
                 )
                 
-                # Log result information
+                # 记录结果信息
                 if results:
                     result_count = len(results)
                     self.logger.info(f"Received {result_count} results from {retriever_name}")
                     
-                    # Special logging for MCP retriever
+                    # MCP retriever 的专门日志
                     if is_mcp_retriever:
                         if self.researcher.verbose:
                             await stream_output(
@@ -991,8 +984,8 @@ class ResearchConductor:
                                 self.researcher.websocket,
                             )
                         
-                        # Log result details
-                        for i, result in enumerate(results[:3]):  # Log first 3 results
+                        # 记录结果明细
+                        for i, result in enumerate(results[:3]):  # 只记录前 3 条结果
                             title = result.get("title", "No title")
                             url = result.get("href", "No URL")
                             content_length = len(result.get("body", "")) if result.get("body") else 0
@@ -1027,59 +1020,59 @@ class ResearchConductor:
             
     async def _extract_content(self, results):
         """
-        Extract content from search results using the browser manager.
-        
-        Args:
-            results: Search results
-            
-        Returns:
-            list: Extracted content
+        借助 browser manager 从搜索结果中提取正文。
+
+        参数：
+            results: 搜索结果
+
+        返回：
+            list: 提取到的正文
         """
         self.logger.info(f"Extracting content from {len(results)} search results")
-        
-        # Get the URLs from the search results
+
+        # 从搜索结果里取出 URL
         urls = []
         for result in results:
             if isinstance(result, dict) and "href" in result:
                 urls.append(result["href"])
-        
-        # Skip if no URLs found
+
+        # 没有 URL 就直接跳过
         if not urls:
             return []
-            
-        # Make sure we don't visit URLs we've already visited
+
+        # 确保不去访问已经访问过的 URL
         new_urls = [url for url in urls if url not in self.researcher.visited_urls]
-        
-        # Return empty if no new URLs
+
+        # 没有新 URL 就返回空
         if not new_urls:
             return []
-            
-        # Scrape the content from the URLs
+
+        # 从这些 URL 抓取正文
         scraped_content = await self.researcher.scraper_manager.browse_urls(new_urls)
-        
-        # Add the URLs to visited_urls
+
+        # 把这些 URL 记入 visited_urls
         self.researcher.visited_urls.update(new_urls)
         
         return scraped_content
         
     async def _summarize_content(self, query, content):
         """
-        Summarize the extracted content.
-        
-        Args:
-            query: The search query
-            content: The extracted content
-            
-        Returns:
-            str: Summarized content
+        对提取到的内容做摘要。
+
+        参数：
+            query: 搜索查询
+            content: 提取到的内容
+
+        返回：
+            str: 摘要后的内容
         """
         self.logger.info(f"Summarizing content for query: {query}")
-        
-        # Skip if no content
+
+        # 没有内容就跳过
         if not content:
             return ""
-            
-        # Summarize the content using the context manager
+
+        # 借助 context manager 对内容做摘要
         summary = await self.researcher.context_manager.get_similar_content_by_query(
             query, content
         )
@@ -1088,11 +1081,11 @@ class ResearchConductor:
         
     async def _update_search_progress(self, current, total):
         """
-        Update the search progress.
-        
-        Args:
-            current: Current number of sub-queries processed
-            total: Total number of sub-queries
+        更新检索进度。
+
+        参数：
+            current: 当前已处理的子查询数量
+            total: 子查询总数
         """
         if self.researcher.verbose and self.researcher.websocket:
             progress = int((current / total) * 100)

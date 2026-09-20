@@ -1,22 +1,21 @@
-"""Enumeration types for Argus configuration."""
+"""Argus 配置所用的枚举类型。"""
 
 from enum import Enum
 
 
 class ReportType(Enum):
-    """Enumeration of available report types for research output.
+    """研究输出可用的报告类型枚举。
 
-    Defines the different types of reports that can be generated
-    by the Argus agent.
+    定义 Argus agent 能够生成的各类报告。
 
-    Attributes:
-        ResearchReport: Standard research report with comprehensive analysis.
-        ResourceReport: Report focused on listing and describing resources.
-        OutlineReport: Report providing a structured outline of the topic.
-        CustomReport: User-defined custom report format.
-        DetailedReport: In-depth detailed analysis report.
-        SubtopicReport: Report focused on a specific subtopic.
-        DeepResearch: Deep research mode with extensive analysis.
+    属性：
+        ResearchReport: 标准研究报告，含全面分析。
+        ResourceReport: 侧重罗列并描述相关资源的报告。
+        OutlineReport: 给出主题结构化大纲的报告。
+        CustomReport: 用户自定义的报告格式。
+        DetailedReport: 深入详尽的分析报告。
+        SubtopicReport: 聚焦某个具体子主题的报告。
+        DeepResearch: 深度研究模式，分析更为广泛。
     """
     ResearchReport = "research_report"
     ResourceReport = "resource_report"
@@ -28,18 +27,17 @@ class ReportType(Enum):
 
 
 class ReportSource(Enum):
-    """Enumeration of available data sources for research.
+    """研究可用的数据来源枚举。
 
-    Defines the different sources from which the researcher
-    can gather information for generating reports.
+    定义 researcher 生成报告时可以采集信息的各类来源。
 
-    Attributes:
-        Web: Search and scrape content from the web.
-        Local: Use local documents and files.
-        LangChainDocuments: Use LangChain document objects.
-        LangChainVectorStore: Use LangChain vector store for retrieval.
-        Static: Use pre-defined static content.
-        Hybrid: Combine multiple source types.
+    属性：
+        Web: 从网络上搜索并抓取内容。
+        Local: 使用本地文档与文件。
+        LangChainDocuments: 使用 LangChain 的文档对象。
+        LangChainVectorStore: 使用 LangChain 向量库进行检索。
+        Static: 使用预置的静态内容。
+        Hybrid: 组合多种来源类型。
     """
     Web = "web"
     Local = "local"
@@ -50,13 +48,11 @@ class ReportSource(Enum):
 
 
 class Tone(Enum):
-    """Enumeration of available writing tones for reports.
+    """报告可用的写作语气枚举。
 
-    Defines the different tones that can be used when generating
-    research reports to match the desired style and audience.
+    定义生成研究报告时可选的各类语气，以匹配期望的风格与读者群。
 
-    Each tone value includes a description of the writing style
-    it represents.
+    每个语气取值里都附带了对该写作风格的说明。
     """
     Objective = "Objective (impartial and unbiased presentation of facts and findings)"
     Formal = "Formal (adheres to academic standards with sophisticated language and structure)"
@@ -90,7 +86,7 @@ class Tone(Enum):
 
 
 class PromptFamily(Enum):
-    """Supported prompt families by name"""
+    """按名称列出受支持的 prompt 家族"""
     Default = "default"
     Granite = "granite"
     Granite3 = "granite3"

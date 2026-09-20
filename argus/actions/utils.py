@@ -8,20 +8,21 @@ async def stream_output(
     type, content, output, websocket=None, output_log=True, metadata=None
 ):
     """
-    Streams output to the websocket
-    Args:
+    把输出流式发送到 websocket
+
+    参数：
         type:
         content:
         output:
 
-    Returns:
+    返回：
         None
     """
     if (not websocket or output_log) and type != "images":
         try:
             logger.info(f"{output}")
         except UnicodeEncodeError:
-            # Option 1: Replace problematic characters with a placeholder
+            # 方案 1：把有问题的字符替换成占位符
             logger.error(output.encode(
                 'cp1252', errors='replace').decode('cp1252'))
 
@@ -34,13 +35,13 @@ async def stream_output(
 
 async def safe_send_json(websocket: Any, data: Dict[str, Any]) -> None:
     """
-    Safely send JSON data through a WebSocket connection.
+    通过 WebSocket 连接安全地发送 JSON 数据。
 
-    Args:
-        websocket (WebSocket): The WebSocket connection to send data through.
-        data (Dict[str, Any]): The data to send as JSON.
+    参数：
+        websocket (WebSocket): 用于发送数据的 WebSocket 连接。
+        data (Dict[str, Any]): 要作为 JSON 发送的数据。
 
-    Returns:
+    返回：
         None
     """
     try:
@@ -52,7 +53,7 @@ async def safe_send_json(websocket: Any, data: Dict[str, Any]) -> None:
             f"Error sending JSON through WebSocket: {error_type}: {error_msg}",
             exc_info=True
         )
-        # Check for common WebSocket errors and provide helpful context
+        # 针对常见的 WebSocket 错误补充更有用的上下文
         if "closed" in error_msg.lower() or "connection" in error_msg.lower():
             logger.warning("WebSocket connection appears to be closed. Client may have disconnected.")
         elif "timeout" in error_msg.lower():
@@ -65,15 +66,15 @@ def calculate_cost(
     model: str
 ) -> float:
     """
-    Calculate the cost of API usage based on the number of tokens and the model used.
+    根据 token 数量与所用模型计算 API 的使用花费。
 
-    Args:
-        prompt_tokens (int): Number of tokens in the prompt.
-        completion_tokens (int): Number of tokens in the completion.
-        model (str): The model used for the API call.
+    参数：
+        prompt_tokens (int): prompt 中的 token 数。
+        completion_tokens (int): completion 中的 token 数。
+        model (str): 本次 API 调用使用的模型。
 
-    Returns:
-        float: The calculated cost in USD.
+    返回：
+        float: 计算出的花费，单位为 USD。
     """
     try:
         prompt_tokens = int(prompt_tokens or 0)
@@ -92,7 +93,7 @@ def calculate_cost(
     if not isinstance(model, str) or not model:
         model = ""
 
-    # Define cost per 1k tokens for different models
+    # 各模型每 1k token 的单价
     costs = {
         "gpt-3.5-turbo": 0.002,
         "gpt-4": 0.03,
@@ -100,14 +101,14 @@ def calculate_cost(
         "gpt-4o": 0.00001,
         "gpt-4o-mini": 0.000001,
         "o3-mini": 0.0000005,
-        # Add more models and their costs as needed
+        # 需要时在此补充更多模型及其单价
     }
 
     model = model.lower()
     if model not in costs:
         logger.warning(
             f"Unknown model: {model}. Cost calculation may be inaccurate.")
-        return 0.0001 # Default avg cost if model is unknown
+        return 0.0001 # 模型未知时使用的默认平均花费
 
     cost_per_1k = costs[model]
     total_tokens = prompt_tokens + completion_tokens
@@ -116,13 +117,13 @@ def calculate_cost(
 
 def format_token_count(count: int) -> str:
     """
-    Format the token count with commas for better readability.
+    用千位分隔符格式化 token 数，便于阅读。
 
-    Args:
-        count (int): The token count to format.
+    参数：
+        count (int): 要格式化的 token 数。
 
-    Returns:
-        str: The formatted token count.
+    返回：
+        str: 格式化后的 token 数。
     """
     try:
         value = int(count or 0)
@@ -138,15 +139,15 @@ async def update_cost(
     websocket: Any
 ) -> None:
     """
-    Update and send the cost information through the WebSocket.
+    更新花费信息，并通过 WebSocket 发送出去。
 
-    Args:
-        prompt_tokens (int): Number of tokens in the prompt.
-        completion_tokens (int): Number of tokens in the completion.
-        model (str): The model used for the API call.
-        websocket (WebSocket): The WebSocket connection to send data through.
+    参数：
+        prompt_tokens (int): prompt 中的 token 数。
+        completion_tokens (int): completion 中的 token 数。
+        model (str): 本次 API 调用使用的模型。
+        websocket (WebSocket): 用于发送数据的 WebSocket 连接。
 
-    Returns:
+    返回：
         None
     """
     cost = calculate_cost(prompt_tokens, completion_tokens, model)
@@ -165,13 +166,13 @@ async def update_cost(
 
 def create_cost_callback(websocket: Any) -> Callable:
     """
-    Create a callback function for updating costs.
+    创建一个用于更新花费的回调函数。
 
-    Args:
-        websocket (WebSocket): The WebSocket connection to send data through.
+    参数：
+        websocket (WebSocket): 用于发送数据的 WebSocket 连接。
 
-    Returns:
-        Callable: A callback function that can be used to update costs.
+    返回：
+        Callable: 可用于更新花费的回调函数。
     """
     async def cost_callback(
         prompt_tokens: int,

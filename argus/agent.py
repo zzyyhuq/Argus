@@ -1,7 +1,7 @@
-"""Argus agent module.
+"""Argus agent 模块。
 
-This module provides the main Argus class that orchestrates
-autonomous research and report generation using LLMs and web search.
+本模块提供 Argus 主类，负责用 LLM 与网络搜索编排自主研究
+与报告生成。
 """
 
 import asyncio
@@ -34,19 +34,18 @@ from .vector_store import VectorStoreWrapper
 
 
 class Argus:
-    """Main Argus agent class.
+    """Argus 主 agent 类。
 
-    This class orchestrates the entire research process including
-    web searching, content scraping, context management, and
-    report generation using LLMs.
+    本类编排整个研究流程：网络搜索、内容抓取、上下文管理，
+    以及基于 LLM 的报告生成。
 
-    Attributes:
-        query: The research query or question.
-        report_type: Type of report to generate.
-        cfg: Configuration object.
-        context: Accumulated research context.
-        research_costs: Total accumulated API costs.
-        step_costs: Per-step cost breakdown dictionary.
+    属性：
+        query: 研究查询或问题。
+        report_type: 要生成的报告类型。
+        cfg: 配置对象。
+        context: 累积的研究上下文。
+        research_costs: 累积的 API 总花费。
+        step_costs: 按步骤拆分花费的字典。
     """
 
     def __init__(
@@ -83,46 +82,46 @@ class Argus:
         **kwargs
     ):
         """
-        Initialize a Argus instance.
-        
-        Args:
-            query (str): The research query or question.
-            report_type (str): Type of report to generate.
-            report_format (str): Format of the report (markdown, apa, etc).
-            report_source (str): Source of information for the report (web, local, etc).
-            tone (Tone): Tone of the report.
-            source_urls (list[str], optional): List of specific URLs to use as sources.
-            document_urls (list[str], optional): List of document URLs to use as sources.
-            complement_source_urls (bool): Whether to complement source URLs with web search.
-            query_domains (list[str], optional): List of domains to restrict search to.
-            documents: Document objects for LangChain integration.
-            vector_store: Vector store for document retrieval.
-            vector_store_filter: Filter for vector store queries.
-            config_path: Path to configuration file.
-            websocket: WebSocket for streaming output.
-            agent: Pre-defined agent type.
-            role: Pre-defined agent role.
-            parent_query: Parent query for subtopic reports.
-            subtopics: List of subtopics to research.
-            visited_urls: Set of already visited URLs.
-            verbose (bool): Whether to output verbose logs.
-            context: Pre-loaded research context.
-            headers (dict, optional): Additional headers for requests and configuration.
-            max_subtopics (int): Maximum number of subtopics to generate.
-            log_handler: Handler for logging events.
-            prompt_family: Family of prompts to use.
-            mcp_configs (list[dict], optional): List of MCP server configurations.
-                Each dictionary can contain:
-                - name (str): Name of the MCP server
-                - command (str): Command to start the server
-                - args (list[str]): Arguments for the server command
-                - tool_name (str): Specific tool to use on the MCP server
-                - env (dict): Environment variables for the server
-                - connection_url (str): URL for WebSocket or HTTP connection
-                - connection_type (str): Connection type (stdio, websocket, http)
-                - connection_token (str): Authentication token for remote connections
-                
-                Example:
+        初始化一个 Argus 实例。
+
+        参数：
+            query (str): 研究查询或问题。
+            report_type (str): 要生成的报告类型。
+            report_format (str): 报告格式（markdown、apa 等）。
+            report_source (str): 报告的信息来源（web、local 等）。
+            tone (Tone): 报告的语气。
+            source_urls (list[str], optional): 用作来源的指定 URL 列表。
+            document_urls (list[str], optional): 用作来源的文档 URL 列表。
+            complement_source_urls (bool): 是否用网络搜索补充来源 URL。
+            query_domains (list[str], optional): 限定搜索范围的域名列表。
+            documents: 供 LangChain 集成的文档对象。
+            vector_store: 用于文档检索的向量库。
+            vector_store_filter: 向量库查询的过滤条件。
+            config_path: 配置文件路径。
+            websocket: 用于流式输出的 WebSocket。
+            agent: 预先指定的 agent 类型。
+            role: 预先指定的 agent 角色。
+            parent_query: 子主题报告的父查询。
+            subtopics: 要研究的子主题列表。
+            visited_urls: 已访问 URL 的集合。
+            verbose (bool): 是否输出详细日志。
+            context: 预加载的研究上下文。
+            headers (dict, optional): 请求与配置使用的附加 header。
+            max_subtopics (int): 最多生成多少个子主题。
+            log_handler: 日志事件处理器。
+            prompt_family: 使用的 prompt 家族。
+            mcp_configs (list[dict], optional): MCP 服务器配置列表。
+                每个字典可包含：
+                - name (str): MCP 服务器名称
+                - command (str): 启动服务器的命令
+                - args (list[str]): 服务器命令的参数
+                - tool_name (str): 在 MCP 服务器上使用的具体工具
+                - env (dict): 服务器的环境变量
+                - connection_url (str): WebSocket 或 HTTP 连接地址
+                - connection_type (str): 连接类型（stdio、websocket、http）
+                - connection_token (str): 远程连接用的认证 token
+
+                示例：
                 ```python
                 mcp_configs=[{
                     "command": "python",
@@ -130,14 +129,14 @@ class Argus:
                     "name": "search"
                 }]
                 ```
-            mcp_strategy (str, optional): MCP execution strategy. Options:
-                - "fast" (default): Run MCP once with original query for best performance
-                - "deep": Run MCP for all sub-queries for maximum thoroughness  
-                - "disabled": Skip MCP entirely, use only web retrievers
-            api_keys (dict, optional): Visitor-supplied credentials for this
-                request only. Recognised keys: ``llm`` (injected into
-                ``cfg.llm_kwargs`` as ``api_key``) and ``tavily`` (injected into
-                ``headers`` so the retriever picks it up ahead of the env var).
+            mcp_strategy (str, optional): MCP 执行策略。可选值：
+                - "fast"（默认）：只对原始查询跑一次 MCP，性能最好
+                - "deep": 对所有子查询都跑 MCP，覆盖最全
+                - "disabled": 完全跳过 MCP，只用网络 retriever
+            api_keys (dict, optional): 由访问者提供、仅本次请求有效的凭证。
+                可识别的键：``llm``（以 ``api_key`` 注入
+                ``cfg.llm_kwargs``）与 ``tavily``（注入 ``headers``，
+                让 retriever 在环境变量之前取到它）。
         """
         self.kwargs = kwargs
         self.query = query
@@ -152,7 +151,7 @@ class Argus:
         self.document_urls = document_urls
         self.complement_source_urls = complement_source_urls
         self.query_domains = query_domains or []
-        self.research_sources = []  # The list of scraped sources including title and content
+        self.research_sources = []  # 抓取到的来源列表，含标题与正文
         self.documents = documents
         self.vector_store = VectorStoreWrapper(vector_store) if vector_store else None
         self.vector_store_filter = vector_store_filter
@@ -164,14 +163,13 @@ class Argus:
         self.visited_urls = visited_urls or set()
         self.verbose = verbose
         self.context = context or []
-        # Copied because a visitor key is merged in below; sharing the caller's
-        # dict would risk carrying one request's key into another.
+        # 这里必须拷贝：下面会合并进访问者提供的 key，若直接共享调用方的
+        # dict，就可能把一个请求的 key 带到另一个请求里。
         self.headers = dict(headers) if headers else {}
 
-        # Visitor-supplied credentials, scoped to this request. Config is built
-        # per instance (line above), so writing into cfg.llm_kwargs affects only
-        # this researcher -- the same non-global approach MCP takes. Deliberately
-        # not os.environ, which would leak across concurrent sessions (#1676).
+        # 访问者提供的凭证，作用域限于本次请求。Config 是按实例构造的（见上一行），
+        # 所以写入 cfg.llm_kwargs 只影响当前这个 researcher——与 MCP 采用的
+        # 非全局做法一致。刻意不用 os.environ，否则会在并发会话之间泄漏（#1676）。
         if api_keys:
             if api_keys.get("llm"):
                 self.cfg.llm_kwargs["api_key"] = api_keys["llm"]
@@ -183,22 +181,22 @@ class Argus:
         self._current_step: str = "general"
         self.log_handler = log_handler
         self.prompt_family = get_prompt_family(prompt_family or self.cfg.prompt_family, self.cfg)
-        
-        # Process MCP configurations if provided
+
+        # 若提供了 MCP 配置则处理它们
         self.mcp_configs = mcp_configs
         if mcp_configs:
             self._process_mcp_configs(mcp_configs)
-        
+
         self.retrievers = get_retrievers(self.headers, self.cfg)
         self.memory = Memory(
             self.cfg.embedding_provider, self.cfg.embedding_model, **self.cfg.embedding_kwargs
         )
-        
-        # Set default encoding to utf-8
-        self.encoding = kwargs.get('encoding', 'utf-8')
-        self.kwargs.pop('encoding', None)  # Remove encoding from kwargs to avoid passing it to LLM calls
 
-        # Initialize components
+        # 默认编码设为 utf-8
+        self.encoding = kwargs.get('encoding', 'utf-8')
+        self.kwargs.pop('encoding', None)  # 从 kwargs 中移除 encoding，避免传给 LLM 调用
+
+        # 初始化各个组件
         self.research_conductor: ResearchConductor = ResearchConductor(self)
         self.report_generator: ReportGenerator = ReportGenerator(self)
         self.context_manager: ContextManager = ContextManager(self)
@@ -208,49 +206,49 @@ class Argus:
         if report_type == ReportType.DeepResearch.value:
             self.deep_researcher = DeepResearchSkill(self)
 
-        self.available_images: list = []  # Source images selected for the report
-        self._research_id: str = ""  # Unique ID for this research session
+        self.available_images: list = []  # 为报告挑选出的来源图片
+        self._research_id: str = ""  # 本次研究会话的唯一 ID
 
-        # Handle MCP strategy configuration with backwards compatibility
+        # 解析 MCP 策略配置，同时保持向后兼容
         self.mcp_strategy = self._resolve_mcp_strategy(mcp_strategy, mcp_max_iterations)
-    
+
     def _generate_research_id(self) -> str:
-        """Generate a unique research ID for this session.
-        
-        Returns:
-            A unique string identifier for this research session.
+        """为本次会话生成唯一的研究 ID。
+
+        返回：
+            本次研究会话的唯一字符串标识。
         """
         if not self._research_id:
             import hashlib
             import time
-            # Create unique ID from query + timestamp
+            # 用 query + 时间戳生成唯一 ID
             unique_str = f"{self.query}_{time.time()}"
             self._research_id = f"research_{hashlib.md5(unique_str.encode()).hexdigest()[:12]}"
         return self._research_id
 
     def _resolve_mcp_strategy(self, mcp_strategy: str | None, mcp_max_iterations: int | None) -> str:
         """
-        Resolve MCP strategy from various sources with backwards compatibility.
-        
-        Priority:
-        1. Parameter mcp_strategy (new approach)
-        2. Parameter mcp_max_iterations (backwards compatibility)  
-        3. Config MCP_STRATEGY
-        4. Default "fast"
-        
-        Args:
-            mcp_strategy: New strategy parameter
-            mcp_max_iterations: Legacy parameter for backwards compatibility
-            
-        Returns:
-            str: Resolved strategy ("fast", "deep", or "disabled")
+        从多个来源解析 MCP 策略，并保持向后兼容。
+
+        优先级：
+        1. 参数 mcp_strategy（新方式）
+        2. 参数 mcp_max_iterations（向后兼容）
+        3. 配置项 MCP_STRATEGY
+        4. 默认 "fast"
+
+        参数：
+            mcp_strategy: 新的策略参数
+            mcp_max_iterations: 为向后兼容保留的旧参数
+
+        返回：
+            str: 解析出的策略（"fast"、"deep" 或 "disabled"）
         """
-        # Priority 1: Use mcp_strategy parameter if provided
+        # 优先级 1：若提供了 mcp_strategy 参数则优先使用
         if mcp_strategy is not None:
-            # Support new strategy names
+            # 支持新的策略名
             if mcp_strategy in ["fast", "deep", "disabled"]:
                 return mcp_strategy
-            # Support old strategy names for backwards compatibility
+            # 为向后兼容，同时支持旧的策略名
             elif mcp_strategy == "optimized":
                 import logging
                 logging.getLogger(__name__).warning("mcp_strategy 'optimized' is deprecated, use 'fast' instead")
@@ -263,12 +261,12 @@ class Argus:
                 import logging
                 logging.getLogger(__name__).warning(f"Invalid mcp_strategy '{mcp_strategy}', defaulting to 'fast'")
                 return "fast"
-        
-        # Priority 2: Convert mcp_max_iterations for backwards compatibility
+
+        # 优先级 2：为向后兼容转换 mcp_max_iterations
         if mcp_max_iterations is not None:
             import logging
             logging.getLogger(__name__).warning("mcp_max_iterations is deprecated, use mcp_strategy instead")
-            
+
             if mcp_max_iterations == 0:
                 return "disabled"
             elif mcp_max_iterations == 1:
@@ -276,37 +274,36 @@ class Argus:
             elif mcp_max_iterations == -1:
                 return "deep"
             else:
-                # Treat any other number as fast mode
+                # 其余数值一律按 fast 模式处理
                 return "fast"
-        
-        # Priority 3: Use config setting
+
+        # 优先级 3：使用配置项
         if hasattr(self.cfg, 'mcp_strategy'):
             config_strategy = self.cfg.mcp_strategy
-            # Support new strategy names
+            # 支持新的策略名
             if config_strategy in ["fast", "deep", "disabled"]:
                 return config_strategy
-            # Support old strategy names for backwards compatibility
+            # 为向后兼容，同时支持旧的策略名
             elif config_strategy == "optimized":
                 return "fast"
             elif config_strategy == "comprehensive":
                 return "deep"
-            
-        # Priority 4: Default to fast
+
+        # 优先级 4：默认 fast
         return "fast"
 
     def _process_mcp_configs(self, mcp_configs: list[dict]) -> None:
         """
-        Process MCP configurations from a list of configuration dictionaries.
+        从配置字典列表中处理 MCP 配置。
 
-        Adds the MCP retriever to the active retriever list by modifying
-        self.cfg.retrievers directly.  Deliberately avoids touching os.environ
-        so that concurrent or subsequent requests are not affected by this
-        session's MCP settings (fixes issue #1676 – process-level env pollution).
+        通过直接修改 self.cfg.retrievers，把 MCP retriever 加入当前启用的
+        retriever 列表。刻意不碰 os.environ，这样并发或后续请求都不会被本
+        会话的 MCP 设置影响（修复 issue #1676 —— 进程级环境变量污染）。
 
-        Args:
-            mcp_configs (list[dict]): List of MCP server configuration dictionaries.
+        参数：
+            mcp_configs (list[dict]): MCP 服务器配置字典列表。
         """
-        # Add MCP to retrievers via cfg (not os.environ) to avoid env pollution.
+        # 通过 cfg（而不是 os.environ）把 MCP 加入 retrievers，避免污染环境变量
         if hasattr(self.cfg, 'retrievers') and self.cfg.retrievers:
             current_retrievers = (
                 list(self.cfg.retrievers)
@@ -319,11 +316,11 @@ class Argus:
         else:
             self.cfg.retrievers = ["mcp"]
 
-        # Store the mcp_configs for use by the MCP retriever
+        # 保存 mcp_configs，供 MCP retriever 使用
         self.mcp_configs = mcp_configs
 
     async def _log_event(self, event_type: str, **kwargs):
-        """Helper method to handle logging events"""
+        """辅助方法，用于处理日志事件"""
         if self.log_handler:
             try:
                 if event_type == "tool":
@@ -333,7 +330,7 @@ class Argus:
                 elif event_type == "research":
                     await self.log_handler.on_research_step(kwargs.get('step', ''), kwargs.get('details', {}))
 
-                # Add direct logging as backup
+                # 额外直接写一条日志作为兜底
                 import logging
                 research_logger = logging.getLogger('research')
                 research_logger.info(f"{event_type}: {json.dumps(kwargs, default=str)}")
@@ -343,16 +340,15 @@ class Argus:
                 logging.getLogger('research').error(f"Error in _log_event: {e}", exc_info=True)
 
     async def conduct_research(self, on_progress=None):
-        """Conduct the research process.
+        """执行研究流程。
 
-        This method orchestrates the main research workflow including
-        agent selection, web searching, and context gathering.
+        本方法编排主要的研究工作流：agent 选择、网络搜索与上下文收集。
 
-        Args:
-            on_progress: Optional callback for progress updates during deep research.
+        参数：
+            on_progress: 可选回调，用于深度研究过程中的进度更新。
 
-        Returns:
-            The accumulated research context.
+        返回：
+            累积得到的研究上下文。
         """
         await self._log_event("research", step="start", details={
             "query": self.query,
@@ -361,7 +357,7 @@ class Argus:
             "role": self.role
         })
 
-        # Handle deep research separately
+        # 深度研究单独处理
         if self.report_type == ReportType.DeepResearch.value and self.deep_researcher:
             self._current_step = "deep_research"
             return await self._handle_deep_research(on_progress)
@@ -369,7 +365,7 @@ class Argus:
         if not (self.agent and self.role):
             self._current_step = "agent_selection"
             await self._log_event("action", action="choose_agent")
-            # Filter out encoding parameter as it's not supported by LLM APIs
+            # 过滤掉 encoding 参数，LLM API 不支持它
             # filtered_kwargs = {k: v for k, v in self.kwargs.items() if k != 'encoding'}
             self.agent, self.role = await choose_agent(
                 query=self.query,
@@ -396,19 +392,19 @@ class Argus:
         await self._log_event("research", step="research_completed", details={
             "context_length": len(self.context)
         })
-        
+
         return self.context
 
     async def _handle_deep_research(self, on_progress=None):
-        """Handle deep research execution and logging.
+        """处理深度研究的执行与日志记录。
 
-        Args:
-            on_progress: Optional callback for progress updates.
+        参数：
+            on_progress: 可选回调，用于进度更新。
 
-        Returns:
-            The accumulated research context from deep research.
+        返回：
+            深度研究累积得到的研究上下文。
         """
-        # Log deep research configuration
+        # 记录深度研究配置
         await self._log_event("research", step="deep_research_initialize", details={
             "type": "deep_research",
             "breadth": self.deep_researcher.breadth,
@@ -416,7 +412,7 @@ class Argus:
             "concurrency": self.deep_researcher.concurrency_limit
         })
 
-        # Log deep research start
+        # 记录深度研究开始
         await self._log_event("research", step="deep_research_start", details={
             "query": self.query,
             "breadth": self.deep_researcher.breadth,
@@ -424,27 +420,27 @@ class Argus:
             "concurrency": self.deep_researcher.concurrency_limit
         })
 
-        # Run deep research and get context
+        # 运行深度研究并获取上下文
         self.context = await self.deep_researcher.run(on_progress=on_progress)
 
-        # Get total research costs
+        # 获取研究总花费
         total_costs = self.get_costs()
 
-        # Log deep research completion with costs
+        # 记录深度研究完成，并带上花费
         await self._log_event("research", step="deep_research_complete", details={
             "context_length": len(self.context),
             "visited_urls": len(self.visited_urls),
             "total_costs": total_costs
         })
 
-        # Log final cost update
+        # 记录最终花费更新
         await self._log_event("research", step="cost_update", details={
             "cost": total_costs,
             "total_cost": total_costs,
             "research_type": "deep_research"
         })
 
-        # Return the research context
+        # 返回研究上下文
         return self.context
 
     async def write_report(
@@ -454,16 +450,16 @@ class Argus:
         ext_context=None,
         custom_prompt="",
     ) -> str:
-        """Write the research report.
+        """撰写研究报告。
 
-        Args:
-            existing_headers: List of existing headers to avoid duplication.
-            relevant_written_contents: List of previously written content for context.
-            ext_context: External context to use instead of internal context.
-            custom_prompt: Custom prompt to guide report generation.
+        参数：
+            existing_headers: 已有标题的列表，用于避免重复。
+            relevant_written_contents: 此前已撰写的内容列表，作为上下文。
+            ext_context: 使用外部上下文替代内部上下文。
+            custom_prompt: 引导报告生成的自定义 prompt。
 
-        Returns:
-            The generated report as a string.
+        返回：
+            生成好的报告字符串。
         """
         has_available_images = bool(self.available_images)
         self._current_step = "report_writing"
@@ -473,13 +469,13 @@ class Argus:
             "available_images_count": len(self.available_images),
         })
 
-        # Generate report with available images embedded
+        # 生成报告，并嵌入可用的图片
         report = await self.report_generator.write_report(
             existing_headers=existing_headers,
             relevant_written_contents=relevant_written_contents,
             ext_context=ext_context or self.context,
             custom_prompt=custom_prompt,
-            available_images=self.available_images,  # Pass pre-generated images
+            available_images=self.available_images,  # 传入预生成的图片
         )
 
         await self._log_event("research", step="report_completed", details={
@@ -489,13 +485,13 @@ class Argus:
         return report
 
     async def write_report_conclusion(self, report_body: str) -> str:
-        """Write the conclusion section of the report.
+        """撰写报告的结论部分。
 
-        Args:
-            report_body: The main body of the report to conclude.
+        参数：
+            report_body: 报告正文，用于撰写结论。
 
-        Returns:
-            The generated conclusion text.
+        返回：
+            生成好的结论文本。
         """
         await self._log_event("research", step="writing_conclusion")
         conclusion = await self.report_generator.write_report_conclusion(report_body)
@@ -503,10 +499,10 @@ class Argus:
         return conclusion
 
     async def write_introduction(self) -> str:
-        """Write the introduction section of the report.
+        """撰写报告的引言部分。
 
-        Returns:
-            The generated introduction text.
+        返回：
+            生成好的引言文本。
         """
         await self._log_event("research", step="writing_introduction")
         intro = await self.report_generator.write_introduction()
@@ -520,18 +516,18 @@ class Argus:
         aggregated_summary: bool = False,
         all_retrievers: bool = False,
     ) -> list[Any] | str:
-        """Perform a quick search without full research workflow.
+        """执行快速搜索，不跑完整的研究流程。
 
-        Args:
-            query: The search query.
-            query_domains: Optional list of domains to restrict search to.
-            aggregated_summary: Whether to return an aggregated summary of the search results.
-            all_retrievers: If True, query every configured retriever concurrently and
-                merge the results (de-duplicated by URL). Defaults to False, which uses
-                only the primary retriever for backward compatibility.
+        参数：
+            query: 搜索查询。
+            query_domains: 可选的域名列表，用于限定搜索范围。
+            aggregated_summary: 是否返回搜索结果的聚合摘要。
+            all_retrievers: 若为 True，则并发查询所有已配置的 retriever，
+                并合并结果（按 URL 去重）。默认 False，即只用主 retriever，
+                以保持向后兼容。
 
-        Returns:
-            List of search results or a synthesized summary string.
+        返回：
+            搜索结果列表，或综合后的摘要字符串。
         """
         if all_retrievers and len(self.retrievers) > 1:
             search_results = await self._search_all_retrievers(query, query_domains)
@@ -543,9 +539,9 @@ class Argus:
         if not aggregated_summary:
             return search_results
 
-        # Format results for summary. Search retrievers return records keyed
-        # by "href" (URL) and "body" (content); fall back to the alternate
-        # keys so callers that pass pre-normalized records still work.
+        # 为生成摘要而整理结果。搜索 retriever 返回的记录以 "href"（URL）与
+        # "body"（正文）为键；这里回退到备用键名，好让传入已归一化记录的
+        # 调用方也能正常工作。
         context = ""
         for i, result in enumerate(search_results, 1):
             title = result.get("title", "")
@@ -569,18 +565,18 @@ class Argus:
     async def _search_all_retrievers(
         self, query: str, query_domains: list[str] = None
     ) -> list[dict[str, Any]]:
-        """Query every configured retriever concurrently and merge the results.
+        """并发查询所有已配置的 retriever，并合并结果。
 
-        Results are de-duplicated by URL (checking both ``url`` and ``href`` keys,
-        which different retrievers use). Retrievers that raise are skipped so a
-        single failing provider does not abort the whole search.
+        结果按 URL 去重（同时检查 ``url`` 与 ``href`` 两个键，不同 retriever
+        用的键不一样）。抛异常的 retriever 会被跳过，因此单个 provider 失败
+        不会中断整次搜索。
 
-        Args:
-            query: The search query.
-            query_domains: Optional list of domains to restrict search to.
+        参数：
+            query: 搜索查询。
+            query_domains: 可选的域名列表，用于限定搜索范围。
 
-        Returns:
-            A merged, de-duplicated list of search results.
+        返回：
+            合并并去重后的搜索结果列表。
         """
         tasks = [
             get_search_results(query, retriever, query_domains=query_domains, researcher=self)
@@ -603,21 +599,21 @@ class Argus:
         return merged
 
     async def get_subtopics(self):
-        """Generate subtopics for the research query.
+        """为研究查询生成子主题。
 
-        Returns:
-            List of generated subtopics.
+        返回：
+            生成的子主题列表。
         """
         return await self.report_generator.get_subtopics()
 
     async def get_draft_section_titles(self, current_subtopic: str) -> list[str]:
-        """Generate draft section titles for a subtopic.
+        """为某个子主题生成草稿章节标题。
 
-        Args:
-            current_subtopic: The subtopic to generate sections for.
+        参数：
+            current_subtopic: 要为其生成章节的子主题。
 
-        Returns:
-            List of section title strings.
+        返回：
+            章节标题字符串列表。
         """
         return await self.report_generator.get_draft_section_titles(current_subtopic)
 
@@ -628,16 +624,16 @@ class Argus:
         written_contents: list[dict],
         max_results: int = 10
     ) -> list[str]:
-        """Find similar previously written contents based on section titles.
+        """根据章节标题找出相似的、此前已撰写的内容。
 
-        Args:
-            current_subtopic: The current subtopic being written.
-            draft_section_titles: List of draft section titles.
-            written_contents: Previously written content to search through.
-            max_results: Maximum number of results to return.
+        参数：
+            current_subtopic: 当前正在撰写的子主题。
+            draft_section_titles: 草稿章节标题列表。
+            written_contents: 用于检索的此前已撰写的内容。
+            max_results: 最多返回的结果数。
 
-        Returns:
-            List of similar content strings.
+        返回：
+            相似内容字符串列表。
         """
         return await self.context_manager.get_similar_written_contents_by_draft_section_titles(
             current_subtopic,
@@ -646,118 +642,118 @@ class Argus:
             max_results
         )
 
-    # Utility methods
+    # 工具方法
     def get_research_sources(self) -> list[dict[str, Any]]:
-        """Get all research sources collected during research.
+        """获取研究过程中收集到的全部来源。
 
-        Returns:
-            List of source dictionaries containing title, content, and images.
+        返回：
+            来源字典列表，包含标题、正文与图片。
         """
         return self.research_sources
 
     def add_research_sources(self, sources: list[dict[str, Any]]) -> None:
-        """Add sources to the research source collection.
+        """把来源加入研究来源集合。
 
-        Args:
-            sources: List of source dictionaries to add.
+        参数：
+            sources: 要添加的来源字典列表。
         """
         self.research_sources.extend(sources)
 
     def add_references(self, report_markdown: str, visited_urls: set) -> str:
-        """Add reference section to a markdown report.
+        """为 markdown 报告追加参考文献小节。
 
-        Args:
-            report_markdown: The markdown report text.
-            visited_urls: Set of URLs to include as references.
+        参数：
+            report_markdown: markdown 报告文本。
+            visited_urls: 要作为参考文献收录的 URL 集合。
 
-        Returns:
-            The report with references appended.
+        返回：
+            追加了参考文献的报告。
         """
         return add_references(report_markdown, visited_urls)
 
     def extract_headers(self, markdown_text: str) -> list[dict]:
-        """Extract headers from markdown text.
+        """从 markdown 文本中提取标题。
 
-        Args:
-            markdown_text: The markdown text to parse.
+        参数：
+            markdown_text: 要解析的 markdown 文本。
 
-        Returns:
-            List of header dictionaries.
+        返回：
+            标题字典列表。
         """
         return extract_headers(markdown_text)
 
     def extract_sections(self, markdown_text: str) -> list[dict]:
-        """Extract sections from markdown text.
+        """从 markdown 文本中提取章节。
 
-        Args:
-            markdown_text: The markdown text to parse.
+        参数：
+            markdown_text: 要解析的 markdown 文本。
 
-        Returns:
-            List of section dictionaries.
+        返回：
+            章节字典列表。
         """
         return extract_sections(markdown_text)
 
     def table_of_contents(self, markdown_text: str) -> str:
-        """Generate a table of contents for markdown text.
+        """为 markdown 文本生成目录。
 
-        Args:
-            markdown_text: The markdown text to generate TOC for.
+        参数：
+            markdown_text: 要生成目录的 markdown 文本。
 
-        Returns:
-            The table of contents as markdown string.
+        返回：
+            目录，markdown 字符串。
         """
         return table_of_contents(markdown_text)
 
     def get_source_urls(self) -> list:
-        """Get all visited source URLs.
+        """获取所有已访问的来源 URL。
 
-        Returns:
-            List of visited URL strings.
+        返回：
+            已访问 URL 字符串列表。
         """
         return list(self.visited_urls)
 
     def get_research_context(self) -> list:
-        """Get the accumulated research context.
+        """获取累积的研究上下文。
 
-        Returns:
-            List of context items collected during research.
+        返回：
+            研究过程中收集的上下文条目列表。
         """
         return self.context
 
     def get_costs(self) -> float:
-        """Get the total accumulated API costs.
+        """获取累积的 API 总花费。
 
-        Returns:
-            Total cost in USD.
+        返回：
+            总花费，单位为 USD。
         """
         return self.research_costs
 
     def get_step_costs(self) -> dict[str, float]:
-        """Get a breakdown of API costs per research step.
+        """获取按研究步骤拆分的 API 花费。
 
-        Returns:
-            Dictionary mapping step names to their costs in USD.
+        返回：
+            步骤名到花费（USD）的字典。
         """
         return dict(self.step_costs)
 
     def set_verbose(self, verbose: bool) -> None:
-        """Set the verbose output mode.
+        """设置详细输出模式。
 
-        Args:
-            verbose: Whether to enable verbose output.
+        参数：
+            verbose: 是否启用详细输出。
         """
         self.verbose = verbose
 
     def add_costs(self, cost: float) -> None:
-        """Add to the accumulated API costs.
+        """累加 API 花费。
 
-        The cost is attributed to the current step set via ``_current_step``.
+        花费会记到通过 ``_current_step`` 设置的当前步骤上。
 
-        Args:
-            cost: Cost amount to add in USD.
+        参数：
+            cost: 要累加的金额，单位为 USD。
 
-        Raises:
-            ValueError: If cost is not a number.
+        异常：
+            ValueError: cost 不是数字时抛出。
         """
         if not isinstance(cost, (float, int)):
             raise ValueError("Cost must be an integer or float")

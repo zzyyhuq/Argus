@@ -1,39 +1,38 @@
-"""Retriever factory and utilities for Argus.
+"""Argus 的 retriever 工厂与工具。
 
-This module provides functions to instantiate and manage various
-search retriever implementations.
+本模块提供实例化与管理各类搜索 retriever 实现的函数。
 """
 
 
 def get_retriever(retriever: str):
-    """Get a retriever class by name.
+    """按名称获取 retriever 类。
 
-    Args:
-        retriever: The name of the retriever to get (e.g., 'google', 'tavily', 'duckduckgo').
+    参数：
+        retriever: 要获取的 retriever 名称（如 'google'、'tavily'、'duckduckgo'）。
 
-    Returns:
-        The retriever class if found, None otherwise.
+    返回：
+        找到时返回对应的 retriever 类，否则返回 None。
 
-    Supported retrievers:
+    支持的 retriever：
         - google: Google Custom Search
-        - searx: SearX search engine
-        - searchapi: SearchAPI service
-        - serpapi: SerpAPI service
+        - searx: SearX 搜索引擎
+        - searchapi: SearchAPI 服务
+        - serpapi: SerpAPI 服务
         - serper: Serper API
-        - duckduckgo: DuckDuckGo search
-        - bing: Bing search
+        - duckduckgo: DuckDuckGo 搜索
+        - bing: Bing 搜索
         - brave: Brave Search API
-        - arxiv: arXiv academic search
-        - tavily: Tavily search API
-        - exa: Exa search
-        - crw: fastCRW search (Firecrawl-compatible web scraper)
-        - semantic_scholar: Semantic Scholar academic search
-        - pubmed_central: PubMed Central medical literature
-        - openalex: OpenAlex scholarly works catalog
-        - custom: Custom user-defined retriever
+        - arxiv: arXiv 学术搜索
+        - tavily: Tavily 搜索 API
+        - exa: Exa 搜索
+        - crw: fastCRW 搜索（兼容 Firecrawl 的网页 scraper）
+        - semantic_scholar: Semantic Scholar 学术搜索
+        - pubmed_central: PubMed Central 医学文献
+        - openalex: OpenAlex 学术成果库
+        - custom: 用户自定义 retriever
         - mcp: Model Context Protocol retriever
-        - xquik: Xquik X/Twitter search
-        - getxapi: GetXAPI X/Twitter search
+        - xquik: Xquik X/Twitter 搜索
+        - getxapi: GetXAPI X/Twitter 搜索
     """
     match retriever:
         case "google":
@@ -127,52 +126,51 @@ def get_retriever(retriever: str):
 
 def get_retrievers(headers: dict[str, str], cfg):
     """
-    Determine which retriever(s) to use based on headers, config, or default.
+    根据 headers、配置或默认值决定使用哪些 retriever。
 
-    Args:
-        headers (dict): The headers dictionary
-        cfg: The configuration object
+    参数：
+        headers (dict): headers 字典
+        cfg: 配置对象
 
-    Returns:
-        list: A list of retriever classes to be used for searching.
+    返回：
+        list: 用于搜索的 retriever 类列表。
     """
-    # Check headers first for multiple retrievers
+    # 先在 headers 里查是否指定了多个 retriever
     if headers.get("retrievers"):
         retrievers = headers.get("retrievers").split(",")
-    # If not found, check headers for a single retriever
+    # 没找到再查 headers 里的单个 retriever
     elif headers.get("retriever"):
         retrievers = [headers.get("retriever")]
-    # If not in headers, check config for multiple retrievers
+    # headers 里没有则查配置里的多个 retriever
     elif cfg.retrievers:
-        # Handle both list and string formats for config retrievers
+        # 配置里的 retrievers 同时兼容列表与字符串两种形式
         if isinstance(cfg.retrievers, str):
             retrievers = cfg.retrievers.split(",")
         else:
             retrievers = cfg.retrievers
-    # If not found, check config for a single retriever
+    # 再查配置里的单个 retriever
     elif cfg.retriever:
         retrievers = [cfg.retriever]
-    # If still not set, use default retriever
+    # 仍未设置则使用默认 retriever
     else:
         retrievers = [get_default_retriever().__name__]
 
-    # Strip whitespace from each retriever name so comma-separated lists with
-    # spaces (e.g. "tavily, exa" from a header or config) resolve correctly
-    # instead of silently falling back to the default retriever.
+    # 去掉每个 retriever 名称两侧的空白，好让带空格的逗号分隔列表（例如来自
+    # header 或配置的 "tavily, exa"）能正确解析，而不是悄悄退回默认 retriever。
     retrievers = [r.strip() for r in retrievers if r and r.strip()]
 
-    # Convert retriever names to actual retriever classes
-    # Use get_default_retriever() as a fallback for any invalid retriever names
+    # 把 retriever 名称转换为实际的 retriever 类
+    # 无效名称一律用 get_default_retriever() 兜底
     retriever_classes = [get_retriever(r) or get_default_retriever() for r in retrievers]
     
     return retriever_classes
 
 
 def get_default_retriever():
-    """Get the default retriever class.
+    """获取默认的 retriever 类。
 
-    Returns:
-        The TavilySearch retriever class as the default search provider.
+    返回：
+        作为默认搜索 provider 的 TavilySearch retriever 类。
     """
     from argus.retrievers import TavilySearch
 

@@ -20,19 +20,19 @@ async def write_report_introduction(
     **kwargs
 ) -> str:
     """
-    Generate an introduction for the report.
+    为报告生成引言。
 
-    Args:
-        query (str): The research query.
-        context (str): Context for the report.
-        role (str): The role of the agent.
-        config (Config): Configuration object.
-        websocket: WebSocket connection for streaming output.
-        cost_callback (callable, optional): Callback for calculating LLM costs.
-        prompt_family: Family of prompts
+    参数：
+        query (str): 研究查询。
+        context (str): 报告使用的上下文。
+        role (str): agent 的角色。
+        config (Config): 配置对象。
+        websocket: 用于流式输出的 WebSocket 连接。
+        cost_callback (callable, optional): 计算 LLM 花费的回调。
+        prompt_family: prompt 家族
 
-    Returns:
-        str: The generated introduction.
+    返回：
+        str: 生成好的引言。
     """
     try:
         introduction = await create_chat_completion(
@@ -71,19 +71,19 @@ async def write_conclusion(
     **kwargs
 ) -> str:
     """
-    Write a conclusion for the report.
+    为报告撰写结论。
 
-    Args:
-        query (str): The research query.
-        context (str): Context for the report.
-        role (str): The role of the agent.
-        config (Config): Configuration object.
-        websocket: WebSocket connection for streaming output.
-        cost_callback (callable, optional): Callback for calculating LLM costs.
-        prompt_family: Family of prompts
+    参数：
+        query (str): 研究查询。
+        context (str): 报告使用的上下文。
+        role (str): agent 的角色。
+        config (Config): 配置对象。
+        websocket: 用于流式输出的 WebSocket 连接。
+        cost_callback (callable, optional): 计算 LLM 花费的回调。
+        prompt_family: prompt 家族
 
-    Returns:
-        str: The generated conclusion.
+    返回：
+        str: 生成好的结论。
     """
     try:
         conclusion = await create_chat_completion(
@@ -122,18 +122,18 @@ async def summarize_url(
     **kwargs
 ) -> str:
     """
-    Summarize the content of a URL.
+    对某个 URL 的内容做摘要。
 
-    Args:
-        url (str): The URL to summarize.
-        content (str): The content of the URL.
-        role (str): The role of the agent.
-        config (Config): Configuration object.
-        websocket: WebSocket connection for streaming output.
-        cost_callback (callable, optional): Callback for calculating LLM costs.
+    参数：
+        url (str): 要摘要的 URL。
+        content (str): 该 URL 的内容。
+        role (str): agent 的角色。
+        config (Config): 配置对象。
+        websocket: 用于流式输出的 WebSocket 连接。
+        cost_callback (callable, optional): 计算 LLM 花费的回调。
 
-    Returns:
-        str: The summarized content.
+    返回：
+        str: 摘要后的内容。
     """
     try:
         summary = await create_chat_completion(
@@ -169,19 +169,19 @@ async def generate_draft_section_titles(
     **kwargs
 ) -> List[str]:
     """
-    Generate draft section titles for the report.
+    为报告生成草稿章节标题。
 
-    Args:
-        query (str): The research query.
-        context (str): Context for the report.
-        role (str): The role of the agent.
-        config (Config): Configuration object.
-        websocket: WebSocket connection for streaming output.
-        cost_callback (callable, optional): Callback for calculating LLM costs.
-        prompt_family: Family of prompts
+    参数：
+        query (str): 研究查询。
+        context (str): 报告使用的上下文。
+        role (str): agent 的角色。
+        config (Config): 配置对象。
+        websocket: 用于流式输出的 WebSocket 连接。
+        cost_callback (callable, optional): 计算 LLM 花费的回调。
+        prompt_family: prompt 家族
 
-    Returns:
-        List[str]: A list of generated section titles.
+    返回：
+        List[str]: 生成的章节标题列表。
     """
     try:
         section_titles = await create_chat_completion(
@@ -219,15 +219,16 @@ async def generate_report(
     existing_headers: list = [],
     relevant_written_contents: list = [],
     cost_callback: callable = None,
-    custom_prompt: str = "", # This can be any prompt the user chooses with the context
+    custom_prompt: str = "", # 可以是用户配合上下文自行选择的任意 prompt
     headers=None,
     prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
     available_images: list = None,
     **kwargs
 ):
     """
-    generates the final report
-    Args:
+    生成最终报告
+
+    参数：
         query:
         context:
         agent_role_prompt:
@@ -239,10 +240,10 @@ async def generate_report(
         existing_headers:
         relevant_written_contents:
         cost_callback:
-        prompt_family: Family of prompts
-        available_images: Pre-generated images to embed in the report
+        prompt_family: prompt 家族
+        available_images: 要嵌入报告的预生成图片
 
-    Returns:
+    返回：
         report:
 
     """
@@ -257,12 +258,11 @@ async def generate_report(
     else:
         content = f"{generate_prompt(query, context, report_source, report_format=cfg.report_format, tone=tone, total_words=cfg.total_words, language=cfg.language)}"
     
-    # Add available images instruction if images were pre-generated
+    # 若图片是预生成的，则追加可用图片的使用说明
     if available_images:
-        # Only embed image dicts that carry a usable URL. Callers (and
-        # partial LLM metadata) may pass None rows, non-dicts, or dicts
-        # missing ``url``; a bare ``img['url']`` KeyError/TypeError would
-        # abort the whole report write path.
+        # 只嵌入带可用 URL 的图片字典。调用方（以及不完整的 LLM 元数据）
+        # 可能传入 None 行、非字典、或缺少 ``url`` 的字典；裸写 ``img['url']``
+        # 会抛 KeyError/TypeError，直接中断整条报告撰写流程。
         image_lines = []
         for i, img in enumerate(available_images):
             if not isinstance(img, dict):

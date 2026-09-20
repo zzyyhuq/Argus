@@ -1,23 +1,21 @@
-"""Embedding provider management for Argus.
+"""Argus 的 embedding 服务商管理。
 
-This build is pinned to a single embedding backend: Alibaba DashScope's
-``text-embedding-v3``, consumed through its **OpenAI-compatible endpoint**
-(``/compatible-mode/v1``) so the LangChain OpenAI client can do the talking.
-The upstream provider matrix — 20+ backends behind a ``match`` in
-``Memory.__init__`` — has been dropped.
+本分支只固定使用一个 embedding 后端：阿里 DashScope 的
+``text-embedding-v3``，并通过其 **OpenAI 兼容端点**（``/compatible-mode/v1``）
+调用，好让 LangChain 的 OpenAI 客户端来出面通信。上游那套服务商矩阵 ——
+在 ``Memory.__init__`` 里用一个 ``match`` 撑起 20 多个后端 —— 已被删掉。
 
-Provider and model are set by ``EMBEDDING`` (``"dashscope:<model>"``) in
-``config/variables/default.py``; the DashScope-specific quirks below are
-defaulted in code so callers don't have to rediscover them.
+服务商与模型由 ``config/variables/default.py`` 中的 ``EMBEDDING``
+（``"dashscope:<model>"``）指定；下面那些 DashScope 特有的坑都已在代码里
+设好默认值，调用方不必再重新踩一遍。
 """
 
 import os
 from typing import Any
 
-# Kept for cost estimation only: `context/compression.py` passes this to
-# `estimate_embedding_cost()` as a tiktoken tokenizer proxy. tiktoken does not
-# know DashScope model names, so it falls back to the default encoding anyway;
-# the USD figure it produces is a rough gauge, not a real price.
+# 仅为成本估算而保留：`context/compression.py` 把它当作 tiktoken 分词器代理
+# 传给 `estimate_embedding_cost()`。tiktoken 并不认识 DashScope 的模型名，
+# 反正会退回默认编码；算出来的美元数字只是粗略参考，不是真实价格。
 OPENAI_EMBEDDING_MODEL = os.environ.get(
     "OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"
 )
@@ -28,9 +26,9 @@ _DASHSCOPE_COMPAT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
 
 class Memory:
-    """Manages embedding generation for document similarity and retrieval.
+    """管理用于文档相似度与检索的 embedding 生成。
 
-    Example:
+    示例：
         ```python
         memory = Memory("dashscope", "text-embedding-v3")
         embeddings = memory.get_embeddings()
@@ -38,17 +36,16 @@ class Memory:
     """
 
     def __init__(self, embedding_provider: str, model: str, **embedding_kwargs: Any):
-        """Initialize the Memory with the DashScope embedding backend.
+        """用 DashScope embedding 后端初始化 Memory。
 
-        Args:
-            embedding_provider: Must be ``"dashscope"``.
-            model: DashScope model name, e.g. ``text-embedding-v3``.
-            **embedding_kwargs: Forwarded to ``OpenAIEmbeddings``. Any key set
-                here wins over the defaults applied below.
+        参数：
+            embedding_provider: 必须是 ``"dashscope"``。
+            model: DashScope 的模型名，例如 ``text-embedding-v3``。
+            **embedding_kwargs: 透传给 ``OpenAIEmbeddings``。此处设置的任何
+                键都优先于下方应用的默认值。
 
-        Raises:
-            ValueError: If the provider is not DashScope, or if no DashScope
-                API key can be found.
+        异常：
+            ValueError: 服务商不是 DashScope，或找不到 DashScope 的 API key。
         """
         if embedding_provider not in _SUPPORTED_PROVIDERS:
             raise ValueError(
@@ -56,9 +53,8 @@ class Memory:
                 f"Supported providers: {', '.join(sorted(_SUPPORTED_PROVIDERS))}"
             )
 
-        # Fail here rather than letting OpenAIEmbeddings silently pick up
-        # OPENAI_API_KEY — that holds the chat model's key, which DashScope
-        # rejects with an opaque 401.
+        # 在这里就失败，而不是让 OpenAIEmbeddings 悄悄用上 OPENAI_API_KEY
+        # —— 那是聊天模型的 key，DashScope 会用一句语焉不详的 401 拒掉。
         if not embedding_kwargs.get("openai_api_key"):
             api_key = os.environ.get("DASHSCOPE_API_KEY")
             if not api_key:
@@ -72,10 +68,10 @@ class Memory:
             "openai_api_base",
             os.environ.get("DASHSCOPE_BASE_URL", _DASHSCOPE_COMPAT_BASE_URL),
         )
-        # text-embedding-v3 is not a tiktoken model, so the client-side context
-        # length check raises before the request is ever sent.
+        # text-embedding-v3 不是 tiktoken 认识的模型，客户端那套上下文长度
+        # 校验会在请求发出前就直接报错，所以关掉。
         embedding_kwargs.setdefault("check_embedding_ctx_length", False)
-        # DashScope rejects embedding batches larger than 10 inputs.
+        # DashScope 拒绝单批超过 10 条输入的 embedding 请求。
         embedding_kwargs.setdefault("chunk_size", 10)
 
         from langchain_openai import OpenAIEmbeddings
@@ -83,9 +79,9 @@ class Memory:
         self._embeddings = OpenAIEmbeddings(model=model, **embedding_kwargs)
 
     def get_embeddings(self):
-        """Get the configured embeddings instance.
+        """获取已配置好的 embeddings 实例。
 
-        Returns:
-            The LangChain embeddings instance configured for this project.
+        返回：
+            为本项目配置的 LangChain embeddings 实例。
         """
         return self._embeddings

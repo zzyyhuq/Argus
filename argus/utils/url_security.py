@@ -1,28 +1,23 @@
-"""URL security utilities for Argus.
+"""Argus 的 URL 安全工具。
 
-These helpers protect the scraping and document-loading pipelines against
-Server-Side Request Forgery (SSRF) and arbitrary local-file reads when the URLs
-originate from untrusted input (e.g. the ``source_urls`` / ``document_urls``
-parameters accepted by the API and WebSocket endpoints).
+当 URL 来自不可信输入时（例如 API 与 WebSocket 端点接收的 ``source_urls`` /
+``document_urls`` 参数），这些辅助函数用来保护抓取与文档加载链路，抵御服务端
+请求伪造（SSRF）和任意本地文件读取。
 
-By default only ``http`` / ``https`` URLs whose host resolves to a public IP
-address are allowed. This blocks:
+默认只放行主机解析到公网 IP 的 ``http`` / ``https`` URL，因此可拦下：
 
-* Non-HTTP schemes such as ``file://``, ``ftp://`` and ``gopher://``.
-* Local filesystem paths (no scheme/host), which some document loaders would
-  otherwise read directly from disk (arbitrary local file read).
-* Requests to private, loopback, link-local, reserved or otherwise internal
-  addresses (e.g. ``127.0.0.1``, ``10.0.0.0/8`` and the ``169.254.169.254``
-  cloud metadata endpoint).
+* 非 HTTP 协议，例如 ``file://``、``ftp://``、``gopher://``。
+* 本地文件系统路径（没有 scheme/host），否则某些文档加载器会直接从磁盘读取
+  它们（即任意本地文件读取）。
+* 指向私有、环回、链路本地、保留或其他内网地址的请求（例如 ``127.0.0.1``、
+  ``10.0.0.0/8``，以及云元数据端点 ``169.254.169.254``）。
 
-Operators who intentionally scrape internal or self-hosted resources can opt out
-of the private-address check by setting the environment variable
-``ALLOW_PRIVATE_URLS=true`` (or by passing ``allow_private=True``).
+如果有意抓取内网或自托管资源，可以设置环境变量 ``ALLOW_PRIVATE_URLS=true``
+（或传入 ``allow_private=True``）跳过私有地址检查。
 
-Note: resolving the host here and letting the HTTP client re-resolve it later
-leaves a small TOCTOU/DNS-rebinding window. Closing it fully requires pinning the
-validated IP into the connection; this guard is intended as defence-in-depth that
-removes the trivial, unauthenticated SSRF and local-file-read primitives.
+注意：在这里解析主机名、之后又让 HTTP 客户端重新解析一遍，会留下一个很小的
+TOCTOU/DNS 重绑定窗口。要彻底堵住它，必须把校验过的 IP 固定到连接上；本防护
+的定位是纵深防御，用于消除那些最省事的、无需认证的 SSRF 与本地文件读取原语。
 """
 
 from __future__ import annotations
@@ -38,7 +33,7 @@ _TRUTHY = ("1", "true", "yes", "on")
 
 
 class UnsafeURLError(ValueError):
-    """Raised when a URL is rejected by the SSRF / local-file protections."""
+    """当 URL 被 SSRF / 本地文件防护拒绝时抛出。"""
 
 
 def _private_urls_allowed() -> bool:
@@ -46,7 +41,7 @@ def _private_urls_allowed() -> bool:
 
 
 def _is_disallowed_ip(ip) -> bool:
-    """Return True if the address is not safe to contact (i.e. internal)."""
+    """地址不安全（即属于内网）时返回 True。"""
     return (
         ip.is_private
         or ip.is_loopback
@@ -58,20 +53,19 @@ def _is_disallowed_ip(ip) -> bool:
 
 
 def validate_url(url: str, *, allow_private: bool | None = None) -> str:
-    """Validate that ``url`` is safe to fetch and return it unchanged.
+    """校验 ``url`` 可以安全抓取，并原样返回。
 
-    Args:
-        url: The URL to validate.
-        allow_private: When ``True``, skip the private/internal address check.
-            When ``None`` (default), fall back to the ``ALLOW_PRIVATE_URLS``
-            environment variable.
+    参数：
+        url: 待校验的 URL。
+        allow_private: 为 ``True`` 时跳过私有/内网地址检查；为 ``None``
+            （默认）时回退到 ``ALLOW_PRIVATE_URLS`` 环境变量。
 
-    Returns:
-        The original ``url`` if it passes all checks.
+    返回：
+        通过全部检查时返回原始的 ``url``。
 
-    Raises:
-        UnsafeURLError: If the URL uses a disallowed scheme, lacks a host, or
-            resolves to a non-public address.
+    异常：
+        UnsafeURLError: URL 使用了不允许的协议、缺少主机名，或解析到非公网
+            地址时抛出。
     """
     if not isinstance(url, str) or not url.strip():
         raise UnsafeURLError("URL must be a non-empty string.")
@@ -117,7 +111,7 @@ def validate_url(url: str, *, allow_private: bool | None = None) -> str:
 
 
 def is_safe_url(url: str, *, allow_private: bool | None = None) -> bool:
-    """Return ``True`` if ``url`` passes :func:`validate_url`, else ``False``."""
+    """``url`` 通过 :func:`validate_url` 时返回 ``True``，否则返回 ``False``。"""
     try:
         validate_url(url, allow_private=allow_private)
         return True

@@ -1,7 +1,6 @@
-"""Source curator skill for Argus.
+"""Argus 的来源筛选技能。
 
-This module provides the SourceCurator class that evaluates and ranks
-research sources based on relevance, credibility, and reliability.
+本模块提供 SourceCurator 类，按相关性、可信度与可靠性评估并排序研究来源。
 """
 
 from typing import Dict, List, Optional
@@ -15,20 +14,19 @@ from ..utils.llm import create_chat_completion
 
 
 class SourceCurator:
-    """Ranks and curates sources based on relevance, credibility and reliability.
+    """按相关性、可信度与可靠性对来源进行排序与筛选。
 
-    This class uses LLM-based evaluation to assess research sources
-    and select the most appropriate ones for report generation.
+    本类借助 LLM 评估研究来源，挑选最适合用于生成报告的那些来源。
 
-    Attributes:
-        researcher: The parent Argus instance.
+    属性：
+        researcher: 持有该筛选器的父级 Argus 实例。
     """
 
     def __init__(self, researcher):
-        """Initialize the SourceCurator.
+        """初始化 SourceCurator。
 
-        Args:
-            researcher: The Argus instance that owns this curator.
+        参数：
+            researcher: 持有该筛选器的 Argus 实例。
         """
         self.researcher = researcher
 
@@ -38,15 +36,15 @@ class SourceCurator:
         max_results: int = 10,
     ) -> List:
         """
-        Rank sources based on research data and guidelines.
+        依据研究数据与评判准则对来源排序。
 
-        Args:
-            query: The research query/task
-            source_data: List of source documents to rank
-            max_results: Maximum number of top sources to return
+        参数：
+            query: 研究查询/任务
+            source_data: 待排序的来源文档列表
+            max_results: 最多返回的优质来源数量
 
-        Returns:
-            str: Ranked list of source URLs with reasoning
+        返回：
+            str: 带理由说明的已排序来源 URL 列表
         """
         print(f"\n\nCurating {len(source_data)} sources: {source_data}")
         if self.researcher.verbose:
@@ -73,15 +71,14 @@ class SourceCurator:
                 cost_callback=self.researcher.add_costs,
             )
 
-            # LLMs frequently wrap the JSON in ```json fences or add prose
-            # despite the prompt's instructions, which plain json.loads cannot
-            # parse. Recover the payload the same way the rest of the codebase
-            # does (see actions/query_processing.py, multi_agents/agents/utils/
-            # llms.py) so a well-formed-but-fenced response is not discarded.
+            # LLM 常常无视 prompt 中的要求，把 JSON 包在 ```json 围栏里或另加散文，
+            # 这种情况 json.loads 解析不了。这里沿用代码库其他位置的恢复方式
+            # （参见 actions/query_processing.py、multi_agents/agents/utils/
+            # llms.py），以免格式正确但被围栏包裹的响应被直接丢弃。
             curated_sources = parse_json_markdown(response, parser=json_repair.loads)
-            # json_repair never raises: on unusable output it returns "" or a
-            # dict rather than a list. Guard so such a result still falls back
-            # to the uncurated sources below instead of emptying the context.
+            # json_repair 从不抛异常：输出不可用时返回的是 "" 或 dict 而非 list。
+            # 这里做个校验，让这类结果仍能回退到下方未筛选的来源，
+            # 而不是把上下文清空。
             if not isinstance(curated_sources, list):
                 raise ValueError(
                     f"expected a JSON list of sources, got "

@@ -1,7 +1,6 @@
-"""LLM utilities for Argus.
+"""Argus 的 LLM 工具函数。
 
-This module provides utility functions for interacting with various
-LLM providers through a unified interface.
+本模块通过统一接口，提供与各类 LLM 服务商交互的工具函数。
 """
 from __future__ import annotations
 
@@ -25,14 +24,14 @@ from .validators import Subtopics
 
 
 def get_llm(llm_provider: str, **kwargs):
-    """Get an LLM provider instance.
+    """获取一个 LLM 服务商实例。
 
-    Args:
-        llm_provider: The name of the LLM provider (e.g., 'openai', 'anthropic').
-        **kwargs: Additional keyword arguments passed to the provider.
+    参数：
+        llm_provider: LLM 服务商名称（如 'openai'、'anthropic'）。
+        **kwargs: 透传给服务商的额外关键字参数。
 
-    Returns:
-        A GenericLLMProvider instance configured for the specified provider.
+    返回：
+        按指定服务商配置好的 GenericLLMProvider 实例。
     """
     from argus.llm_provider import GenericLLMProvider
     return GenericLLMProvider.from_provider(llm_provider, **kwargs)
@@ -51,27 +50,27 @@ async def create_chat_completion(
         reasoning_effort: str | None = ReasoningEfforts.Medium.value,
         **kwargs
 ) -> str:
-    """Create a chat completion using the OpenAI API
-    Args:
-        messages (list[dict[str, str]]): The messages to send to the chat completion.
-        model (str, optional): The model to use. Defaults to None.
-        temperature (float, optional): The temperature to use. Defaults to 0.4.
-        max_tokens (int, optional): The max tokens to use. Defaults to 4000.
-        llm_provider (str, optional): The LLM Provider to use.
-        stream (bool): Whether to stream the response. Defaults to False.
-        webocket (WebSocket): The websocket used in the currect request,
-        llm_kwargs (dict[str, Any], optional): Additional LLM keyword arguments. Defaults to None.
-        cost_callback: Callback function for updating cost.
-        reasoning_effort (str, optional): Reasoning effort for OpenAI's reasoning models. Defaults to 'low'.
-        **kwargs: Additional keyword arguments.
-    Returns:
-        str: The response from the chat completion.
+    """使用 OpenAI API 创建一次 chat completion
+    参数：
+        messages (list[dict[str, str]]): 发送给 chat completion 的消息。
+        model (str, optional): 使用的模型。默认为 None。
+        temperature (float, optional): 使用的 temperature。默认为 0.4。
+        max_tokens (int, optional): 使用的最大 token 数。默认为 4000。
+        llm_provider (str, optional): 使用的 LLM 服务商。
+        stream (bool): 是否流式返回响应。默认为 False。
+        webocket (WebSocket): 当前请求所用的 websocket，
+        llm_kwargs (dict[str, Any], optional): 额外的 LLM 关键字参数。默认为 None。
+        cost_callback: 用于更新成本的回调函数。
+        reasoning_effort (str, optional): OpenAI reasoning 模型的 reasoning effort。默认为 'low'。
+        **kwargs: 额外的关键字参数。
+    返回：
+        str: chat completion 返回的响应。
     """
-    # validate input
+    # 校验入参
     if model is None:
         raise ValueError("Model cannot be None")
-    # Sanity guard against absurd values (e.g., env var typos). The actual
-    # per-model output limits are enforced by the upstream provider.
+    # 兜底拦截明显离谱的取值（例如环境变量拼错）。真正的单模型输出上限
+    # 由上游服务商把关。
     if max_tokens is not None and max_tokens > 200_000:
         raise ValueError(
             f"max_tokens={max_tokens} exceeds the largest output limit of "
@@ -80,7 +79,7 @@ async def create_chat_completion(
             "STRATEGIC_TOKEN_LIMIT env vars for typos."
         )
 
-    # Get the provider from supported providers
+    # 从受支持的服务商中取出对应的 provider
     provider_kwargs = {'model': model}
 
     if llm_kwargs:
@@ -98,10 +97,10 @@ async def create_chat_completion(
     if model not in NO_SUPPORT_TEMPERATURE_MODELS:
         provider_kwargs['temperature'] = temperature
     else:
-        # These models enforce their default temperature, but output limits
-        # still apply (langchain-openai maps max_tokens to the API's
-        # max_completion_tokens). Note that for reasoning models the limit
-        # covers reasoning tokens too, so budgets need extra headroom.
+        # 这些模型强制使用自己的默认 temperature，但输出上限依然生效
+        # （langchain-openai 会把 max_tokens 映射到 API 的
+        # max_completion_tokens）。注意 reasoning 模型的这个上限也把
+        # reasoning token 算在内，因此预算需要留更多余量。
         provider_kwargs['temperature'] = None
     provider_kwargs['max_tokens'] = max_tokens
 
@@ -112,7 +111,7 @@ async def create_chat_completion(
 
     provider = get_llm(llm_provider, **provider_kwargs)
     response = ""
-    # create response
+    # 生成响应
     max_attempts = 1 if (stream and websocket is not None) else 10
     last_exception: Exception | None = None
     for attempt in range(1, max_attempts + 1):
@@ -167,18 +166,18 @@ async def construct_subtopics(
     **kwargs
 ) -> list:
     """
-    Construct subtopics based on the given task and data.
+    根据给定任务与数据构造子主题。
 
-    Args:
-        task (str): The main task or topic.
-        data (str): Additional data for context.
-        config: Configuration settings.
-        subtopics (list, optional): Existing subtopics. Defaults to [].
-        prompt_family (PromptFamily): Family of prompts
-        **kwargs: Additional keyword arguments.
+    参数：
+        task (str): 主任务或主题。
+        data (str): 用于提供上下文的补充数据。
+        config: 配置项。
+        subtopics (list, optional): 已有的子主题。默认为 []。
+        prompt_family (PromptFamily): prompt 家族
+        **kwargs: 额外的关键字参数。
 
-    Returns:
-        list: A list of constructed subtopics.
+    返回：
+        list: 构造出的子主题列表。
     """
     try:
         parser = PydanticOutputParser(pydantic_object=Subtopics)

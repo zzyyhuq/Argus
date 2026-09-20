@@ -10,12 +10,12 @@ from ..utils.llm import create_chat_completion
 
 
 def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
-    """Coerce a parsed LLM response into a flat list of query strings.
+    """把解析后的 LLM 响应统一整理成扁平的查询字符串列表。
 
-    ``json_repair.loads`` may return a list, a dict (e.g. ``{"queries": [...]}``
-    or a single ``{"query": "..."}``), a bare string, or ``None`` when the model
-    does not return clean JSON. Callers expect a ``list[str]`` and otherwise crash
-    on ``.append`` / iteration, so normalize defensively here.
+    ``json_repair.loads`` 可能返回列表、字典（如 ``{"queries": [...]}``
+    或单个 ``{"query": "..."}``）、裸字符串，或者在模型没返回干净 JSON 时
+    返回 ``None``。调用方期望拿到 ``list[str]``，否则会在 ``.append`` /
+    迭代时崩掉，所以这里做防御性归一化。
     """
     if isinstance(parsed, dict):
         for key in ("queries", "sub_queries", "subQueries", "items"):
@@ -24,7 +24,7 @@ def _normalize_sub_queries(parsed: Any, fallback_query: str) -> List[str]:
                 parsed = value
                 break
         else:
-            # Single-query dict like {"query": "..."} or unrecognized shape.
+            # 形如 {"query": "..."} 的单查询字典，或无法识别的结构。
             single = parsed.get("query")
             parsed = [single] if isinstance(single, str) else []
 
@@ -49,26 +49,26 @@ async def get_search_results(
     max_results: int | None = None,
 ) -> List[Dict[str, Any]]:
     """
-    Get web search results for a given query.
+    获取给定查询的网络搜索结果。
 
-    Args:
-        query: The search query
-        retriever: The retriever instance
-        query_domains: Optional list of domains to search
-        researcher: The researcher instance (needed for MCP retrievers)
-        max_results: Optional cap on the number of results
+    参数：
+        query: 搜索查询
+        retriever: retriever 实例
+        query_domains: 可选的待搜索域名列表
+        researcher: researcher 实例（MCP retriever 需要）
+        max_results: 可选的结果数量上限
 
-    Returns:
-        A list of search results
+    返回：
+        搜索结果列表
     """
     import asyncio
 
-    # Check if this is an MCP retriever and pass the researcher instance
+    # 判断是不是 MCP retriever，是则把 researcher 实例传进去
     if "mcpretriever" in retriever.__name__.lower():
         search_retriever = retriever(
             query, 
             query_domains=query_domains,
-            researcher=researcher  # Pass researcher instance for MCP retrievers
+            researcher=researcher  # MCP retriever 需要 researcher 实例
         )
     else:
         search_retriever = retriever(query, query_domains=query_domains)
@@ -77,7 +77,7 @@ async def get_search_results(
     if max_results is not None:
         search_kwargs["max_results"] = max_results
 
-    # Retriever searches are blocking HTTP calls; keep the event loop free
+    # retriever 的搜索是阻塞式 HTTP 调用，别让它占住事件循环
     return await asyncio.to_thread(search_retriever.search, **search_kwargs)
 
 async def generate_sub_queries(
@@ -91,20 +91,20 @@ async def generate_sub_queries(
     **kwargs
 ) -> List[str]:
     """
-    Generate sub-queries using the specified LLM model.
+    用指定的 LLM 模型生成子查询。
 
-    Args:
-        query: The original query
-        parent_query: The parent query
-        report_type: The type of report
-        max_iterations: Maximum number of research iterations
-        context: Search results context
-        cfg: Configuration object
-        cost_callback: Callback for cost calculation
-        prompt_family: Family of prompts
+    参数：
+        query: 原始查询
+        parent_query: 父查询
+        report_type: 报告类型
+        max_iterations: 研究迭代的最大次数
+        context: 搜索结果的上下文
+        cfg: 配置对象
+        cost_callback: 计算花费的回调
+        prompt_family: prompt 家族
 
-    Returns:
-        A list of sub-queries
+    返回：
+        子查询列表
     """
     gen_queries_prompt = prompt_family.generate_search_queries_prompt(
         query,
@@ -168,41 +168,41 @@ async def plan_research_outline(
     **kwargs
 ) -> List[str]:
     """
-    Plan the research outline by generating sub-queries.
+    通过生成子查询来规划研究大纲。
 
-    Args:
-        query: Original query
-        search_results: Initial search results
-        agent_role_prompt: Agent role prompt
-        cfg: Configuration object
-        parent_query: Parent query
-        report_type: Report type
-        cost_callback: Callback for cost calculation
-        retriever_names: Names of the retrievers being used
+    参数：
+        query: 原始查询
+        search_results: 初始搜索结果
+        agent_role_prompt: agent 角色 prompt
+        cfg: 配置对象
+        parent_query: 父查询
+        report_type: 报告类型
+        cost_callback: 计算花费的回调
+        retriever_names: 正在使用的 retriever 名称
 
-    Returns:
-        A list of sub-queries
+    返回：
+        子查询列表
     """
-    # Handle the case where retriever_names is not provided
+    # 处理未提供 retriever_names 的情况
     if retriever_names is None:
         retriever_names = []
     
-    # For MCP retrievers, we may want to skip sub-query generation
-    # Check if MCP is the only retriever or one of multiple retrievers
+    # 对 MCP retriever，可能要跳过子查询生成
+    # 判断 MCP 是唯一的 retriever，还是多个 retriever 之一
     if retriever_names and ("mcp" in retriever_names or "MCPRetriever" in retriever_names):
         mcp_only = (len(retriever_names) == 1 and 
                    ("mcp" in retriever_names or "MCPRetriever" in retriever_names))
         
         if mcp_only:
-            # If MCP is the only retriever, skip sub-query generation
+            # MCP 是唯一 retriever 时，跳过子查询生成
             logger.info("Using MCP retriever only - skipping sub-query generation")
-            # Return the original query to prevent additional search iterations
+            # 返回原始查询，避免产生额外的搜索迭代
             return [query]
         else:
-            # If MCP is one of multiple retrievers, generate sub-queries for the others
+            # MCP 只是多个 retriever 之一时，为其他 retriever 生成子查询
             logger.info("Using MCP with other retrievers - generating sub-queries for non-MCP retrievers")
 
-    # Generate sub-queries for research outline
+    # 为研究大纲生成子查询
     sub_queries = await generate_sub_queries(
         query,
         parent_query,

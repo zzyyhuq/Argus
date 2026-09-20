@@ -36,41 +36,41 @@ class JSONResearchHandler:
             json.dump(self.research_data, f, indent=2)
 
 def setup_research_logging():
-    # Create logs directory if it doesn't exist
+    # 若 logs 目录不存在则创建
     logs_dir = Path("logs")
     logs_dir.mkdir(exist_ok=True)
     
-    # Generate timestamp for log files
+    # 生成日志文件用的时间戳
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Create log file paths
+    # 拼出日志文件路径
     log_file = logs_dir / f"research_{timestamp}.log"
     json_file = logs_dir / f"research_{timestamp}.json"
     
-    # Configure file handler for research logs
+    # 为研究日志配置文件 handler
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     
-    # Get research logger and configure it
+    # 取出 research logger 并配置
     research_logger = logging.getLogger('research')
     research_logger.setLevel(logging.INFO)
     
-    # Remove any existing handlers to avoid duplicates
+    # 清掉已有 handler，避免重复输出
     research_logger.handlers.clear()
     
-    # Add file handler
+    # 挂上文件 handler
     research_logger.addHandler(file_handler)
     
-    # Add stream handler for console output
+    # 再挂一个 stream handler 用于控制台输出
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     research_logger.addHandler(console_handler)
     
-    # Prevent propagation to root logger to avoid duplicate logs
+    # 关闭向 root logger 的传播，避免同一行日志出现两次
     research_logger.propagate = False
     
-    # Create JSON handler
+    # 创建 JSON handler
     json_handler = JSONResearchHandler(json_file)
     
     return str(log_file), str(json_file), research_logger, json_handler

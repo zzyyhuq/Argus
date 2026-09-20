@@ -1,9 +1,8 @@
 """
-Global rate limiter for scraper requests.
+抓取请求的全局限流器。
 
-Ensures that SCRAPER_RATE_LIMIT_DELAY is enforced globally across ALL WorkerPools,
-not just per-pool. This prevents multiple concurrent researchers from overwhelming
-rate-limited APIs like Firecrawl.
+确保 SCRAPER_RATE_LIMIT_DELAY 在**所有** WorkerPool 之间全局生效，而不只是
+各自为政。这样多个并行的 researcher 就不会把 Firecrawl 这类有限流的 API 打爆。
 """
 import asyncio
 import time
@@ -12,10 +11,10 @@ from typing import ClassVar
 
 class GlobalRateLimiter:
     """
-    Singleton global rate limiter.
+    单例全局限流器。
 
-    Ensures minimum delay between ANY scraper requests across the entire application,
-    regardless of how many WorkerPools or Argus instances are active.
+    保证整个应用里任意两次抓取请求之间都满足最小间隔，无论同时跑着多少个
+    WorkerPool 或 Argus 实例。
     """
 
     _instance: ClassVar['GlobalRateLimiter'] = None
@@ -28,7 +27,7 @@ class GlobalRateLimiter:
         return cls._instance
 
     def __init__(self):
-        """Initialize the global rate limiter (only once)."""
+        """初始化全局限流器（只执行一次）。"""
         if self._initialized:
             return
 
@@ -36,26 +35,26 @@ class GlobalRateLimiter:
         self.rate_limit_delay = 0.0
         self._initialized = True
 
-        # Create lock at class level to ensure it's shared across all instances
+        # 锁放在类属性上，确保所有实例共用同一把
         if GlobalRateLimiter._lock is None:
-            # Note: This will be properly initialized when first accessed in an async context
+            # 注意：真正初始化要等到首次在 async 上下文中访问时
             GlobalRateLimiter._lock = None
 
     @classmethod
     def get_lock(cls):
-        """Get or create the async lock (must be called from async context)."""
+        """获取或创建异步锁（必须在 async 上下文中调用）。"""
         if cls._lock is None:
             cls._lock = asyncio.Lock()
         return cls._lock
 
     def configure(self, rate_limit_delay: float):
         """
-        Configure the global rate limit delay.
+        配置全局限流间隔。
 
-        Args:
-            rate_limit_delay: Minimum seconds between requests (0 = no limit)
+        参数：
+            rate_limit_delay: 两次请求之间的最小间隔秒数（0 表示不限流）
         """
-        # Env/config may hand us strings; wait_if_needed compares as float.
+        # 环境变量/配置可能给的是字符串，而 wait_if_needed 是按 float 比较的。
         if rate_limit_delay is None:
             self.rate_limit_delay = 0.0
             return
@@ -71,13 +70,13 @@ class GlobalRateLimiter:
 
     async def wait_if_needed(self):
         """
-        Wait if needed to enforce global rate limiting.
+        按需等待，以落实全局限流。
 
-        This method ensures that regardless of how many WorkerPools are active,
-        the SCRAPER_RATE_LIMIT_DELAY is respected globally.
+        无论同时有多少个 WorkerPool 在跑，本方法都能保证
+        SCRAPER_RATE_LIMIT_DELAY 被全局遵守。
         """
         if self.rate_limit_delay <= 0:
-            return  # No rate limiting
+            return  # 未启用限流
 
         lock = self.get_lock()
         async with lock:
@@ -91,14 +90,14 @@ class GlobalRateLimiter:
             self.last_request_time = time.time()
 
     def reset(self):
-        """Reset the rate limiter state (useful for testing)."""
+        """重置限流器状态（便于测试）。"""
         self.last_request_time = 0.0
 
 
-# Singleton instance
+# 单例实例
 _global_rate_limiter = GlobalRateLimiter()
 
 
 def get_global_rate_limiter() -> GlobalRateLimiter:
-    """Get the global rate limiter singleton instance."""
+    """获取全局限流器单例。"""
     return _global_rate_limiter

@@ -1,8 +1,7 @@
-"""Configuration management for Argus.
+"""Argus 的配置管理。
 
-This module provides the Config class that manages all configuration
-settings for Argus including LLM providers, embeddings,
-retrievers, and various operational parameters.
+本模块提供 Config 类，统一管理 Argus 的全部配置项，包括 LLM 服务商、
+embedding、retriever 以及各类运行参数。
 """
 
 import json
@@ -18,25 +17,24 @@ from .variables.default import DEFAULT_CONFIG
 
 
 class Config:
-    """Configuration manager for Argus.
+    """Argus 的配置管理器。
 
-    Handles loading, parsing, and managing all configuration settings
-    from files, environment variables, and defaults.
+    负责从配置文件、环境变量与默认值中加载、解析并管理全部配置项。
 
-    Attributes:
-        CONFIG_DIR: Directory containing configuration files.
-        config_path: Path to the configuration file.
-        llm_kwargs: Additional keyword arguments for LLM.
-        embedding_kwargs: Additional keyword arguments for embeddings.
+    属性：
+        CONFIG_DIR: 存放配置文件的目录。
+        config_path: 配置文件的路径。
+        llm_kwargs: LLM 的额外关键字参数。
+        embedding_kwargs: embedding 的额外关键字参数。
     """
 
     CONFIG_DIR = os.path.join(os.path.dirname(__file__), "variables")
 
     def __init__(self, config_path: str | None = None):
-        """Initialize the config class.
+        """初始化配置类。
 
-        Args:
-            config_path: Optional path to a JSON configuration file.
+        参数：
+            config_path: 可选的 JSON 配置文件路径。
         """
         self.config_path = config_path
         self.llm_kwargs: Dict[str, Any] = {}
@@ -45,12 +43,11 @@ class Config:
         config_to_use = self.load_config(config_path)
         self._set_attributes(config_to_use)
 
-        # Take private copies of the kwargs dicts. load_config returns
-        # DEFAULT_CONFIG itself -- not a copy -- when no config file is given,
-        # so the nested dicts it holds would otherwise be shared by every Config
-        # instance. Config is built per researcher, so a write for one request
-        # (set_verbose stores into llm_kwargs, and a visitor-supplied API key
-        # goes there too) would bleed into every later request.
+        # 这里把 kwargs 字典复制一份私有副本。未指定配置文件时，load_config
+        # 返回的就是 DEFAULT_CONFIG 本身而非副本，其内部嵌套的字典会被所有
+        # Config 实例共享。而 Config 是每个 researcher 各建一份的，于是某次
+        # 请求的写入（set_verbose 会写进 llm_kwargs，访客传入的 API key 也在
+        # 这里）就会渗到之后的所有请求里。
         self.llm_kwargs = dict(self.llm_kwargs)
         self.embedding_kwargs = dict(self.embedding_kwargs)
 
@@ -60,24 +57,23 @@ class Config:
         if config_to_use['REPORT_SOURCE'] != 'web':
           self._set_doc_path(config_to_use)
 
-        # MCP support configuration
-        self.mcp_servers = []  # List of MCP server configurations
-        self.mcp_allowed_root_paths = []  # Allowed root paths for MCP servers
+        # MCP 支持相关配置
+        self.mcp_servers = []  # MCP 服务器配置列表
+        self.mcp_allowed_root_paths = []  # MCP 服务器允许使用的根路径
 
-        # Read from config
+        # 从配置中读取
         if hasattr(self, 'mcp_servers'):
             self.mcp_servers = self.mcp_servers
         if hasattr(self, 'mcp_allowed_root_paths'):
             self.mcp_allowed_root_paths = self.mcp_allowed_root_paths
 
     def _set_attributes(self, config: Dict[str, Any]) -> None:
-        """Set configuration attributes from config dictionary.
+        """用配置字典设置各项配置属性。
 
-        Merges environment variables with config file values, with
-        environment variables taking precedence.
+        把环境变量与配置文件里的值合并，其中环境变量优先。
 
-        Args:
-            config: Dictionary of configuration key-value pairs.
+        参数：
+            config: 配置键值对字典。
         """
         for key, value in config.items():
             env_value = os.getenv(key)
@@ -85,7 +81,7 @@ class Config:
                 value = self.convert_env_value(key, env_value, BaseConfig.__annotations__[key])
             setattr(self, key.lower(), value)
 
-        # Handle RETRIEVER with default value
+        # RETRIEVER 带默认值，单独处理
         retriever_env = os.environ.get("RETRIEVER", config.get("RETRIEVER", "tavily"))
         try:
             self.retrievers = self.parse_retrievers(retriever_env)
@@ -94,20 +90,20 @@ class Config:
             self.retrievers = ["tavily"]
 
     def _set_embedding_attributes(self) -> None:
-        """Parse and set embedding provider and model attributes."""
+        """解析并设置 embedding 的服务商与模型属性。"""
         self.embedding_provider, self.embedding_model = self.parse_embedding(
             self.embedding
         )
 
     def _set_llm_attributes(self) -> None:
-        """Parse and set LLM provider and model attributes for all LLM types."""
+        """解析并设置各类 LLM 的服务商与模型属性。"""
         self.fast_llm_provider, self.fast_llm_model = self.parse_llm(self.fast_llm)
         self.smart_llm_provider, self.smart_llm_model = self.parse_llm(self.smart_llm)
         self.strategic_llm_provider, self.strategic_llm_model = self.parse_llm(self.strategic_llm)
         self.reasoning_effort = self.parse_reasoning_effort(os.getenv("REASONING_EFFORT"))
 
     def _handle_deprecated_attributes(self) -> None:
-        """Handle deprecated configuration attributes with warnings."""
+        """处理已废弃的配置项，并发出警告。"""
         _deprecation_warning = (
             "LLM_PROVIDER, FAST_LLM_MODEL and SMART_LLM_MODEL are deprecated and "
             "will be removed soon. Use FAST_LLM and SMART_LLM instead."
@@ -138,7 +134,7 @@ class Config:
 
     @classmethod
     def load_config(cls, config_path: str | None) -> Dict[str, Any]:
-        """Load a configuration by name."""
+        """按名称加载一份配置。"""
         config_path = config_path or os.environ.get("CONFIG_PATH")
         if not config_path:
             return DEFAULT_CONFIG
@@ -154,22 +150,22 @@ class Config:
         with open(config_path, "r") as f:
             custom_config = json.load(f)
 
-        # Merge with default config to ensure all keys are present
+        # 与默认配置合并，确保所有键都存在
         merged_config = DEFAULT_CONFIG.copy()
         merged_config.update(custom_config)
         return merged_config
 
     @classmethod
     def list_available_configs(cls) -> List[str]:
-        """List all available configuration names."""
+        """列出所有可用的配置名称。"""
         configs = ["default"]
         for file in os.listdir(cls.CONFIG_DIR):
             if file.endswith(".json"):
-                configs.append(file[:-5])  # Remove .json extension
+                configs.append(file[:-5])  # 去掉 .json 后缀
         return configs
 
     def parse_retrievers(self, retriever_str: str) -> List[str]:
-        """Parse the retriever string into a list of retrievers and validate them."""
+        """把 retriever 字符串解析成列表并逐个校验。"""
         from ..retrievers.utils import get_all_retriever_names
         
         retrievers = [retriever.strip()
@@ -185,7 +181,7 @@ class Config:
 
     @staticmethod
     def parse_llm(llm_str: str | None) -> tuple[str | None, str | None]:
-        """Parse llm string into (llm_provider, llm_model)."""
+        """把 LLM 字符串解析成 (llm_provider, llm_model)。"""
         from argus.llm_provider.generic.base import _SUPPORTED_PROVIDERS
 
         if llm_str is None:
@@ -205,7 +201,7 @@ class Config:
 
     @staticmethod
     def parse_reasoning_effort(reasoning_effort_str: str | None) -> str | None:
-        """Parse reasoning effort string into (reasoning_effort)."""
+        """把 reasoning effort 字符串解析成 reasoning_effort。"""
         if reasoning_effort_str is None:
             return ReasoningEfforts.Medium.value
         if reasoning_effort_str not in [effort.value for effort in ReasoningEfforts]:
@@ -214,7 +210,7 @@ class Config:
 
     @staticmethod
     def parse_embedding(embedding_str: str | None) -> tuple[str | None, str | None]:
-        """Parse embedding string into (embedding_provider, embedding_model)."""
+        """把 embedding 字符串解析成 (embedding_provider, embedding_model)。"""
         from argus.memory.embeddings import _SUPPORTED_PROVIDERS
 
         if embedding_str is None:
@@ -233,20 +229,20 @@ class Config:
             )
 
     def validate_doc_path(self):
-        """Ensure that the folder exists at the doc path"""
+        """确保 doc_path 指向的目录存在"""
         os.makedirs(self.doc_path, exist_ok=True)
 
     @staticmethod
     def convert_env_value(key: str, env_value: str, type_hint: Type) -> Any:
-        """Convert environment variable to the appropriate type based on the type hint."""
+        """依据类型提示，把环境变量的值转换成合适的类型。"""
         origin = get_origin(type_hint)
         args = get_args(type_hint)
 
         if origin is Union:
-            # Handle Union types (e.g., Union[str, None] / Optional[str]).
-            # Check the None sentinel BEFORE non-None args: for Optional[str],
-            # str conversion never raises, so looping str-first permanently
-            # shadowed the none/null/"" → None branch (see issue #1899).
+            # 处理 Union 类型（如 Union[str, None] / Optional[str]）。
+            # 先判断 None 哨兵值，再尝试非 None 的分支：对于 Optional[str]，
+            # 转成 str 永远不会抛异常，若先遍历 str 分支，none/null/"" →
+            # None 这条路就永远走不到（见 issue #1899）。
             if type(None) in args and env_value.lower() in ("none", "null", ""):
                 return None
             for arg in args:
@@ -267,8 +263,8 @@ class Config:
         elif type_hint in (str, Any):
             return env_value
         elif type_hint is list or origin is list or origin is List:
-            # Env values are often hand-edited (trailing commas, single quotes).
-            # Bare `list` has get_origin(None); typing.List[...] has origin list.
+            # 环境变量里的值常是手工改的（多余逗号、单引号）。
+            # 裸 `list` 的 get_origin 为 None；typing.List[...] 的 origin 是 list。
             try:
                 value = json_repair.loads(env_value)
             except Exception as exc:
@@ -289,18 +285,18 @@ class Config:
 
 
     def set_verbose(self, verbose: bool) -> None:
-        """Set the verbosity level."""
+        """设置日志详细程度。"""
         self.llm_kwargs["verbose"] = verbose
 
     def get_mcp_server_config(self, name: str) -> dict:
         """
-        Get the configuration for an MCP server.
+        获取某个 MCP 服务器的配置。
         
-        Args:
-            name (str): The name of the MCP server to get the config for.
+        参数：
+            name (str): 要取配置的 MCP 服务器名称。
                 
-        Returns:
-            dict: The server configuration, or an empty dict if the server is not found.
+        返回：
+            dict: 该服务器的配置；找不到时返回空字典。
         """
         if not name or not self.mcp_servers:
             return {}

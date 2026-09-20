@@ -1,17 +1,16 @@
-"""Context compression utilities for Argus.
+"""Argus 的上下文压缩工具。
 
-This module provides classes for compressing and retrieving relevant
-context from documents using embeddings and similarity filtering.
+本模块提供若干类，借助 embedding 与相似度过滤，从文档中压缩并取出相关上下文。
 
-The compression pipeline:
-1. Splits documents into chunks
-2. Filters chunks by embedding similarity to the query
-3. Returns the most relevant chunks as context
+压缩流程：
+1. 把文档切分成 chunk
+2. 依据与查询的 embedding 相似度筛选 chunk
+3. 把最相关的 chunk 作为上下文返回
 
-Classes:
-    VectorstoreCompressor: Retrieves context from a vector store.
-    ContextCompressor: Compresses raw documents using embedding similarity.
-    WrittenContentCompressor: Compresses previously written content sections.
+类：
+    VectorstoreCompressor: 从向量库中检索上下文。
+    ContextCompressor: 用 embedding 相似度压缩原始文档。
+    WrittenContentCompressor: 压缩此前写好的内容段落。
 """
 
 import asyncio
@@ -34,15 +33,14 @@ from .retriever import SearchAPIRetriever, SectionRetriever
 
 
 class VectorstoreCompressor:
-    """Retrieves and compresses context from a vector store.
+    """从向量库中检索并压缩上下文。
 
-    Uses similarity search on an existing vector store to find
-    relevant documents for a given query.
+    在已有向量库上做相似度搜索，为给定查询找出相关文档。
 
-    Attributes:
-        vector_store: The vector store wrapper to search.
-        max_results: Maximum number of results to return.
-        filter: Optional filter for vector store queries.
+    属性：
+        vector_store: 待搜索的向量库包装对象。
+        max_results: 最多返回的结果条数。
+        filter: 向量库查询的可选过滤条件。
     """
 
     def __init__(
@@ -53,14 +51,14 @@ class VectorstoreCompressor:
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
         **kwargs,
     ):
-        """Initialize the VectorstoreCompressor.
+        """初始化 VectorstoreCompressor。
 
-        Args:
-            vector_store: The vector store to search.
-            max_results: Maximum number of results to return.
-            filter: Optional filter dictionary for queries.
-            prompt_family: Prompt family for formatting output.
-            **kwargs: Additional keyword arguments.
+        参数：
+            vector_store: 待搜索的向量库。
+            max_results: 最多返回的结果条数。
+            filter: 查询用的可选过滤字典。
+            prompt_family: 用于格式化输出的 prompt 家族。
+            **kwargs: 额外的关键字参数。
         """
         self.vector_store = vector_store
         self.max_results = max_results
@@ -69,30 +67,29 @@ class VectorstoreCompressor:
         self.prompt_family = prompt_family
 
     async def async_get_context(self, query: str, max_results: int = 5) -> str:
-        """Get relevant context from the vector store.
+        """从向量库中取出相关上下文。
 
-        Args:
-            query: The search query.
-            max_results: Maximum number of results to return.
+        参数：
+            query: 搜索查询。
+            max_results: 最多返回的结果条数。
 
-        Returns:
-            Formatted string of relevant document content.
+        返回：
+            格式化后的相关文档内容字符串。
         """
         results = await self.vector_store.asimilarity_search(query=query, k=max_results, filter=self.filter)
         return self.prompt_family.pretty_print_docs(results)
 
 
 class ContextCompressor:
-    """Compresses raw documents to extract relevant context.
+    """压缩原始文档，从中提取相关上下文。
 
-    Uses embedding similarity to filter document chunks and return
-    only the most relevant content for a given query.
+    用 embedding 相似度过滤文档 chunk，只保留与给定查询最相关的内容。
 
-    Attributes:
-        documents: List of documents to compress.
-        embeddings: Embedding model for similarity calculation.
-        max_results: Maximum number of results to return.
-        similarity_threshold: Minimum similarity score for inclusion.
+    属性：
+        documents: 待压缩的文档列表。
+        embeddings: 用于计算相似度的 embedding 模型。
+        max_results: 最多返回的结果条数。
+        similarity_threshold: 入选所需的最低相似度分数。
     """
 
     def __init__(
@@ -104,16 +101,16 @@ class ContextCompressor:
         prompt_family: type[PromptFamily] | PromptFamily = PromptFamily,
         **kwargs,
     ):
-        """Initialize the ContextCompressor.
+        """初始化 ContextCompressor。
 
-        Args:
-            documents: List of documents to compress.
-            embeddings: Embedding model instance.
-            max_results: Maximum number of results to return.
-            similarity_threshold: Minimum similarity score for inclusion.
-                Falls back to the SIMILARITY_THRESHOLD env var when not given.
-            prompt_family: Prompt family for formatting output.
-            **kwargs: Additional keyword arguments.
+        参数：
+            documents: 待压缩的文档列表。
+            embeddings: embedding 模型实例。
+            max_results: 最多返回的结果条数。
+            similarity_threshold: 入选所需的最低相似度分数。
+                未提供时回退到环境变量 SIMILARITY_THRESHOLD。
+            prompt_family: 用于格式化输出的 prompt 家族。
+            **kwargs: 额外的关键字参数。
         """
         self.max_results = max_results
         self.documents = documents
@@ -125,11 +122,10 @@ class ContextCompressor:
         self.prompt_family = prompt_family
 
     def __get_contextual_retriever(self):
-        """Build the contextual compression retriever pipeline.
+        """构建上下文压缩 retriever 流水线。
 
-        Returns:
-            A ContextualCompressionRetriever configured with text splitting
-            and embedding-based filtering.
+        返回：
+            一个配置好文本切分与 embedding 过滤的 ContextualCompressionRetriever。
         """
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
@@ -146,28 +142,28 @@ class ContextCompressor:
         return contextual_retriever
 
     async def async_get_context(self, query: str, max_results: int = 5, cost_callback=None) -> str:
-        """Get relevant context from documents asynchronously.
+        """异步地从文档中取出相关上下文。
 
-        Optimization: Skip expensive compression pipeline for small document sets.
-        When documents are already concise, directly use them without embedding-based filtering.
+        优化点：文档集较小时跳过昂贵的压缩流水线。
+        文档本身已经足够简短时，直接拿来用，不做基于 embedding 的过滤。
 
-        Args:
-            query: The search query.
-            max_results: Maximum number of results to return.
-            cost_callback: Optional callback for tracking embedding costs.
+        参数：
+            query: 搜索查询。
+            max_results: 最多返回的结果条数。
+            cost_callback: 用于统计 embedding 成本的可选回调。
 
-        Returns:
-            Formatted string of relevant document content.
+        返回：
+            格式化后的相关文档内容字符串。
         """
-        # Optimization: Calculate total content size
+        # 优化：先算出内容总量
         total_chars = sum(len(str(doc.get('raw_content', ''))) for doc in self.documents)
         chunk_threshold = int(os.environ.get("COMPRESSION_THRESHOLD", "8000"))
 
-        # If total content is small, skip expensive compression and return directly
+        # 内容总量小就直接返回，省掉昂贵的压缩
         if total_chars < chunk_threshold and len(self.documents) <= max_results:
-            # Fast path: no compression needed
-            # Map scraper/retriever dict keys into metadata that pretty_print_docs expects.
-            # Raw dicts use `url`; SearchAPIRetriever / pretty_print use `source`.
+            # 快速路径：无需压缩
+            # 把 scraper/retriever 的字典键映射成 pretty_print_docs 期望的 metadata。
+            # 原始字典用的是 `url`；SearchAPIRetriever / pretty_print 用的是 `source`。
             direct_docs = [
                 Document(
                     page_content=doc.get('raw_content', '') or '',
@@ -180,7 +176,7 @@ class ContextCompressor:
             ]
             return self.prompt_family.pretty_print_docs(direct_docs, max_results)
 
-        # Standard path: use compression for large content
+        # 常规路径：内容较多时走压缩
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:
             cost_callback(estimate_embedding_cost(model=OPENAI_EMBEDDING_MODEL, docs=self.documents))
@@ -189,26 +185,24 @@ class ContextCompressor:
 
 
 class WrittenContentCompressor:
-    """Compresses previously written content sections.
+    """压缩此前已写好的内容段落。
 
-    Specialized compressor for finding relevant sections from
-    previously written report content, preserving section titles
-    and structure.
+    专用于从已写好的报告内容中找出相关段落的压缩器，会保留段落标题与结构。
 
-    Attributes:
-        documents: List of written content sections.
-        embeddings: Embedding model for similarity calculation.
-        similarity_threshold: Minimum similarity score for inclusion.
+    属性：
+        documents: 已写好的内容段落列表。
+        embeddings: 用于计算相似度的 embedding 模型。
+        similarity_threshold: 入选所需的最低相似度分数。
     """
 
     def __init__(self, documents, embeddings, similarity_threshold: float, **kwargs):
-        """Initialize the WrittenContentCompressor.
+        """初始化 WrittenContentCompressor。
 
-        Args:
-            documents: List of written content sections.
-            embeddings: Embedding model instance.
-            similarity_threshold: Minimum similarity score for inclusion.
-            **kwargs: Additional keyword arguments.
+        参数：
+            documents: 已写好的内容段落列表。
+            embeddings: embedding 模型实例。
+            similarity_threshold: 入选所需的最低相似度分数。
+            **kwargs: 额外的关键字参数。
         """
         self.documents = documents
         self.kwargs = kwargs
@@ -216,10 +210,10 @@ class WrittenContentCompressor:
         self.similarity_threshold = similarity_threshold
 
     def __get_contextual_retriever(self):
-        """Build the contextual compression retriever for sections.
+        """构建面向内容段落的上下文压缩 retriever。
 
-        Returns:
-            A ContextualCompressionRetriever configured for section retrieval.
+        返回：
+            一个为段落检索配置好的 ContextualCompressionRetriever。
         """
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         relevance_filter = EmbeddingsFilter(embeddings=self.embeddings,
@@ -236,27 +230,27 @@ class WrittenContentCompressor:
         return contextual_retriever
 
     def __pretty_docs_list(self, docs, top_n: int) -> list[str]:
-        """Format documents as a list of title/content strings.
+        """把文档格式化成「标题/内容」字符串列表。
 
-        Args:
-            docs: List of documents to format.
-            top_n: Maximum number of documents to include.
+        参数：
+            docs: 待格式化的文档列表。
+            top_n: 最多包含的文档数量。
 
-        Returns:
-            List of formatted document strings.
+        返回：
+            格式化后的文档字符串列表。
         """
         return [f"Title: {d.metadata.get('section_title')}\nContent: {d.page_content}\n" for i, d in enumerate(docs) if i < top_n]
 
     async def async_get_context(self, query: str, max_results: int = 5, cost_callback=None) -> list[str]:
-        """Get relevant written content sections asynchronously.
+        """异步地取出相关的已写内容段落。
 
-        Args:
-            query: The search query.
-            max_results: Maximum number of results to return.
-            cost_callback: Optional callback for tracking embedding costs.
+        参数：
+            query: 搜索查询。
+            max_results: 最多返回的结果条数。
+            cost_callback: 用于统计 embedding 成本的可选回调。
 
-        Returns:
-            List of formatted section strings.
+        返回：
+            格式化后的段落字符串列表。
         """
         compressed_docs = self.__get_contextual_retriever()
         if cost_callback:

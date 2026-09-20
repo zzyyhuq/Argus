@@ -1,4 +1,4 @@
-"""Pydantic validation models for Argus."""
+"""Argus 的 Pydantic 校验模型。"""
 
 from typing import List
 
@@ -6,21 +6,20 @@ from pydantic import BaseModel, Field
 
 
 class Subtopic(BaseModel):
-    """Model representing a single research subtopic.
+    """表示单个研究子主题的模型。
 
-    Attributes:
-        task: The name or description of the subtopic task.
+    属性：
+        task: 子主题任务的名称或描述。
     """
     task: str = Field(description="Task name", min_length=1)
 
 
 class Subtopics(BaseModel):
-    """Model representing a collection of research subtopics.
+    """表示一组研究子主题的模型。
 
-    Used for parsing and validating subtopic lists generated
-    by the LLM during research planning.
+    用于解析并校验 LLM 在研究规划阶段生成的子主题列表。
 
-    Attributes:
-        subtopics: List of Subtopic objects.
+    属性：
+        subtopics: Subtopic 对象列表。
     """
     subtopics: List[Subtopic] = []

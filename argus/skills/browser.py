@@ -1,7 +1,6 @@
-"""Browser manager skill for Argus.
+"""Argus 的浏览器管理技能。
 
-This module provides the BrowserManager class that handles web scraping
-and content extraction from URLs.
+本模块提供 BrowserManager 类，负责网页抓取与从 URL 提取正文。
 """
 
 from argus.utils.workers import WorkerPool
@@ -11,21 +10,20 @@ from ..actions.web_scraping import scrape_urls
 
 
 class BrowserManager:
-    """Manages web browsing and content scraping for research.
+    """负责研究过程中的网页浏览与内容抓取。
 
-    This class handles URL scraping and content extraction during the
-    research process.
+    本类在检索过程中处理 URL 抓取与正文提取。
 
-    Attributes:
-        researcher: The parent Argus instance.
-        worker_pool: Pool of workers for parallel scraping.
+    属性：
+        researcher: 持有该管理器的父级 Argus 实例。
+        worker_pool: 用于并发抓取的 worker 池。
     """
 
     def __init__(self, researcher):
-        """Initialize the BrowserManager.
+        """初始化 BrowserManager。
 
-        Args:
-            researcher: The Argus instance that owns this manager.
+        参数：
+            researcher: 持有该管理器的 Argus 实例。
         """
         self.researcher = researcher
         self.worker_pool = WorkerPool(
@@ -35,13 +33,13 @@ class BrowserManager:
 
     async def browse_urls(self, urls: list[str]) -> list[dict]:
         """
-        Scrape content from a list of URLs.
+        从一组 URL 中抓取正文。
 
-        Args:
-            urls (list[str]): list of URLs to scrape.
+        参数：
+            urls (list[str]): 待抓取的 URL 列表。
 
-        Returns:
-            list[dict]: list of scraped content results.
+        返回：
+            list[dict]: 抓取结果列表。
         """
         if self.researcher.verbose:
             await stream_output(

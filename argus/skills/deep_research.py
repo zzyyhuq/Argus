@@ -14,7 +14,7 @@ from ..actions.query_processing import get_search_results
 
 logger = logging.getLogger(__name__)
 
-# Maximum words allowed in context (25k words for safety margin)
+# 上下文中允许的最大词数（2.5 万词，留出安全余量）
 MAX_CONTEXT_WORDS = 25000
 
 JSON_BLOCK_PATTERNS = [
@@ -205,22 +205,22 @@ def parse_research_results_response(response: str, num_learnings: int) -> Dict[s
     }
 
 def count_words(text) -> int:
-    """Count words in a text string. Handles both strings and lists."""
+    """统计文本中的词数。字符串与列表都支持。"""
     if isinstance(text, list):
         text = " ".join(str(item) for item in text)
     return len(str(text).split())
 
 def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CONTEXT_WORDS) -> List[str]:
-    """Trim context list to stay within word limit while preserving most recent/relevant items"""
+    """裁剪上下文列表使其不超词数上限，同时保留最新/最相关的条目"""
     total_words = 0
     trimmed_context = []
 
-    # Process in reverse to keep most recent items
+    # 倒序处理，以便优先保住最新的条目
     for item in reversed(context_list):
         text = " ".join(str(part) for part in item) if isinstance(item, list) else str(item)
         words = count_words(item)
         if total_words + words <= max_words:
-            trimmed_context.insert(0, item)  # Insert at start to maintain original order
+            trimmed_context.insert(0, item)  # 插到开头，以保持原有顺序
             total_words += words
         elif not trimmed_context:
             trimmed_context.insert(0, " ".join(text.split()[:max_words]))
@@ -232,9 +232,9 @@ def trim_context_to_word_limit(context_list: List[str], max_words: int = MAX_CON
 
 class ResearchProgress:
     def __init__(self, total_depth: int, total_breadth: int):
-        self.current_depth = 1  # Start from 1 and increment up to total_depth
+        self.current_depth = 1  # 从 1 开始，一直递增到 total_depth
         self.total_depth = total_depth
-        self.current_breadth = 0  # Start from 0 and count up to total_breadth as queries complete
+        self.current_breadth = 0  # 从 0 开始，随查询完成情况累加到 total_breadth
         self.total_breadth = total_breadth
         self.current_query: Optional[str] = None
         self.total_queries = 0
@@ -253,11 +253,11 @@ class DeepResearchSkill:
         self.headers = researcher.headers or {}
         self.visited_urls = researcher.visited_urls
         self.learnings = []
-        self.research_sources = []  # Track all research sources
-        self.context = []  # Track all context
+        self.research_sources = []  # 记录全部研究来源
+        self.context = []  # 记录全部上下文
 
     async def generate_search_queries(self, query: str, num_queries: int = 3) -> List[Dict[str, str]]:
-        """Generate SERP queries for research"""
+        """为研究生成 SERP 查询"""
         messages = [
             {
                 "role": "system",
@@ -293,8 +293,8 @@ class DeepResearchSkill:
         return parse_search_queries_response(response, num_queries)
 
     async def generate_research_plan(self, query: str, num_questions: int = 3) -> List[str]:
-        """Generate follow-up questions to clarify research direction"""
-        # Get initial search results from all retrievers to inform query generation
+        """生成追问问题，以厘清研究方向"""
+        # 先从所有 retriever 取一轮搜索结果，作为生成问题的依据
         all_search_results = []
         for retriever in self.researcher.retrievers:
             try:
@@ -309,7 +309,7 @@ class DeepResearchSkill:
         search_results = all_search_results
         logger.info(f"Initial web knowledge obtained: {len(search_results)} results")
 
-        # Get current time for context
+        # 取当前时间作为上下文
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         messages = [
@@ -347,7 +347,7 @@ Return ONLY a JSON object using this exact schema:
         return parse_follow_up_questions_response(response, num_questions)
 
     async def process_research_results(self, query: str, context: str, num_learnings: int = 3) -> Dict[str, List[str]]:
-        """Process research results to extract learnings and follow-up questions"""
+        """处理研究结果，提取要点与追问问题"""
         messages = [
             {
                 "role": "system",
@@ -373,7 +373,7 @@ Return ONLY a JSON object using this exact schema:
             model=self.researcher.cfg.strategic_llm_model,
             temperature=0.4,
             reasoning_effort=ReasoningEfforts.High.value,
-            # Needs headroom for reasoning tokens on reasoning models
+            # 推理模型需要为 reasoning token 留出余量
             max_tokens=4000,
             llm_kwargs=self.researcher.cfg.llm_kwargs
         )
@@ -390,7 +390,7 @@ Return ONLY a JSON object using this exact schema:
             visited_urls: Set[str] = None,
             on_progress=None
     ) -> Dict[str, Any]:
-        """Conduct deep iterative research"""
+        """执行多轮迭代的深度研究"""
         print(f"\n📊 DEEP RESEARCH: depth={depth}, breadth={breadth}, query={query[:100]}...", flush=True)
         if learnings is None:
             learnings = []
@@ -404,7 +404,7 @@ Return ONLY a JSON object using this exact schema:
         if on_progress:
             on_progress(progress)
 
-        # Generate search queries
+        # 生成搜索查询
         print(f"🔎 Generating {breadth} search queries...", flush=True)
         serp_queries = await self.generate_search_queries(query, num_queries=breadth)
         print(f"✅ Generated {len(serp_queries)} queries: {[q['query'] for q in serp_queries]}", flush=True)
@@ -425,7 +425,7 @@ Return ONLY a JSON object using this exact schema:
         all_context = []
         all_sources = []
 
-        # Process queries with concurrency limit
+        # 按并发上限处理查询
         semaphore = asyncio.Semaphore(self.concurrency_limit)
 
         async def process_query(serp_query: Dict[str, str]) -> Optional[Dict[str, Any]]:
@@ -445,25 +445,25 @@ Return ONLY a JSON object using this exact schema:
                         config_path=self.config_path,
                         headers=self.headers,
                         visited_urls=self.visited_urls,
-                        # Propagate MCP configuration to nested researchers
+                        # 把 MCP 配置传递给嵌套的研究器
                         mcp_configs=self.researcher.mcp_configs,
                         mcp_strategy=self.researcher.mcp_strategy
                     )
 
-                    # Conduct research
+                    # 开展研究
                     context = await researcher.conduct_research()
 
-                    # Get results and visited URLs
+                    # 取回结果与已访问 URL
                     visited = researcher.visited_urls
                     sources = researcher.research_sources
 
-                    # Process results to extract learnings and citations
+                    # 处理结果，提取要点与引用来源
                     results = await self.process_research_results(
                         query=serp_query['query'],
                         context=context
                     )
 
-                    # Update progress
+                    # 更新进度
                     progress.completed_queries += 1
                     progress.current_breadth += 1
                     if on_progress:
@@ -486,19 +486,18 @@ Return ONLY a JSON object using this exact schema:
                     print(f"\n❌ DEEP RESEARCH ERROR: {str(e)}\n{error_details}", flush=True)
                     return None
 
-        # Process queries concurrently with limit
+        # 在并发上限内并发处理查询
         tasks = [process_query(query) for query in serp_queries]
         results = await asyncio.gather(*tasks)
         results = [r for r in results if r is not None]
 
-        # Update breadth progress based on successful queries
+        # 依据成功的查询数更新广度进度
         progress.current_breadth = len(results)
         if on_progress:
             on_progress(progress)
 
-        # #1579: if every branch at this level failed (bad API key, offline
-        # retriever, etc.), stop instead of endlessly generating follow-ups
-        # from empty goals / empty learnings.
+        # #1579：若本层所有分支都失败（API key 无效、retriever 离线等），
+        # 就此停下，不要拿着空目标 / 空要点无止境地生成后续追问。
         if not results:
             logger.warning(
                 "Deep research produced no successful query results at depth=%s; stopping descent.",
@@ -516,15 +515,15 @@ Return ONLY a JSON object using this exact schema:
                 'sources': all_sources,
             }
 
-        # Collect all results
+        # 汇总所有结果
         for result in results:
             all_learnings.extend(result['learnings'])
             all_visited_urls.update(result['visited_urls'])
             all_citations.update(result['citations'])
             if result['context']:
-                # Use extend, not append: when CURATE_SOURCES=True, result['context'] is
-                # a List[dict]. append() nests it as a single item, which causes
-                # "\n".join() to crash later with "expected str instance, dict found".
+                # 必须用 extend 而不是 append：当 CURATE_SOURCES=True 时，
+                # result['context'] 是 List[dict]。append() 会把它当成单个元素嵌进去，
+                # 之后 "\n".join() 就会抛出 "expected str instance, dict found" 而崩溃。
                 ctx = result['context']
                 if isinstance(ctx, list):
                     all_context.extend(ctx)
@@ -533,19 +532,19 @@ Return ONLY a JSON object using this exact schema:
             if result['sources']:
                 all_sources.extend(result['sources'])
 
-            # Continue deeper if needed
+            # 如需要则继续向更深一层推进
             if depth > 1:
                 new_breadth = max(2, breadth // 2)
                 new_depth = depth - 1
                 progress.current_depth += 1
 
-                # Create next query from research goal and follow-up questions
+                # 由研究目标与追问问题拼出下一轮的查询
                 next_query = f"""
                 Previous research goal: {result['researchGoal']}
                 Follow-up questions: {' '.join(result['followUpQuestions'])}
                 """
 
-                # Recursive research
+                # 递归研究
                 deeper_results = await self.deep_research(
                     query=next_query,
                     breadth=new_breadth,
@@ -564,11 +563,11 @@ Return ONLY a JSON object using this exact schema:
                 if deeper_results.get('sources'):
                     all_sources.extend(deeper_results['sources'])
 
-        # Update class tracking
+        # 更新类级别的记录
         self.context.extend(all_context)
         self.research_sources.extend(all_sources)
 
-        # Trim context to stay within word limits
+        # 裁剪上下文，使其不超词数上限
         trimmed_context = trim_context_to_word_limit(all_context)
         logger.info(f"Trimmed context from {len(all_context)} items to {len(trimmed_context)} items to stay within word limit")
 
@@ -581,11 +580,11 @@ Return ONLY a JSON object using this exact schema:
         }
 
     async def run(self, on_progress=None) -> str:
-        """Run the deep research process and generate final report"""
+        """运行深度研究流程并生成最终报告"""
         print(f"\n🔍 DEEP RESEARCH: Starting with breadth={self.breadth}, depth={self.depth}, concurrency={self.concurrency_limit}", flush=True)
         start_time = time.time()
 
-        # Log initial costs
+        # 记录初始开销
         initial_costs = self.researcher.get_costs()
 
         follow_up_questions = await self.generate_research_plan(self.researcher.query)
@@ -603,17 +602,17 @@ Return ONLY a JSON object using this exact schema:
             on_progress=on_progress
         )
 
-        # Get costs after deep research
+        # 取深度研究之后的开销
         research_costs = self.researcher.get_costs() - initial_costs
 
-        # Log research costs if we have a log handler
+        # 若有 log handler，则记录研究开销
         if self.researcher.log_handler:
             await self.researcher._log_event("research", step="deep_research_costs", details={
                 "research_costs": research_costs,
                 "total_costs": self.researcher.get_costs()
             })
 
-        # Prepare context with citations
+        # 准备带引用来源的上下文
         context_with_citations = []
         for learning in results['learnings']:
             citation = results['citations'].get(learning, '')
@@ -622,14 +621,14 @@ Return ONLY a JSON object using this exact schema:
             else:
                 context_with_citations.append(learning)
 
-        # Add all research context
+        # 追加全部研究上下文
         if results.get('context'):
             context_with_citations.extend(results['context'])
 
-        # Trim final context to word limit
+        # 对最终上下文做词数裁剪
         final_context = trim_context_to_word_limit(context_with_citations)
         
-        # Set enhanced context and visited URLs
+        # 写回增强后的上下文与已访问 URL
         self.researcher.context = "\n".join(
             item if isinstance(item, str)
             else item.get("Content", str(item)) if isinstance(item, dict)
@@ -638,15 +637,15 @@ Return ONLY a JSON object using this exact schema:
         )
         self.researcher.visited_urls = results['visited_urls']
 
-        # Set research sources
+        # 写回研究来源
         if results.get('sources'):
             self.researcher.research_sources = results['sources']
 
-        # Log total execution time
+        # 记录总执行耗时
         end_time = time.time()
         execution_time = timedelta(seconds=end_time - start_time)
         logger.info(f"Total research execution time: {execution_time}")
         logger.info(f"Total research costs: ${research_costs:.2f}")
 
-        # Return the context - don't generate report here as it will be done by the main agent
+        # 只返回上下文 —— 这里不生成报告，报告由主 agent 负责
         return self.researcher.context

@@ -1,9 +1,8 @@
 """
-Tool-enabled LLM utilities for Argus
+Argus 的启用工具的 LLM 工具函数
 
-This module provides provider-agnostic tool calling functionality using LangChain's
-unified interface. It allows any LLM provider that supports function calling to use
-tools seamlessly.
+本模块借助 LangChain 的统一接口，提供与具体服务商无关的 tool calling 能力，
+让任何支持 function calling 的 LLM 服务商都能无缝使用工具。
 """
 
 import asyncio
@@ -56,33 +55,33 @@ async def create_chat_completion_with_tools(
     **kwargs
 ) -> Tuple[str, List[Dict[str, Any]]]:
     """
-    Create a chat completion with tool calling support across all LLM providers.
+    创建支持 tool calling 的 chat completion，兼容所有 LLM 服务商。
     
-    This function uses LangChain's bind_tools() to enable function calling in a 
-    provider-agnostic way. The AI decides autonomously when and how to use tools.
+    本函数用 LangChain 的 bind_tools() 以与具体服务商无关的方式启用 function
+    calling。由 AI 自主决定何时以及如何使用工具。
     
-    Args:
-        messages: List of chat messages with role and content
-        tools: List of LangChain tool functions (decorated with @tool)
-        model: The model to use (from config)
-        temperature: Temperature for generation
-        max_tokens: Maximum tokens to generate
-        llm_provider: LLM provider name (from config)
-        llm_kwargs: Additional LLM keyword arguments
-        cost_callback: Callback function for cost tracking
-        websocket: Optional websocket for streaming
-        **kwargs: Additional arguments
+    参数：
+        messages: chat 消息列表，每条含 role 与 content
+        tools: LangChain 工具函数列表（用 @tool 装饰）
+        model: 使用的模型（取自配置）
+        temperature: 生成时的 temperature
+        max_tokens: 最多生成的 token 数
+        llm_provider: LLM 服务商名称（取自配置）
+        llm_kwargs: 额外的 LLM 关键字参数
+        cost_callback: 用于成本统计的回调函数
+        websocket: 可选的 websocket，用于流式输出
+        **kwargs: 额外的参数
         
-    Returns:
-        Tuple of (response_content, tool_calls_metadata)
+    返回：
+        (response_content, tool_calls_metadata) 元组
         
-    Raises:
-        Exception: If tool-enabled completion fails, falls back to simple completion
+    异常：
+        Exception: 启用工具的 completion 失败时会回退到简单 completion
     """
     try:
         from ..llm_provider.generic.base import GenericLLMProvider
         
-        # Create LLM provider using the config
+        # 按配置创建 LLM provider
         provider_kwargs = {
             'model': model,
             **(llm_kwargs or {})
@@ -93,7 +92,7 @@ async def create_chat_completion_with_tools(
             **provider_kwargs
         )
         
-        # Convert messages to LangChain format
+        # 把消息转换成 LangChain 格式
         lc_messages = []
         for msg in messages:
             if msg["role"] == "system":
@@ -103,16 +102,17 @@ async def create_chat_completion_with_tools(
             elif msg["role"] == "assistant":
                 lc_messages.append(AIMessage(content=msg["content"]))
         
-        # Bind tools to the LLM - this works across all LangChain providers that support function calling
+        # 把工具绑定到 LLM 上 —— 凡是支持 function calling 的 LangChain
+        # 服务商都能这么用
         llm_with_tools = llm_provider_instance.llm.bind_tools(tools)
         
-        # Invoke the LLM with tools - this will handle the full conversation flow
+        # 带着工具调用 LLM —— 完整的多轮对话流程由它负责
         logger.info(f"Invoking LLM with {len(tools)} available tools")
         
-        # For tool calling, we need to handle the full conversation including tool responses
+        # tool calling 需要处理包含工具返回结果的完整对话
         from langchain_core.messages import ToolMessage
         
-        # First call to LLM
+        # 第一次调用 LLM
         response = await llm_with_tools.ainvoke(lc_messages)
         _track_response_cost(
             llm_provider=llm_provider,
@@ -123,15 +123,15 @@ async def create_chat_completion_with_tools(
             cost_callback=cost_callback,
         )
         
-        # Process tool calls if any were made
+        # 若发生了工具调用，则逐条处理
         tool_calls_metadata = []
         if hasattr(response, 'tool_calls') and response.tool_calls:
             logger.info(f"LLM made {len(response.tool_calls)} tool calls")
             
-            # Add the assistant's response with tool calls to the conversation
+            # 把带 tool calls 的 assistant 回复追加进对话
             lc_messages.append(response)
             
-            # Execute each tool call and add results to conversation
+            # 执行每个工具调用，并把结果加入对话
             for tool_call in response.tool_calls:
                 tool_name = tool_call.get('name', 'unknown')
                 tool_args = tool_call.get('args', {})
@@ -142,7 +142,7 @@ async def create_chat_completion_with_tools(
                     args_str = ", ".join([f"{k}={v}" for k, v in tool_args.items()])
                     logger.debug(f"Tool arguments: {args_str}")
                 
-                # Find and execute the tool
+                # 找到并执行该工具
                 tool_result = "Tool execution failed"
                 for tool in tools:
                     if tool.name == tool_name:
@@ -161,7 +161,7 @@ async def create_chat_completion_with_tools(
                                 f"Error executing tool '{tool_name}': {error_type}: {error_msg}",
                                 exc_info=True
                             )
-                            # Provide user-friendly error message
+                            # 给出对用户友好的错误提示
                             if "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
                                 tool_result = f"Tool '{tool_name}' timed out. The operation took too long to complete. Please try again or check your network connection."
                             elif "connection" in error_msg.lower() or "network" in error_msg.lower():
@@ -171,11 +171,11 @@ async def create_chat_completion_with_tools(
                             else:
                                 tool_result = f"Tool '{tool_name}' encountered an error: {error_msg}. Please check the logs for more details."
                 
-                # Add tool result to conversation
+                # 把工具结果加入对话
                 tool_message = ToolMessage(content=str(tool_result), tool_call_id=tool_id)
                 lc_messages.append(tool_message)
                 
-                # Add to metadata
+                # 记入元数据
                 tool_calls_metadata.append({
                     "tool": tool_name,
                     "args": tool_args,
@@ -183,11 +183,11 @@ async def create_chat_completion_with_tools(
                     "result": str(tool_result)[:200] + "..." if len(str(tool_result)) > 200 else str(tool_result)
                 })
             
-            # Get final response from LLM after tool execution
+            # 工具执行完后，取 LLM 的最终回复
             logger.info("Getting final response from LLM after tool execution")
             final_response = await llm_with_tools.ainvoke(lc_messages)
              
-            # Track costs if callback provided
+            # 提供了回调就统计成本
             _track_response_cost(
                 llm_provider=llm_provider,
                 model=model,
@@ -200,7 +200,7 @@ async def create_chat_completion_with_tools(
             return final_response.content, tool_calls_metadata
          
         else:
-            # No tool calls, return regular response
+            # 没有工具调用，直接返回普通响应
             return response.content, []
         
     except Exception as e:
@@ -212,7 +212,7 @@ async def create_chat_completion_with_tools(
         )
         logger.info("Falling back to simple chat completion without tools")
         
-        # Fallback to simple chat completion without tools
+        # 回退到不带工具的简单 chat completion
         response = await create_chat_completion(
             model=model,
             messages=messages,
@@ -229,13 +229,13 @@ async def create_chat_completion_with_tools(
 
 def create_search_tool(search_function: Callable[[str], Dict]) -> Callable:
     """
-    Create a standardized search tool for use with tool-enabled chat completions.
+    创建一个标准化的搜索工具，供启用工具的 chat completion 使用。
     
-    Args:
-        search_function: Function that takes a query string and returns search results
+    参数：
+        search_function: 接收查询字符串并返回搜索结果的函数
         
-    Returns:
-        LangChain tool function decorated with @tool
+    返回：
+        用 @tool 装饰的 LangChain 工具函数
     """
     @tool
     def search_tool(query: str) -> str:
@@ -258,7 +258,7 @@ def create_search_tool(search_function: Callable[[str], Dict]) -> Callable:
                 f"Search tool error: {error_type}: {error_msg}",
                 exc_info=True
             )
-            # Provide context-aware error messages
+            # 按错误类型给出贴合场景的提示
             if "api" in error_msg.lower() or "key" in error_msg.lower():
                 return f"Search failed: API key issue. Please verify your search API credentials are configured correctly."
             elif "timeout" in error_msg.lower() or "timed out" in error_msg.lower():
@@ -278,16 +278,16 @@ def create_custom_tool(
     parameter_schema: Optional[Dict] = None
 ) -> Callable:
     """
-    Create a custom tool for use with tool-enabled chat completions.
+    创建一个自定义工具，供启用工具的 chat completion 使用。
     
-    Args:
-        name: Name of the tool
-        description: Description of what the tool does
-        function: The actual function to execute
-        parameter_schema: Optional schema for function parameters
+    参数：
+        name: 工具名称
+        description: 工具用途说明
+        function: 实际要执行的函数
+        parameter_schema: 函数参数的可选 schema
         
-    Returns:
-        LangChain tool function decorated with @tool
+    返回：
+        用 @tool 装饰的 LangChain 工具函数
     """
     @tool
     def custom_tool(*args, **kwargs) -> str:
@@ -301,7 +301,7 @@ def create_custom_tool(
                 f"Custom tool '{name}' error: {error_type}: {error_msg}",
                 exc_info=True
             )
-            # Provide informative error message without exposing internal details
+            # 给出有用提示，同时不把内部细节暴露出去
             if "validation" in error_msg.lower() or "invalid" in error_msg.lower():
                 return f"Tool '{name}' received invalid input. Please check the parameters and try again."
             elif "not found" in error_msg.lower() or "missing" in error_msg.lower():
@@ -309,22 +309,22 @@ def create_custom_tool(
             else:
                 return f"Tool '{name}' encountered an error: {error_msg}. Please check the tool configuration."
     
-    # Set tool metadata
+    # 设置工具元数据
     custom_tool.name = name
     custom_tool.description = description
     
     return custom_tool
 
 
-# Utility function for common tool patterns
+# 常见工具模式的辅助函数
 def get_available_providers_with_tools() -> List[str]:
     """
-    Get list of LLM providers that support tool calling.
+    获取支持 tool calling 的 LLM 服务商列表。
     
-    Returns:
-        List of provider names that support function calling
+    返回：
+        支持 function calling 的服务商名称列表
     """
-    # These are the providers known to support function calling in LangChain
+    # 这些是已知在 LangChain 中支持 function calling 的服务商
     return [
         "openai",
         "anthropic", 
@@ -332,18 +332,18 @@ def get_available_providers_with_tools() -> List[str]:
         "azure_openai",
         "fireworks",
         "groq",
-        # Note: This list may expand as more providers add function calling support
+        # 注意：随着更多服务商支持 function calling，这个列表可能还会扩充
     ]
 
 
 def supports_tools(provider: str) -> bool:
     """
-    Check if a given provider supports tool calling.
+    判断给定服务商是否支持 tool calling。
     
-    Args:
-        provider: LLM provider name
+    参数：
+        provider: LLM 服务商名称
         
-    Returns:
-        True if provider supports tools, False otherwise
+    返回：
+        服务商支持工具时返回 True，否则返回 False
     """
     return provider in get_available_providers_with_tools()

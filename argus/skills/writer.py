@@ -1,7 +1,6 @@
-"""Report generator skill for Argus.
+"""Argus 的报告生成技能。
 
-This module provides the ReportGenerator class that handles report
-writing, including introductions, conclusions, and subtopic management.
+本模块提供 ReportGenerator 类，负责报告撰写，包括引言、结论与子主题管理。
 """
 
 from typing import Dict, Optional
@@ -17,21 +16,20 @@ from ..utils.llm import construct_subtopics
 
 
 class ReportGenerator:
-    """Generates reports based on research data.
+    """基于研究数据生成报告。
 
-    This class handles all aspects of report generation including
-    writing introductions, conclusions, and managing report structure.
+    本类处理报告生成的各个环节，包括撰写引言、结论以及管理报告结构。
 
-    Attributes:
-        researcher: The parent Argus instance.
-        research_params: Dictionary of parameters for report generation.
+    属性：
+        researcher: 持有该生成器的父级 Argus 实例。
+        research_params: 报告生成所用的参数字典。
     """
 
     def __init__(self, researcher):
-        """Initialize the ReportGenerator.
+        """初始化 ReportGenerator。
 
-        Args:
-            researcher: The Argus instance that owns this generator.
+        参数：
+            researcher: 持有该生成器的 Argus 实例。
         """
         self.researcher = researcher
         self.research_params = {
@@ -47,25 +45,25 @@ class ReportGenerator:
 
     async def write_report(self, existing_headers: list = [], relevant_written_contents: list = [], ext_context=None, custom_prompt="", available_images: list = None) -> str:
         """
-        Write a report based on existing headers and relevant contents.
+        基于已有标题与相关内容撰写报告。
 
-        Args:
-            existing_headers (list): List of existing headers.
-            relevant_written_contents (list): List of relevant written contents.
-            ext_context (Optional): External context, if any.
-            custom_prompt (str): Custom prompt for the report.
-            available_images (list): Pre-generated images available for embedding.
+        参数：
+            existing_headers (list): 已有标题列表。
+            relevant_written_contents (list): 相关已写内容列表。
+            ext_context (Optional): 外部上下文（若有）。
+            custom_prompt (str): 报告的自定义 prompt。
+            available_images (list): 可供嵌入的预生成图片。
 
-        Returns:
-            str: The generated report.
+        返回：
+            str: 生成的报告。
         """
         available_images = available_images or []
 
         context = ext_context or self.researcher.context
 
-        # Guard against fabricating a report from nothing: if no research content was
-        # gathered (every retriever returned empty / was blocked / rate-limited), don't
-        # silently write a confident, sourced-looking report - abstain so it is visible.
+        # 防止凭空捏造报告：若没有收集到任何研究内容（所有 retriever 都返回空、
+        # 被拦截或被限流），不要默不作声地写出看起来证据充分、自信满满的报告 ——
+        # 应当弃权，让这种情况暴露出来。
         _ctx = "\n".join(context) if isinstance(context, list) else str(context or "")
         if not _ctx.strip():
             return (
@@ -74,7 +72,7 @@ class ReportGenerator:
                 "因此无法生成有据可依的报告。"
             )
         
-        # Log image availability
+        # 记录图片可用情况
         if available_images and self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -96,7 +94,7 @@ class ReportGenerator:
             report_params["agent_role_prompt"] = self.researcher.cfg.agent_role or self.researcher.role
         report_params["context"] = context
         report_params["custom_prompt"] = custom_prompt
-        report_params["available_images"] = available_images  # Pass pre-generated images
+        report_params["available_images"] = available_images  # 传入预生成的图片
 
         if self.researcher.report_type == "subtopic_report":
             report_params.update({
@@ -122,13 +120,13 @@ class ReportGenerator:
 
     async def write_report_conclusion(self, report_content: str) -> str:
         """
-        Write the conclusion for the report.
+        撰写报告的结论。
 
-        Args:
-            report_content (str): The content of the report.
+        参数：
+            report_content (str): 报告的正文内容。
 
-        Returns:
-            str: The generated conclusion.
+        返回：
+            str: 生成的结论。
         """
         if self.researcher.verbose:
             await stream_output(
@@ -160,7 +158,7 @@ class ReportGenerator:
         return conclusion
 
     async def write_introduction(self):
-        """Write the introduction section of the report."""
+        """撰写报告的引言部分。"""
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -191,7 +189,7 @@ class ReportGenerator:
         return introduction
 
     async def get_subtopics(self):
-        """Retrieve subtopics for the research."""
+        """获取本次研究的子主题。"""
         if self.researcher.verbose:
             await stream_output(
                 "logs",
@@ -220,7 +218,7 @@ class ReportGenerator:
         return subtopics
 
     async def get_draft_section_titles(self, current_subtopic: str):
-        """Generate draft section titles for the report."""
+        """为报告生成草稿章节标题。"""
         if self.researcher.verbose:
             await stream_output(
                 "logs",

@@ -5,11 +5,11 @@ DEFAULT_CONFIG: BaseConfig = {
     "EMBEDDING": "dashscope:text-embedding-v3",
     "SIMILARITY_THRESHOLD": 0.42,
     "FAST_LLM": "openai:gpt-5.4-mini",
-    "SMART_LLM": "openai:gpt-5.4",  # Has support for long responses (2k+ words).
-    "STRATEGIC_LLM": "openai:gpt-5.4",  # Reasoning model used for planning; tune REASONING_EFFORT for speed vs. depth.
-    # Output token limits. For reasoning models (the default gpt-5.x family)
-    # these map to max_completion_tokens, which also covers reasoning tokens -
-    # hence the generous headroom on top of the visible output.
+    "SMART_LLM": "openai:gpt-5.4",  # 支持生成长篇回复（2000 字以上）。
+    "STRATEGIC_LLM": "openai:gpt-5.4",  # 用于规划的 reasoning 模型；可通过 REASONING_EFFORT 权衡速度与深度。
+    # 输出 token 上限。对 reasoning 模型（默认的 gpt-5.x 系列）来说，这些值
+    # 会映射到 max_completion_tokens，而该上限也把 reasoning token 计入 ——
+    # 所以要在可见输出之外留出足够余量。
     "FAST_TOKEN_LIMIT": 6000,
     "SMART_TOKEN_LIMIT": 12000,
     "STRATEGIC_TOKEN_LIMIT": 8000,
@@ -26,30 +26,29 @@ DEFAULT_CONFIG: BaseConfig = {
     "AGENT_ROLE": None,
     "SCRAPER": "bs",
     "MAX_SCRAPER_WORKERS": 15,
-    "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # Minimum seconds between scraper requests (0 = no limit, useful for API rate limiting)
+    "SCRAPER_RATE_LIMIT_DELAY": 0.0,  # 抓取请求之间的最小间隔秒数（0 表示不限流，用于配合 API 限流）
     "MAX_SUBTOPICS": 3,
-    # Injected into the report prompt as "write the report in the following
-    # language: {LANGUAGE}". "chinese" alone is ambiguous between Simplified
-    # and Traditional, so a report built from Taiwan/Hong Kong sources came out
-    # in Traditional characters; name the script explicitly.
+    # 会以 "write the report in the following language: {LANGUAGE}" 的形式
+    # 注入报告 prompt。只写 "chinese" 无法区分简体与繁体，取材自台湾/香港
+    # 来源的报告会输出繁体字，因此这里把具体字形写清楚。
     "LANGUAGE": "Simplified Chinese (简体中文)",
     "REPORT_SOURCE": "web",
     "DOC_PATH": "./my-docs",
     "PROMPT_FAMILY": "default",
     "LLM_KWARGS": {},
-    # DashScope quirks (compat base URL, chunk_size, ctx-length check) are
-    # defaulted inside Memory; only set keys here to override them.
+    # DashScope 的那些坑（兼容 base URL、chunk_size、上下文长度校验）已在
+    # Memory 内部设好默认值；只有需要覆盖时才在这里设置相应的键。
     "EMBEDDING_KWARGS": {},
     "VERBOSE": False,
-    # Deep research specific settings
+    # 深度研究相关设置
     "DEEP_RESEARCH_BREADTH": 3,
     "DEEP_RESEARCH_DEPTH": 2,
     "DEEP_RESEARCH_CONCURRENCY": 4,
     
-    # MCP retriever specific settings
-    "MCP_SERVERS": [],  # List of predefined MCP server configurations
-    "MCP_AUTO_TOOL_SELECTION": True,  # Whether to automatically select the best tool for a query
-    "MCP_ALLOWED_ROOT_PATHS": [],  # List of allowed root paths for local file access
-    "MCP_STRATEGY": "fast",  # MCP execution strategy: "fast", "deep", "disabled"
+    # MCP retriever 相关设置
+    "MCP_SERVERS": [],  # 预置的 MCP 服务器配置列表
+    "MCP_AUTO_TOOL_SELECTION": True,  # 是否自动为查询挑选最合适的工具
+    "MCP_ALLOWED_ROOT_PATHS": [],  # 允许访问本地文件的根路径列表
+    "MCP_STRATEGY": "fast",  # MCP 执行策略："fast"、"deep"、"disabled"
     "REASONING_EFFORT": "medium",
 }
