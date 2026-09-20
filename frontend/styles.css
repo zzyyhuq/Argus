@@ -1681,10 +1681,6 @@ footer {
     color: var(--accent-hover);
 }
 
-.footer-note {
-    color: var(--text-dim);
-}
-
 /* --- 平板 --- */
 @media (max-width: 900px) {
     .form-grid {
