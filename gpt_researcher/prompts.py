@@ -216,11 +216,16 @@ STYLE REQUIREMENTS:
         report_type: str,
         max_iterations: int = 3,
         context: List[Dict[str, Any]] = [],
+        language: str = "english",
     ):
         """Generates the search queries prompt for the given question.
         Args:
             question (str): The question to generate the search queries prompt for
             parent_query (str): The main question (only relevant for detailed reports)
+            language (str): Language the report will be written in. The queries are
+                generated in it too -- a search backend answers in the language it
+                is queried in, so a query in another language returns sources that
+                do not match the report.
             report_type (str): The report type
             max_iterations (int): The maximum number of search queries to generate
             context (str): Context for better understanding of the task with realtime web information
@@ -250,6 +255,10 @@ Use this context to inform and refine your search queries. The context provides 
 Each query must be a plain natural language phrase. Do not use search operator syntax
 such as site:, filetype:, inurl:, intitle:, OR, AND, or NOT — these operators are
 not universally supported and will return empty results on many search backends.
+
+Write every query in {language}. The report is written in {language}, and a search
+backend answers in the language it is queried in — queries in another language come
+back as sources that cannot be used.
 
 Assume the current date is {datetime.now(timezone.utc).strftime('%B %d, %Y')} if required.
 

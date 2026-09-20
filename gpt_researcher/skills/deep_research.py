@@ -271,6 +271,9 @@ class DeepResearchSkill:
                 "content": (
                     f"Given the following prompt, generate {num_queries} unique search queries to research the topic thoroughly. "
                     "For each query, provide a research goal.\n\n"
+                    f"Write every query in {self.researcher.cfg.language} — the language the report "
+                    "is written in. A search backend answers in the language it is queried in, so "
+                    "queries in another language come back as sources that cannot be used.\n\n"
                     "Return ONLY a JSON array of objects using this exact schema:\n"
                     '[{"query": "<search query>", "researchGoal": "<research goal>"}]\n\n'
                     f"Prompt: {query}"
