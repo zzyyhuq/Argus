@@ -13,8 +13,8 @@
      8. 历史记录面板
      9. 连接状态面板
     10. 底部下载条
-    11. 浮层（展开视图 / 图片灯箱 / Toast）
-    12. 页脚与响应式
+    11. 浮层（展开视图 / Toast）
+    12. 响应式
 
    注意：本文件中的类名与脚本 scripts.js 存在契约关系，
    尤其是 .report-container / .research-output-container /
@@ -1655,32 +1655,8 @@ select.form-control option {
 }
 
 /* ---------------------------------------------------------------------------
-   12. 页脚与响应式
+   12. 响应式
    ------------------------------------------------------------------------ */
-footer {
-    max-width: var(--content-w);
-    margin: 0 auto;
-    padding: var(--sp-6) var(--sp-5) var(--sp-8);
-    text-align: center;
-    font-size: 12.5px;
-    color: var(--text-dim);
-}
-
-.footer-links {
-    display: flex;
-    justify-content: center;
-    gap: var(--sp-4);
-    margin-bottom: var(--sp-2);
-}
-
-.footer-links a {
-    color: var(--text-muted);
-}
-
-.footer-links a:hover {
-    color: var(--accent-hover);
-}
-
 /* --- 平板 --- */
 @media (max-width: 900px) {
     .form-grid {
