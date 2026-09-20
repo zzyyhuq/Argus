@@ -4,30 +4,30 @@ import uuid
 import mistune
 
 async def write_to_file(filename: str, text: str) -> None:
-    """Asynchronously write text to a file in UTF-8 encoding.
+    """以 UTF-8 编码异步把文本写入文件。
 
-    Args:
-        filename (str): The filename to write to.
-        text (str): The text to write.
+    参数：
+        filename (str): 要写入的文件名。
+        text (str): 要写入的文本。
     """
-    # Ensure text is a string
+    # 确保 text 是字符串
     if not isinstance(text, str):
         text = str(text)
 
-    # Convert text to UTF-8, replacing any problematic characters
+    # 转成 UTF-8，并把无法编码的字符替换掉
     text_utf8 = text.encode('utf-8', errors='replace').decode('utf-8')
 
     async with aiofiles.open(filename, "w", encoding='utf-8') as file:
         await file.write(text_utf8)
 
 async def write_text_to_md(text: str, path: str) -> str:
-    """Writes text to a Markdown file and returns the file path.
+    """把文本写入 Markdown 文件并返回文件路径。
 
-    Args:
-        text (str): Text to write to the Markdown file.
+    参数：
+        text (str): 要写入 Markdown 文件的文本。
 
-    Returns:
-        str: The file path of the generated Markdown file.
+    返回：
+        str: 生成的 Markdown 文件的路径。
     """
     task = uuid.uuid4().hex
     file_path = f"{path}/{task}.md"
@@ -36,20 +36,18 @@ async def write_text_to_md(text: str, path: str) -> str:
     return file_path
 
 
-# Fonts forced into every exported DOCX. See the matching comment in
-# backend/utils.py: python-docx's default template names no East Asian font in
-# its theme, so Word falls back to mixing Cambria (Latin, serif) with 宋体
-# (Chinese) on the same line, which reads as uneven.
+# 强制写入每个导出的 DOCX 的字体。参见 backend/utils.py 中对应的注释：
+# python-docx 的默认模板在 theme 里没有指定任何东亚字体，于是 Word 会退化成
+# 在同一行里混用 Cambria（拉丁文衬线体）与宋体，看起来参差不齐。
 _DOCX_LATIN_FONT = "Segoe UI"
 _DOCX_EAST_ASIA_FONT = "微软雅黑"
 
 
 def _apply_docx_fonts(docx_path: str) -> None:
-    """Write an explicit Latin + East Asian typeface into a saved DOCX.
+    """把明确的拉丁文字体 + 东亚字体写入已保存的 DOCX。
 
-    Patches the theme rather than individual styles, because nearly every style
-    in the default template references the theme. python-docx exposes the theme
-    part as read-only, so the saved package is rewritten instead.
+    改的是 theme 而不是单个样式，因为默认模板里几乎每个样式都引用 theme。
+    python-docx 把 theme 部分暴露为只读，所以这里改为重写整个已保存的包。
     """
     import os
     import re
@@ -75,7 +73,7 @@ def _apply_docx_fonts(docx_path: str) -> None:
                     f'<a:ea typeface="{_DOCX_EAST_ASIA_FONT}"',
                     theme,
                 )
-                # Per-script entries beat <a:ea> for the scripts they name.
+                # 对于自身列出的文字，按 script 的条目优先级高于 <a:ea>。
                 theme = re.sub(
                     r'<a:font script="(Hans|Hant)" typeface="[^"]*"',
                     rf'<a:font script="\1" typeface="{_DOCX_EAST_ASIA_FONT}"',
@@ -88,13 +86,13 @@ def _apply_docx_fonts(docx_path: str) -> None:
 
 
 async def write_md_to_word(text: str, path: str) -> str:
-    """Converts Markdown text to a DOCX file and returns the file path.
+    """把 Markdown 文本转成 DOCX 文件并返回文件路径。
 
-    Args:
-        text (str): Markdown text to convert.
+    参数：
+        text (str): 要转换的 Markdown 文本。
 
-    Returns:
-        str: The encoded file path of the generated DOCX.
+    返回：
+        str: 生成的 DOCX 经过编码后的文件路径。
     """
     task = uuid.uuid4().hex
     file_path = f"{path}/{task}.docx"
@@ -102,14 +100,14 @@ async def write_md_to_word(text: str, path: str) -> str:
     try:
         from htmldocx import HtmlToDocx
         from docx import Document
-        # Convert report markdown to HTML
+        # 把报告 markdown 转成 HTML
         html = mistune.html(text)
-        # Create a document object
+        # 创建文档对象
         doc = Document()
-        # Convert the html generated from the report to document format
+        # 把由报告生成的 html 转成文档格式
         HtmlToDocx().add_html_to_document(html, doc)
 
-        # Saving the docx document to file_path
+        # 把 docx 文档保存到 file_path
         doc.save(file_path)
         _apply_docx_fonts(file_path)
 

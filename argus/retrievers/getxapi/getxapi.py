@@ -1,4 +1,4 @@
-"""GetXAPI X/Twitter retriever for Argus."""
+"""Argus 的 GetXAPI X/Twitter retriever。"""
 
 import json
 import os
@@ -8,12 +8,12 @@ import urllib.request
 
 class GetXAPISearch:
     """
-    GetXAPI X/Twitter search retriever.
+    GetXAPI X/Twitter search retriever。
 
-    Searches tweets via the GetXAPI REST API and returns results in the
-    standard {title, href, body} format used by all Argus retrievers.
+    通过 GetXAPI REST API 搜索推文，并按所有 Argus retriever 通用的
+    标准 {title, href, body} 格式返回结果。
 
-    Set GETXAPI_API_KEY in your environment. Get one at https://getxapi.com
+    需要在环境变量中设置 GETXAPI_API_KEY，可在 https://getxapi.com 获取。
     """
 
     def __init__(self, query, query_domains=None, **kwargs):
@@ -33,10 +33,10 @@ class GetXAPISearch:
 
     def search(self, max_results=10):
         """
-        Search X/Twitter via GetXAPI advanced search.
+        通过 GetXAPI 高级搜索接口搜索 X/Twitter。
 
-        Returns:
-            list: Search results as [{title, href, body}, ...]
+        返回：
+            list: 搜索结果，格式为 [{title, href, body}, ...]
         """
         print(f"Searching X/Twitter with query: {self.query}...")
 

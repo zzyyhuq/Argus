@@ -1,15 +1,14 @@
-"""Retention for generated report artifacts.
+"""生成出来的报告文件的保留策略。
 
-Every research writes .md/.docx/.json into ``outputs/``, which is mounted
-publicly at ``/outputs`` and never shrank on its own — so the directory grew
-without bound, one set of files per visitor. Files older than the retention
-window are swept on a timer.
+每次研究都会往 ``outputs/`` 写入 .md/.docx/.json，而这个目录以 ``/outputs``
+对外公开挂载，又从来不会自己变小——于是它会无限膨胀，每位访客留下一套文件。超过
+保留期的文件由定时任务清掉。
 
-Filename randomisation (see ``sanitize_filename``) is what keeps a report
-private; this module is only about disk. Both are needed: without randomisation
-an old file stays derivable, and without retention the disk fills regardless.
+让报告保持私密靠的是文件名随机化（见 ``sanitize_filename``）；本模块只管磁盘。
+两者都需要：没有随机化，旧文件仍然可被推导出来；没有保留策略，磁盘无论如何都会
+被塞满。
 
-Set ``OUTPUTS_RETENTION_DAYS=0`` to disable sweeping entirely.
+把 ``OUTPUTS_RETENTION_DAYS`` 设为 0 可完全关闭清理。
 """
 
 import asyncio
@@ -22,12 +21,11 @@ logger = logging.getLogger(__name__)
 
 OUTPUTS_DIR = Path("outputs")
 
-# Extensions this app writes for a research. Anything else in the directory
-# (manual files, scratch output) is left alone.
+# 本应用给一次研究写出的扩展名。目录里别的东西（手工放进去的文件、临时输出）
+# 一律不碰。
 _MANAGED_SUFFIXES = (".md", ".docx", ".json")
 
-# How often to sweep. Retention is measured in days, so a few hours of
-# granularity is plenty and keeps this off the request path.
+# 清理的间隔。保留期以天计，几小时的粒度足够，也让这件事不落在请求路径上。
 _SWEEP_INTERVAL_SECONDS = 6 * 3600
 
 
@@ -39,13 +37,13 @@ def _retention_days() -> int:
 
 
 def purge_expired(now: float | None = None) -> int:
-    """Delete generated files older than the retention window.
+    """删除超过保留期的生成文件。
 
-    Args:
-        now: Override for the current time, for tests.
+    参数：
+        now: 覆盖当前时间，供测试使用。
 
-    Returns:
-        int: How many files were removed.
+    返回：
+        int: 删掉了多少个文件。
     """
     days = _retention_days()
     if days <= 0 or not OUTPUTS_DIR.is_dir():
@@ -62,20 +60,20 @@ def purge_expired(now: float | None = None) -> int:
                 path.unlink()
                 removed += 1
         except OSError as e:
-            # A file being deleted twice, or held open, is not worth failing over.
+            # 文件被重复删除、或被别的进程占着，都不值得让整个清理失败。
             logger.warning("Could not remove expired file %s: %s", path, e)
 
     return removed
 
 
 async def periodic_cleanup() -> None:
-    """Sweep once at start-up, then on a timer. Runs until cancelled."""
+    """启动时先清理一次，之后按定时器清理。一直运行到被取消。"""
     while True:
         try:
             removed = purge_expired()
             if removed:
                 logger.info("Removed %d expired file(s) from outputs/", removed)
         except Exception as e:
-            # Never let a sweep failure kill the loop for the life of the process.
+            # 绝不能让某次清理失败把循环弄死，那会影响到进程的整个生命周期。
             logger.warning("outputs cleanup failed: %s", e)
         await asyncio.sleep(_SWEEP_INTERVAL_SECONDS)

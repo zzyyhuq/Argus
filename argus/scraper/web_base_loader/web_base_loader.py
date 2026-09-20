@@ -10,13 +10,11 @@ class WebBaseLoaderScraper:
 
     def scrape(self) -> tuple:
         """
-        This Python function scrapes content from a webpage using a WebBaseLoader object and returns the
-        concatenated page content.
-        
-        Returns:
-          The `scrape` method is returning a string variable named `content` which contains the
-        concatenated page content from the documents loaded by the `WebBaseLoader`. If an exception
-        occurs during the process, an error message is printed and an empty string is returned.
+        本函数使用 WebBaseLoader 对象抓取网页内容，并返回拼接后的页面内容。
+
+        返回：
+          `scrape` 方法返回名为 `content` 的字符串变量，其中是 `WebBaseLoader`
+        所加载文档拼接后的页面内容。过程中若发生异常，会打印错误信息并返回空字符串。
         """
         try:
             from langchain_community.document_loaders import WebBaseLoader
@@ -38,7 +36,7 @@ class WebBaseLoaderScraper:
                 response = self.session.get(self.link)
                 soup = BeautifulSoup(response.content, 'html.parser')
 
-                # Extract the title using the utility function
+                # 用工具函数提取标题
                 title = extract_title(soup)
             except Exception as e:
                 print("Error extracting title! : " + str(e))

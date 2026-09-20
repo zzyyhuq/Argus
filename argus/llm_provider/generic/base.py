@@ -53,7 +53,7 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "o3-2025-04-16",
     "o4-mini",
     "o4-mini-2025-04-16",
-    # GPT-5 family: OpenAI enforces default temperature only
+    # GPT-5 系列：OpenAI 只允许使用默认 temperature
     "gpt-5",
     "gpt-5-mini",
     "gpt-5-nano",
@@ -63,7 +63,7 @@ NO_SUPPORT_TEMPERATURE_MODELS = [
     "gpt-5.4-pro",
     "gpt-5.5",
     "gpt-5.5-pro",
-    # Claude 4.x family: Anthropic deprecates temperature on these models
+    # Claude 4.x 系列：Anthropic 已在这些模型上弃用 temperature
     "claude-sonnet-4-5",
     "claude-sonnet-4-5-20250929",
     "claude-sonnet-4-6",
@@ -96,8 +96,8 @@ class ReasoningEfforts(Enum):
 
 
 class ChatLogger:
-    """Helper utility to log all chat requests and their corresponding responses
-    plus the stack trace leading to the call.
+    """工具类：记录所有聊天请求、对应的响应，
+    以及触发该调用的调用栈。
     """
 
     def __init__(self, fname: str):
@@ -148,12 +148,12 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            # Support custom OpenAI-compatible APIs via OPENAI_BASE_URL
+            # 通过 OPENAI_BASE_URL 支持自定义的 OpenAI 兼容 API
             if "openai_api_base" not in kwargs and os.environ.get("OPENAI_BASE_URL"):
                 kwargs["openai_api_base"] = os.environ["OPENAI_BASE_URL"]
 
-            # Report token usage on streamed responses too, so cost
-            # tracking can use real usage instead of tiktoken estimates.
+            # 流式响应也要上报 token 用量，这样花费统计用的就是真实用量，
+            # 而不是 tiktoken 的估算值。
             kwargs.setdefault("stream_usage", True)
 
             llm = ChatOpenAI(**kwargs)
@@ -196,8 +196,8 @@ class GenericLLMProvider:
             _check_pkg("langchain_ollama")
             from langchain_ollama import ChatOllama
 
-            # Use OLLAMA_BASE_URL from env if not already supplied in kwargs;
-            # fall back to the Ollama default so OLLAMA_BASE_URL is optional.
+            # kwargs 里没给 base_url 时才读环境变量 OLLAMA_BASE_URL；
+            # 再退回 Ollama 的默认地址，这样 OLLAMA_BASE_URL 可以不设。
             if "base_url" not in kwargs:
                 kwargs["base_url"] = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
 
@@ -211,7 +211,7 @@ class GenericLLMProvider:
             _check_pkg("langchain_mistralai")
             from langchain_mistralai import ChatMistralAI
 
-            # Support custom Mistral-compatible APIs via MISTRAL_BASE_URL
+            # 通过 MISTRAL_BASE_URL 支持自定义的 Mistral 兼容 API
             if "endpoint" not in kwargs and "base_url" not in kwargs and os.environ.get("MISTRAL_BASE_URL"):
                 kwargs["endpoint"] = os.environ["MISTRAL_BASE_URL"]
 
@@ -275,7 +275,7 @@ class GenericLLMProvider:
             _check_pkg("langchain_gigachat")
             from langchain_gigachat.chat_models import GigaChat
 
-            kwargs.pop("model", None) # Use env GIGACHAT_MODEL=GigaChat-Max
+            kwargs.pop("model", None) # 改用环境变量 GIGACHAT_MODEL=GigaChat-Max
             llm = GigaChat(**kwargs)
         elif provider == "openrouter":
             _check_pkg("langchain_openai")
@@ -340,7 +340,7 @@ class GenericLLMProvider:
             _check_pkg("langchain_openai")
             from langchain_openai import ChatOpenAI
 
-            # NEBIUS_BASE_URL overrides the default endpoint (self-hosted / regional)
+            # NEBIUS_BASE_URL 可覆盖默认端点（自建 / 区域部署）
             llm = ChatOpenAI(openai_api_base=os.getenv("NEBIUS_BASE_URL", 'https://api.tokenfactory.nebius.com/v1'),
                      openai_api_key=os.environ["NEBIUS_API_KEY"],
                      **kwargs
@@ -361,7 +361,7 @@ class GenericLLMProvider:
     async def get_chat_response(self, messages, stream, websocket=None, **kwargs):
         self._reset_last_response_metadata()
         if not stream:
-            # Getting output from the model chain using ainvoke for asynchronous invoking
+            # 用 ainvoke 异步调用模型链并取回输出
             output = await self.llm.ainvoke(messages, **kwargs)
             self._capture_response_metadata(output)
 
@@ -380,7 +380,7 @@ class GenericLLMProvider:
         paragraph = ""
         response = ""
 
-        # Streaming the response using the chain astream method from langchain
+        # 用 langchain 模型链的 astream 方法流式获取响应
         async for chunk in self.llm.astream(messages, **kwargs):
             self._capture_response_metadata(chunk)
             content = chunk.content
@@ -407,7 +407,7 @@ class GenericLLMProvider:
 def _check_pkg(pkg: str) -> None:
     if not importlib.util.find_spec(pkg):
         pkg_kebab = pkg.replace("_", "-")
-        # Import colorama and initialize it
+        # 导入并初始化 colorama
         init(autoreset=True)
 
         try:
@@ -415,7 +415,7 @@ def _check_pkg(pkg: str) -> None:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", pkg_kebab])
             print(f"{Fore.GREEN}Successfully installed {pkg_kebab}{Style.RESET_ALL}")
 
-            # Try importing again after install
+            # 安装完成后重新尝试导入
             importlib.import_module(pkg)
 
         except subprocess.CalledProcessError:

@@ -1,6 +1,6 @@
-# SerpApi Retriever
+# SerpApi retriever
 
-# libraries
+# 依赖库
 import os
 import requests
 import urllib.parse
@@ -8,12 +8,12 @@ import urllib.parse
 
 class SerpApiSearch():
     """
-    SerpApi Retriever
+    SerpApi retriever
     """
     def __init__(self, query, query_domains=None):
         """
-        Initializes the SerpApiSearch object
-        Args:
+        初始化 SerpApiSearch 对象
+        参数：
             query:
         """
         self.query = query
@@ -22,8 +22,8 @@ class SerpApiSearch():
 
     def get_api_key(self):
         """
-        Gets the SerpApi API key
-        Returns:
+        获取 SerpApi API key
+        返回：
 
         """
         try:
@@ -35,8 +35,8 @@ class SerpApiSearch():
 
     def search(self, max_results=7):
         """
-        Searches the query
-        Returns:
+        执行查询搜索
+        返回：
 
         """
         print("SerpApiSearch: Searching with query {0}...".format(self.query))
@@ -46,7 +46,7 @@ class SerpApiSearch():
 
         search_query = self.query
         if self.query_domains:
-            # Add site:domain1 OR site:domain2 OR ... to the search query
+            # 在搜索查询后追加 site:domain1 OR site:domain2 OR ...
             search_query += " site:" + " OR site:".join(self.query_domains)
 
         params = {
@@ -60,9 +60,8 @@ class SerpApiSearch():
             if response.status_code == 200:
                 search_results = response.json()
                 if search_results:
-                    # A response with no organic results (e.g. an error payload
-                    # or a query that matched nothing) has no "organic_results"
-                    # key; default to [] instead of raising KeyError.
+                    # 没有自然结果的响应（如错误载荷或没匹配到任何内容的查询）
+                    # 不含 "organic_results" 键；默认取 []，而不是抛 KeyError。
                     results = search_results.get("organic_results") or []
                     if not isinstance(results, list):
                         results = []
@@ -73,11 +72,11 @@ class SerpApiSearch():
                         if not isinstance(result, dict):
                             continue
                         link = result.get("link") or ""
-                        # A result without a link is unusable; skip it rather
-                        # than emitting an entry with href=None.
+                        # 没有链接的结果不可用；直接跳过，
+                        # 而不是产出一条 href=None 的记录。
                         if not link:
                             continue
-                        # skip youtube results
+                        # 跳过 youtube 结果
                         if "youtube.com" in link:
                             continue
                         search_result = {

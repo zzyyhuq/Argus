@@ -6,7 +6,7 @@ RunResearchTask = Callable[..., Awaitable[Any]]
 
 
 def _ensure_repo_root_on_path() -> None:
-    """Ensure top-level repo root is importable for multi-agent modules."""
+    """确保仓库根目录可被导入，供多智能体模块使用。"""
     repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
     if repo_root not in sys.path:
         sys.path.insert(0, repo_root)

@@ -1,11 +1,11 @@
 """
-MCP (Model Context Protocol) Integration for Argus
+Argus 的 MCP（Model Context Protocol）集成。
 
-This module provides comprehensive MCP integration including:
-- Client management for MCP servers
-- Tool selection and execution
-- Research execution with MCP tools
-- Streaming support for real-time updates
+本模块提供完整的 MCP 接入能力：
+- MCP server 的客户端管理
+- 工具的筛选与执行
+- 借助 MCP 工具开展研究
+- 实时推送所需的流式输出支持
 """
 
 import logging
@@ -13,12 +13,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 try:
-    # Check if langchain-mcp-adapters is available
+    # 检查 langchain-mcp-adapters 是否可用
     from langchain_mcp_adapters.client import MultiServerMCPClient
     HAS_MCP_ADAPTERS = True
     logger.debug("langchain-mcp-adapters is available")
     
-    # Import core MCP components
+    # 导入 MCP 的核心组件
     from .client import MCPClientManager
     from .tool_selector import MCPToolSelector
     from .research import MCPResearchSkill

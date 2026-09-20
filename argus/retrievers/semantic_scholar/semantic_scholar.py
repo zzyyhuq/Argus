@@ -5,7 +5,7 @@ import requests
 
 class SemanticScholarSearch:
     """
-    Semantic Scholar API Retriever
+    Semantic Scholar API retriever
     """
 
     BASE_URL = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -13,25 +13,24 @@ class SemanticScholarSearch:
 
     def __init__(self, query: str, sort: str = "relevance", query_domains=None):
         """
-        Initialize the SemanticScholarSearch class with a query and sort criterion.
+        用查询与排序条件初始化 SemanticScholarSearch 类。
 
-        :param query: Search query string
-        :param sort: Sort criterion ('relevance', 'citationCount', 'publicationDate')
+        :param query: 搜索查询字符串
+        :param sort: 排序条件（'relevance'、'citationCount'、'publicationDate'）
         """
         self.query = query
         assert sort in self.VALID_SORT_CRITERIA, "Invalid sort criterion"
-        # Preserve the exact (camelCase) criterion. The Semantic Scholar API
-        # expects ``citationCount`` / ``publicationDate`` verbatim; lowercasing
-        # them produced ``citationcount`` / ``publicationdate``, which the API
-        # rejects or silently ignores.
+        # 原样保留（camelCase 的）排序条件。Semantic Scholar API 要求
+        # ``citationCount`` / ``publicationDate`` 逐字一致；改成小写会得到
+        # ``citationcount`` / ``publicationdate``，API 会拒绝或静默忽略。
         self.sort = sort
 
     def search(self, max_results: int = 20) -> List[Dict[str, str]]:
         """
-        Perform the search on Semantic Scholar and return results.
+        在 Semantic Scholar 上执行搜索并返回结果。
 
-        :param max_results: Maximum number of results to retrieve
-        :return: List of dictionaries containing title, href, and body of each paper
+        :param max_results: 最多获取的结果数
+        :return: 字典列表，每项含该论文的 title、href 与 body
         """
         params = {
             "query": self.query,

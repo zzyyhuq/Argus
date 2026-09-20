@@ -1,15 +1,12 @@
-"""Per-client rate limiting for research requests.
+"""研究请求的按客户端限流。
 
-This protects the *server's* search quota, not the visitor's. A visitor who
-supplies their own Tavily key spends their own credits and is not limited;
-everyone else shares the server's allowance, which is small -- Tavily's free
-tier is 1000 searches/month and one research issues 4-8 of them, so a few dozen
-visitors could exhaust it in an afternoon.
+这里保护的是*服务器*的搜索额度，而不是访客的。自带 Tavily key 的访客花的是自己
+的额度，不受限；其余人共用服务器那份很小的配额——Tavily 免费版每月 1000 次搜索，
+而一次研究要发起 4-8 次，所以几十个访客一下午就能把它耗光。
 
-Deliberately in-memory and per-process: the app runs a single uvicorn worker
-(`Dockerfile` WORKERS default 1, `main.py` plain `uvicorn.run`), so a shared
-store would be premature. If that ever changes, this needs to move to Redis or
-similar -- process-local counters would each enforce their own limit.
+刻意做成进程内的内存实现：应用只跑一个 uvicorn worker（`Dockerfile` 里 WORKERS
+默认为 1，`main.py` 也就是普通的 `uvicorn.run`），所以引入共享存储为时过早。若日
+后这一点变了，就得换成 Redis 之类——各进程自己的计数器会各限各的，等于没限。
 """
 
 import asyncio
@@ -19,7 +16,7 @@ from typing import Dict, List, Tuple
 
 
 class RateLimiter:
-    """Sliding-window request counter keyed by client identity."""
+    """按客户端身份计数的滑动窗口请求计数器。"""
 
     def __init__(self, limit: int, window_seconds: int = 3600):
         self.limit = limit
@@ -28,16 +25,16 @@ class RateLimiter:
         self._lock = asyncio.Lock()
 
     async def check(self, key: str) -> Tuple[bool, int]:
-        """Record a request for ``key``.
+        """为 ``key`` 记一次请求。
 
-        Args:
-            key: Client identity (see ``client_key``).
+        参数：
+            key: 客户端身份（见 ``client_key``）。
 
-        Returns:
-            ``(allowed, retry_after_seconds)``. ``retry_after_seconds`` is 0
-            when the request is allowed.
+        返回：
+            ``(allowed, retry_after_seconds)``。请求被放行时
+            ``retry_after_seconds`` 为 0。
         """
-        if self.limit <= 0:  # 0 disables limiting entirely
+        if self.limit <= 0:  # 0 表示完全不限流
             return True, 0
 
         now = time.monotonic()
@@ -52,8 +49,8 @@ class RateLimiter:
             hits.append(now)
             self._hits[key] = hits
 
-            # Drop keys with no live hits so the map does not grow without bound
-            # as visitors come and go.
+            # 丢掉已经没有有效记录的 key，这样访客来来去去时这张表也不会无限
+            # 增长。
             if len(self._hits) > 1024:
                 self._hits = {k: v for k, v in self._hits.items() if v}
 
@@ -61,26 +58,25 @@ class RateLimiter:
 
 
 def client_key(websocket) -> str:
-    """Identify the caller for rate-limiting purposes.
+    """识别调用方，供限流使用。
 
-    NOTE: this is the *direct peer* address. Behind a reverse proxy (nginx,
-    Cloudflare, ...) every visitor shares the proxy's IP and would be limited
-    as one client -- at which point this must read a trusted X-Forwarded-For
-    instead.
+    注意：这里取的是*直接对端*的地址。若身处反向代理之后（nginx、Cloudflare
+    等），所有访客共用代理的 IP，会被当成同一个客户端来限流——到那时就必须改读
+    可信的 X-Forwarded-For。
     """
     client = getattr(websocket, "client", None)
     return getattr(client, "host", None) or "unknown"
 
 
 def build_limiter(env_var: str = "RATE_LIMIT_PER_HOUR", default: int = 3) -> RateLimiter:
-    """Build a limiter from an environment variable.
+    """从环境变量构造一个限流器。
 
-    Args:
-        env_var: Name of the environment variable holding the hourly limit.
-        default: Used when the variable is unset or not an integer.
+    参数：
+        env_var: 存放每小时限额的环境变量名。
+        default: 变量未设置或不是整数时使用。
 
-    Returns:
-        A limiter with that limit, or an unlimited one when the value is <= 0.
+    返回：
+        按该限额构造的限流器；值为 <= 0 时返回不限流的限流器。
     """
     raw = os.getenv(env_var, str(default)).strip()
     try:

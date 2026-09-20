@@ -12,23 +12,23 @@ from fastapi import WebSocket
 from backend.report_type import BasicReport, DetailedReport
 
 from argus.utils.enum import ReportType, Tone
-from argus.actions import stream_output  # Import stream_output
+from argus.actions import stream_output  # 导入 stream_output
 from .multi_agent_runner import run_multi_agent_task
 from .server_utils import CustomLogsHandler
 
 logger = logging.getLogger(__name__)
 
 class WebSocketManager:
-    """Manage websockets"""
+    """管理 websocket 连接"""
 
     def __init__(self):
-        """Initialize the WebSocketManager class."""
+        """初始化 WebSocketManager。"""
         self.active_connections: List[WebSocket] = []
         self.sender_tasks: Dict[WebSocket, asyncio.Task] = {}
         self.message_queues: Dict[WebSocket, asyncio.Queue] = {}
 
     async def start_sender(self, websocket: WebSocket):
-        """Start the sender task."""
+        """启动发送任务。"""
         queue = self.message_queues.get(websocket)
         if not queue:
             return
@@ -36,7 +36,7 @@ class WebSocketManager:
         while True:
             try:
                 message = await queue.get()
-                if message is None:  # Shutdown signal
+                if message is None:  # 关闭信号
                     break
                     
                 if websocket in self.active_connections:
@@ -51,7 +51,7 @@ class WebSocketManager:
                 break
 
     async def connect(self, websocket: WebSocket):
-        """Connect a websocket."""
+        """接入一个 websocket。"""
         try:
             await websocket.accept()
             self.active_connections.append(websocket)
@@ -64,12 +64,12 @@ class WebSocketManager:
                 await self.disconnect(websocket)
 
     async def disconnect(self, websocket: WebSocket):
-        """Disconnect a websocket."""
+        """断开一个 websocket。"""
         try:
             if websocket in self.active_connections:
                 self.active_connections.remove(websocket)
                 
-                # Cancel sender task if it exists
+                # 发送任务存在就取消掉
                 if websocket in self.sender_tasks:
                     try:
                         self.sender_tasks[websocket].cancel()
@@ -77,34 +77,34 @@ class WebSocketManager:
                     except Exception as e:
                         logger.error(f"Error canceling sender task: {e}")
                     finally:
-                        # Always try to clean up regardless of errors
+                        # 无论是否出错都要清理
                         if websocket in self.sender_tasks:
                             del self.sender_tasks[websocket]
                 
-                # Clean up message queue
+                # 清理消息队列
                 if websocket in self.message_queues:
                     del self.message_queues[websocket]
                 
-                # Finally close the WebSocket
+                # 最后关闭 WebSocket
                 try:
                     await websocket.close()
                 except Exception as e:
                     logger.info(f"WebSocket already closed: {e}")
         except Exception as e:
             logger.error(f"Error during WebSocket disconnection: {e}")
-            # Still try to close the connection if possible
+            # 还是尽量把连接关掉
             try:
                 await websocket.close()
             except Exception:
-                pass  # If this fails too, there's nothing more we can do
+                pass  # 这一步也失败的话，就没别的办法了
 
     async def start_streaming(self, task, report_type, report_source, source_urls, document_urls, tone, websocket, headers=None, query_domains=[], mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None, api_keys=None):
-        """Start streaming the output."""
+        """开始流式输出。"""
         tone = Tone[tone]
-        # add customized JSON config file path here
+        # 在这里填入自定义 JSON 配置文件的路径
         config_path = os.environ.get("CONFIG_PATH", "default")
 
-        # Pass MCP parameters to run_agent
+        # 把 MCP 参数传给 run_agent
         report = await run_agent(
             task, report_type, report_source, source_urls, document_urls, tone, websocket,
             headers=headers, query_domains=query_domains, config_path=config_path,
@@ -114,14 +114,13 @@ class WebSocketManager:
         return report
 
 async def run_agent(task, report_type, report_source, source_urls, document_urls, tone: Tone, websocket, stream_output=stream_output, headers=None, query_domains=[], config_path="", return_researcher=False, mcp_enabled=False, mcp_strategy="fast", mcp_configs=[], max_search_results=None, api_keys=None):
-    """Run the agent."""    
-    # Create logs handler for this research task
+    """运行 agent。"""
+    # 为本次研究任务创建日志处理器
     logs_handler = CustomLogsHandler(websocket, task)
 
-    # Log MCP initialization. Retriever and strategy are configured per-request
-    # inside Argus via mcp_configs/mcp_strategy params — no os.environ
-    # mutation needed here (mutating os.environ would persist across requests and
-    # affect unrelated sessions, see issue #1676).
+    # 记录 MCP 的初始化。retriever 与 strategy 是逐请求配置的，通过 Argus 的
+    # mcp_configs/mcp_strategy 参数传入——这里不需要改 os.environ，因为改动
+    # os.environ 会跨请求残留，影响无关的会话，见 issue #1676。
     if mcp_enabled and mcp_configs:
         print(f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)")
         await logs_handler.send_json({
@@ -130,11 +129,11 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             "output": f"🔧 MCP enabled with strategy '{mcp_strategy}' and {len(mcp_configs)} server(s)"
         })
 
-    # Initialize researcher based on report type
+    # 按报告类型初始化 researcher
     if report_type == "multi_agents":
         report = await run_multi_agent_task(
             query=task, 
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,  # 用 logs_handler 而不是裸 websocket
             stream_output=stream_output, 
             tone=tone, 
             headers=headers
@@ -151,7 +150,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,  # 用 logs_handler 而不是裸 websocket
             headers=headers,
             mcp_configs=mcp_configs if mcp_enabled else None,
             mcp_strategy=mcp_strategy if mcp_enabled else None,
@@ -170,7 +169,7 @@ async def run_agent(task, report_type, report_source, source_urls, document_urls
             document_urls=document_urls,
             tone=tone,
             config_path=config_path,
-            websocket=logs_handler,  # Use logs_handler instead of raw websocket
+            websocket=logs_handler,  # 用 logs_handler 而不是裸 websocket
             headers=headers,
             mcp_configs=mcp_configs if mcp_enabled else None,
             mcp_strategy=mcp_strategy if mcp_enabled else None,

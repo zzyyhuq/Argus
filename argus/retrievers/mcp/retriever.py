@@ -1,10 +1,10 @@
 """
-MCP-Based Research Retriever
+基于 MCP 的研究 retriever
 
-A retriever that uses Model Context Protocol (MCP) tools for intelligent research.
-This retriever implements a two-stage approach:
-1. Tool Selection: LLM selects 2-3 most relevant tools from all available MCP tools
-2. Research Execution: LLM uses the selected tools to conduct intelligent research
+一个使用 Model Context Protocol (MCP) 工具做智能研究的 retriever。
+它采用两阶段方案：
+1. 工具选择：由 LLM 从全部可用的 MCP 工具中挑出最相关的 2-3 个
+2. 研究执行：由 LLM 使用选中的工具开展智能研究
 """
 import asyncio
 import logging
@@ -26,19 +26,18 @@ logger = logging.getLogger(__name__)
 
 class MCPRetriever:
     """
-    Model Context Protocol (MCP) Retriever for Argus.
-    
-    This retriever implements a two-stage approach:
-    1. Tool Selection: LLM selects 2-3 most relevant tools from all available MCP tools
-    2. Research Execution: LLM with bound tools conducts intelligent research
-    
-    This approach is more efficient than calling all tools and provides better, 
-    more targeted research results.
-    
-    The retriever requires a researcher instance to access:
-    - mcp_configs: List of MCP server configurations
-    - cfg: Configuration object with LLM settings and parameters
-    - add_costs: Method for tracking research costs
+    Argus 的 Model Context Protocol (MCP) retriever。
+
+    本 retriever 采用两阶段方案：
+    1. 工具选择：由 LLM 从全部可用的 MCP 工具中挑出最相关的 2-3 个
+    2. 研究执行：由绑定了工具的 LLM 开展智能研究
+
+    该方案比调用全部工具更高效，研究结果也更好、更有针对性。
+
+    retriever 需要一个 researcher 实例，以便访问：
+    - mcp_configs: MCP 服务器配置列表
+    - cfg: 含 LLM 设置与参数的配置对象
+    - add_costs: 用于统计研究成本的方法
     """
 
     def __init__(
@@ -51,15 +50,15 @@ class MCPRetriever:
         **kwargs
     ):
         """
-        Initialize the MCP Retriever.
-        
-        Args:
-            query (str): The search query string.
-            headers (dict, optional): Headers containing MCP configuration.
-            query_domains (list, optional): List of domains to search (not used in MCP).
-            websocket: WebSocket for stream logging.
-            researcher: Researcher instance containing mcp_configs and cfg.
-            **kwargs: Additional arguments (for compatibility).
+        初始化 MCP Retriever。
+
+        参数：
+            query (str): 搜索查询字符串。
+            headers (dict, optional): 含 MCP 配置的 headers。
+            query_domains (list, optional): 要搜索的域名列表（MCP 中不使用）。
+            websocket: 用于流式日志的 WebSocket。
+            researcher: 含 mcp_configs 与 cfg 的 Researcher 实例。
+            **kwargs: 附加参数（用于兼容）。
         """
         self.query = query
         self.headers = headers or {}
@@ -67,20 +66,20 @@ class MCPRetriever:
         self.websocket = websocket
         self.researcher = researcher
         
-        # Extract mcp_configs and config from the researcher instance
+        # 从 researcher 实例中取出 mcp_configs 与 config
         self.mcp_configs = self._get_mcp_configs()
         self.cfg = self._get_config()
         
-        # Initialize modular components
+        # 初始化各模块化组件
         self.client_manager = MCPClientManager(self.mcp_configs)
         self.tool_selector = MCPToolSelector(self.cfg, self.researcher)
         self.mcp_researcher = MCPResearchSkill(self.cfg, self.researcher)
         self.streamer = MCPStreamer(self.websocket)
         
-        # Initialize caching
+        # 初始化缓存
         self._all_tools_cache = None
         
-        # Log initialization
+        # 记录初始化日志
         if self.mcp_configs:
             self.streamer.stream_log_sync(f"🔧 Initializing MCP retriever for query: {self.query}")
             self.streamer.stream_log_sync(f"🔧 Found {len(self.mcp_configs)} MCP server configurations")
@@ -90,10 +89,10 @@ class MCPRetriever:
 
     def _get_mcp_configs(self) -> List[Dict[str, Any]]:
         """
-        Get MCP configurations from the researcher instance.
-        
-        Returns:
-            List[Dict[str, Any]]: List of MCP server configurations.
+        从 researcher 实例中获取 MCP 配置。
+
+        返回：
+            List[Dict[str, Any]]: MCP 服务器配置列表。
         """
         if self.researcher and hasattr(self.researcher, 'mcp_configs'):
             return self.researcher.mcp_configs or []
@@ -101,40 +100,40 @@ class MCPRetriever:
 
     def _get_config(self):
         """
-        Get configuration from the researcher instance.
-        
-        Returns:
-            Config: Configuration object with LLM settings.
+        从 researcher 实例中获取配置。
+
+        返回：
+            Config: 含 LLM 设置的配置对象。
         """
         if self.researcher and hasattr(self.researcher, 'cfg'):
             return self.researcher.cfg
         
-        # If no config available, this is a critical error
+        # 没有可用 config 属于致命错误
         logger.error("No config found in researcher instance. MCPRetriever requires a researcher instance with cfg attribute.")
         raise ValueError("MCPRetriever requires a researcher instance with cfg attribute containing LLM configuration")
 
     async def search_async(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
-        Perform an async search using MCP tools with intelligent two-stage approach.
-        
-        Args:
-            max_results: Maximum number of results to return.
-            
-        Returns:
-            List[Dict[str, str]]: The search results.
+        使用 MCP 工具执行异步搜索，采用智能的两阶段方案。
+
+        参数：
+            max_results: 最多返回的结果数。
+
+        返回：
+            List[Dict[str, str]]: 搜索结果。
         """
-        # Check if we have any server configurations
+        # 检查是否有任何服务器配置
         if not self.mcp_configs:
             error_msg = "No MCP server configurations available. Please provide mcp_configs parameter to Argus."
             logger.error(error_msg)
             await self.streamer.stream_error("MCP retriever cannot proceed without server configurations.")
-            return []  # Return empty instead of raising to allow research to continue
+            return []  # 返回空列表而不是抛异常，让研究流程能继续走下去
             
-        # Log to help debug the integration flow
+        # 记录日志，便于排查集成流程
         logger.info(f"MCPRetriever.search_async called for query: {self.query}")
             
         try:
-            # Stage 1: Get all available tools
+            # 阶段 1：获取所有可用工具
             await self.streamer.stream_stage_start("Stage 1", "Getting all available MCP tools")
             all_tools = await self._get_all_tools()
             
@@ -142,7 +141,7 @@ class MCPRetriever:
                 await self.streamer.stream_warning("No MCP tools available, skipping MCP research")
                 return []
             
-            # Stage 2: Select most relevant tools
+            # 阶段 2：挑选最相关的工具
             await self.streamer.stream_stage_start("Stage 2", "Selecting most relevant tools")
             selected_tools = await self.tool_selector.select_relevant_tools(self.query, all_tools, max_tools=3)
             
@@ -150,26 +149,26 @@ class MCPRetriever:
                 await self.streamer.stream_warning("No relevant tools selected, skipping MCP research")
                 return []
             
-            # Stage 3: Conduct research with selected tools
+            # 阶段 3：用选中的工具开展研究
             await self.streamer.stream_stage_start("Stage 3", "Conducting research with selected tools")
             results = await self.mcp_researcher.conduct_research_with_tools(self.query, selected_tools)
             
-            # Limit the number of results
+            # 限制结果条数
             if len(results) > max_results:
                 logger.info(f"Limiting {len(results)} MCP results to {max_results}")
                 results = results[:max_results]
             
-            # Log result summary with actual content samples
+            # 记录结果摘要，并附带实际内容样本
             logger.info(f"MCPRetriever returning {len(results)} results")
             
-            # Calculate total content length for summary
+            # 统计内容总长度，用于摘要
             total_content_length = sum(len(result.get("body", "")) for result in results)
             await self.streamer.stream_research_results(len(results), total_content_length)
             
-            # Log detailed content samples for debugging
+            # 记录详细内容样本，便于调试
             if results:
-                # Show samples of the first few results
-                for i, result in enumerate(results[:3]):  # Show first 3 results
+                # 展示前几条结果的样本
+                for i, result in enumerate(results[:3]):  # 只展示前 3 条结果
                     title = result.get("title", "No title")
                     url = result.get("href", "No URL")
                     content = result.get("body", "")
@@ -192,7 +191,7 @@ class MCPRetriever:
             await self.streamer.stream_error(f"Error in MCP search: {str(e)}")
             return []
         finally:
-            # Ensure client cleanup after search completes
+            # 确保搜索完成后清理客户端
             try:
                 await self.client_manager.close_client()
             except Exception as e:
@@ -200,38 +199,37 @@ class MCPRetriever:
 
     def search(self, max_results: int = 10) -> List[Dict[str, str]]:
         """
-        Perform a search using MCP tools with intelligent two-stage approach.
-        
-        This is the synchronous interface required by Argus.
-        It wraps the async search_async method.
-        
-        Args:
-            max_results: Maximum number of results to return.
-            
-        Returns:
-            List[Dict[str, str]]: The search results.
+        使用 MCP 工具执行搜索，采用智能的两阶段方案。
+
+        这是 Argus 要求的同步接口，内部包装了异步的 search_async 方法。
+
+        参数：
+            max_results: 最多返回的结果数。
+
+        返回：
+            List[Dict[str, str]]: 搜索结果。
         """
-        # Check if we have any server configurations
+        # 检查是否有任何服务器配置
         if not self.mcp_configs:
             error_msg = "No MCP server configurations available. Please provide mcp_configs parameter to Argus."
             logger.error(error_msg)
             self.streamer.stream_log_sync("❌ MCP retriever cannot proceed without server configurations.")
-            return []  # Return empty instead of raising to allow research to continue
+            return []  # 返回空列表而不是抛异常，让研究流程能继续走下去
             
-        # Log to help debug the integration flow
+        # 记录日志，便于排查集成流程
         logger.info(f"MCPRetriever.search called for query: {self.query}")
         
         try:
-            # Handle the async/sync boundary properly
+            # 妥善处理 async/sync 的边界
             try:
-                # Try to get the current event loop
+                # 尝试获取当前事件循环
                 loop = asyncio.get_running_loop()
-                # If we're in an async context, we need to schedule the coroutine
-                # This is a bit tricky - we'll create a task and let it run
+                # 若处于 async 上下文中，就需要另行调度这个协程。
+                # 这里稍微绕一点——我们创建一个任务并让它自己跑起来。
                 import concurrent.futures
                 import threading
                 
-                # Create a new event loop in a separate thread
+                # 在独立线程中新建一个事件循环
                 def run_in_thread():
                     new_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(new_loop)
@@ -239,54 +237,54 @@ class MCPRetriever:
                         result = new_loop.run_until_complete(self.search_async(max_results))
                         return result
                     finally:
-                        # Enhanced cleanup procedure for MCP connections
+                        # 针对 MCP 连接的强化清理流程
                         try:
-                            # Cancel all pending tasks with a timeout
+                            # 取消所有待处理任务（带超时）
                             pending = asyncio.all_tasks(new_loop)
                             for task in pending:
                                 task.cancel()
                             
-                            # Wait for cancelled tasks to complete with timeout
+                            # 带超时地等待已取消任务收尾
                             if pending:
                                 try:
                                     new_loop.run_until_complete(
                                         asyncio.wait_for(
                                             asyncio.gather(*pending, return_exceptions=True),
-                                            timeout=5.0  # 5 second timeout for cleanup
+                                            timeout=5.0  # 清理超时 5 秒
                                         )
                                     )
                                 except asyncio.TimeoutError:
                                     logger.debug("Timeout during task cleanup, continuing...")
                                 except Exception:
-                                    pass  # Ignore other cleanup errors
+                                    pass  # 忽略其他清理错误
                         except Exception:
-                            pass  # Ignore cleanup errors
+                            pass  # 忽略清理错误
                         finally:
                             try:
-                                # Give the loop a moment to finish any final cleanup
+                                # 给事件循环一点时间完成最后的清理
                                 import time
                                 time.sleep(0.1)
                                 
-                                # Force garbage collection to clean up any remaining references
+                                # 强制垃圾回收，清理残留引用
                                 import gc
                                 gc.collect()
                                 
-                                # Additional time for HTTP clients to finish their cleanup
+                                # 再留一点时间给 HTTP 客户端完成清理
                                 time.sleep(0.2)
                                 
-                                # Close the loop
+                                # 关闭事件循环
                                 if not new_loop.is_closed():
                                     new_loop.close()
                             except Exception:
-                                pass  # Ignore close errors
+                                pass  # 忽略关闭时的错误
                 
-                # Run in a thread pool to avoid blocking the main event loop
+                # 放到线程池里跑，避免阻塞主事件循环
                 with concurrent.futures.ThreadPoolExecutor() as executor:
                     future = executor.submit(run_in_thread)
-                    results = future.result(timeout=300)  # 5 minute timeout
+                    results = future.result(timeout=300)  # 5 分钟超时
                     
             except RuntimeError:
-                # No event loop is running, we can run directly
+                # 没有事件循环在运行，可以直接跑
                 results = asyncio.run(self.search_async(max_results))
             
             return results
@@ -294,15 +292,15 @@ class MCPRetriever:
         except Exception as e:
             logger.error(f"Error in MCP search: {e}")
             self.streamer.stream_log_sync(f"❌ Error in MCP search: {str(e)}")
-            # Return empty results instead of raising to allow research to continue
+            # 返回空结果而不是抛异常，让研究流程能继续走下去
             return []
 
     async def _get_all_tools(self) -> List:
         """
-        Get all available tools from MCP servers.
-        
-        Returns:
-            List: All available MCP tools
+        从 MCP 服务器获取所有可用工具。
+
+        返回：
+            List: 所有可用的 MCP 工具
         """
         if self._all_tools_cache is not None:
             return self._all_tools_cache

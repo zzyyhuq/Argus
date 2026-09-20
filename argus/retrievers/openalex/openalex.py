@@ -6,19 +6,19 @@ import requests
 
 class OpenAlexSearch:
     """
-    OpenAlex API Retriever.
+    OpenAlex API retriever。
 
-    OpenAlex (https://openalex.org) is an open catalog of scholarly works.
-    No API key is required for default usage.
+    OpenAlex（https://openalex.org）是一个开放的学术作品目录。
+    默认用法无需 API key。
 
-    Optional environment variables:
-    - OPENALEX_EMAIL: adds the caller to OpenAlex's polite pool for more
-      predictable rate limits (recommended for production use).
-    - OPENALEX_API_KEY: authenticated access with higher rate limits
-      (register for free at https://openalex.org/).
+    可选环境变量：
+    - OPENALEX_EMAIL: 把调用方加入 OpenAlex 的 polite pool，以获得更
+      可预期的限流（生产环境推荐设置）。
+    - OPENALEX_API_KEY: 认证访问，限流更宽松
+      （可在 https://openalex.org/ 免费注册）。
 
-    See https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication
-    for current rate limit details.
+    当前限流细节见
+    https://docs.openalex.org/how-to-use-the-api/rate-limits-and-authentication
     """
 
     BASE_URL = "https://api.openalex.org/works"
@@ -30,10 +30,10 @@ class OpenAlexSearch:
 
     def __init__(self, query: str, sort: str = "relevance_score:desc", query_domains=None):
         """
-        Initialize the OpenAlexSearch class with a query and sort criterion.
+        用查询与排序条件初始化 OpenAlexSearch 类。
 
-        :param query: Search query string.
-        :param sort: Sort criterion. One of VALID_SORT_CRITERIA.
+        :param query: 搜索查询字符串。
+        :param sort: 排序条件，取 VALID_SORT_CRITERIA 之一。
         """
         self.query = query
         assert sort in self.VALID_SORT_CRITERIA, f"Invalid sort criterion: {sort}"
@@ -43,10 +43,10 @@ class OpenAlexSearch:
 
     def search(self, max_results: int = 20) -> List[Dict[str, str]]:
         """
-        Perform the search on OpenAlex and return results.
+        在 OpenAlex 上执行搜索并返回结果。
 
-        :param max_results: Maximum number of results to retrieve (capped at 25 per request).
-        :return: List of dictionaries containing title, href, and body of each work.
+        :param max_results: 最多获取的结果数（单次请求上限为 25）。
+        :return: 字典列表，每项含该作品的 title、href 与 body。
         """
         params = {
             "search": self.query,
@@ -94,8 +94,8 @@ class OpenAlexSearch:
     @staticmethod
     def _pick_href(result: dict) -> Optional[str]:
         """
-        Prefer the open-access PDF URL, then the landing page URL from
-        primary_location, then the OpenAlex work URL as fallback.
+        优先取开放获取的 PDF URL，其次取 primary_location 中的落地页 URL，
+        最后回退到 OpenAlex 的作品 URL。
         """
         oa_location = result.get("best_oa_location")
         if not isinstance(oa_location, dict):
@@ -116,8 +116,7 @@ class OpenAlexSearch:
     @staticmethod
     def _reconstruct_abstract(inverted: Optional[dict]) -> Optional[str]:
         """
-        OpenAlex returns abstracts as an inverted index (word -> positions).
-        Reconstruct the original text.
+        OpenAlex 以倒排索引（词 -> 位置）返回摘要，这里还原文本来。
         """
         if not inverted or not isinstance(inverted, dict):
             return None

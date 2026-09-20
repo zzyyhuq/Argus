@@ -1,8 +1,7 @@
-# Xquik X/Twitter Retriever
+# Xquik X/Twitter retriever
 #
-# Searches X (Twitter) for real-time perspectives, dev discussions,
-# product feedback, breaking news, and expert opinions.
-# $0.00015 per tweet — 33x cheaper than the official X API.
+# 在 X（Twitter）上搜索实时观点、开发者讨论、产品反馈、突发新闻与专家意见。
+# 每条推文 $0.00015——比官方 X API 便宜 33 倍。
 
 import json
 import os
@@ -12,12 +11,12 @@ import urllib.request
 
 class XquikSearch:
     """
-    Xquik X/Twitter search retriever.
+    Xquik X/Twitter search retriever。
 
-    Searches tweets via the Xquik REST API and returns results in the
-    standard {title, href, body} format used by all Argus retrievers.
+    通过 Xquik REST API 搜索推文，并按所有 Argus retriever 通用的
+    标准 {title, href, body} 格式返回结果。
 
-    Set XQUIK_API_KEY in your environment. Get one at https://xquik.com
+    需要在环境变量中设置 XQUIK_API_KEY，可在 https://xquik.com 获取。
     """
 
     def __init__(self, query, query_domains=None, **kwargs):
@@ -37,10 +36,10 @@ class XquikSearch:
 
     def search(self, max_results=10):
         """
-        Search X/Twitter via Xquik API.
+        通过 Xquik API 搜索 X/Twitter。
 
-        Returns:
-            list: Search results as [{title, href, body}, ...]
+        返回：
+            list: 搜索结果，格式为 [{title, href, body}, ...]
         """
         print(f"Searching X/Twitter with query: {self.query}...")
 
@@ -68,14 +67,13 @@ class XquikSearch:
         with urllib.request.urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read().decode("utf-8"))
 
-        # Use `or` fallbacks so an explicit JSON null ("tweets": null,
-        # "author": null, "text": null) does not slip a None past `.get()`'s
-        # default and crash slicing / attribute access below — which the
-        # broad except in search() would swallow, silently dropping every
-        # result. Mirrors the sibling GetXAPI retriever.
-        # Also reject non-list `tweets` and non-dict tweet rows: an API could
-        # return a string/object envelope or sparse tuples that would either
-        # iterate characters or AttributeError on .get — same silent drop.
+        # 用 `or` 兜底，避免显式的 JSON null（"tweets": null、"author": null、
+        # "text": null）绕过 `.get()` 的默认值塞进 None，进而在下面的切片 /
+        # 属性访问处崩溃——而 search() 里宽泛的 except 会把它吞掉，
+        # 静默丢掉全部结果。这一点与同类的 GetXAPI retriever 保持一致。
+        # 另外也拒绝非 list 的 `tweets` 和非 dict 的推文行：API 可能返回
+        # 字符串/对象信封或稀疏元组，前者会被逐字符遍历，后者会在 .get 处
+        # 抛 AttributeError——同样是静默丢弃。
         tweets = data.get("tweets") or []
         if not isinstance(tweets, list):
             return []

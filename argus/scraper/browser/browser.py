@@ -19,12 +19,11 @@ from urllib.parse import urljoin, urlparse
 
 
 def _is_pdf_url(url: str) -> bool:
-    """Return True when ``url`` points at a PDF.
+    """当 ``url`` 指向 PDF 时返回 True。
 
-    Inspects only the path component so query strings / fragments don't hide
-    the extension (signed CDN/S3 links like ``https://host/doc.pdf?sig=...``
-    are extremely common), and matches case-insensitively because ``.PDF`` is
-    a perfectly valid suffix.
+    只检查 path 部分，避免 query string / fragment 把扩展名藏起来
+    （``https://host/doc.pdf?sig=...`` 这类带签名的 CDN/S3 链接非常常见）；
+    匹配时忽略大小写，因为 ``.PDF`` 也是完全合法的后缀。
     """
     if not url:
         return False
@@ -45,7 +44,7 @@ class BrowserScraper:
                            "Chrome/128.0.0.0 Safari/537.36")
         self.driver = None
         self.use_browser_cookies = False
-        self._import_selenium()  # Import only if used to avoid unnecessary dependencies
+        self._import_selenium()  # 仅在用到时才导入，避免引入不必要的依赖
         self.cookie_filename = f"{self._generate_random_string(8)}.pkl"
 
     def scrape(self) -> tuple:
@@ -65,8 +64,8 @@ class BrowserScraper:
             print(f"An error occurred during scraping: {str(e)}")
             print("Full stack trace:")
             print(traceback.format_exc())
-            # Return empty content so the failure is dropped instead of the
-            # error text being treated as page content downstream.
+            # 返回空内容让这次失败被丢弃，
+            # 而不是让错误文本在下游被当成页面正文。
             return "", ""
         finally:
             if self.driver:
@@ -134,7 +133,7 @@ class BrowserScraper:
             raise
 
     def _load_saved_cookies(self):
-        """Load saved cookies before visiting the target URL"""
+        """在访问目标 URL 之前载入已保存的 cookie"""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
             cookies = pickle.load(open(self.cookie_filename, "rb"))
@@ -144,7 +143,7 @@ class BrowserScraper:
             print("No saved cookies found.")
 
     def _load_browser_cookies(self):
-        """Load cookies directly from the browser"""
+        """直接从浏览器中载入 cookie"""
         try:
             import browser_cookie3
         except ImportError:
@@ -165,7 +164,7 @@ class BrowserScraper:
             self.driver.add_cookie({'name': cookie.name, 'value': cookie.value, 'domain': cookie.domain})
 
     def _cleanup_cookie_file(self):
-        """Remove the cookie file"""
+        """删除 cookie 文件"""
         cookie_file = Path(self.cookie_filename)
         if cookie_file.exists():
             try:
@@ -176,11 +175,11 @@ class BrowserScraper:
             print("No cookie file found to remove.")
 
     def _generate_random_string(self, length):
-        """Generate a random string of specified length"""
+        """生成指定长度的随机字符串"""
         return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
     def _get_domain(self):
-        """Extract domain from URL"""
+        """从 URL 中提取域名"""
         from urllib.parse import urlparse
 
         """Get domain from URL, removing 'www' if present"""
@@ -188,12 +187,12 @@ class BrowserScraper:
         return domain[4:] if domain.startswith("www.") else domain
 
     def _visit_google_and_save_cookies(self):
-        """Visit Google and save cookies before navigating to the target URL"""
+        """在跳转到目标 URL 前先访问 Google 并保存 cookie"""
         try:
             self.driver.get("https://www.google.com")
-            time.sleep(2)  # Wait for cookies to be set
+            time.sleep(2)  # 等待 cookie 写入
 
-            # Save cookies to a file
+            # 把 cookie 保存到文件
             cookies = self.driver.get_cookies()
             pickle.dump(cookies, open(self.cookie_filename, "wb"))
 
@@ -238,22 +237,22 @@ class BrowserScraper:
         return text, title
 
     def _scroll_to_bottom(self):
-        """Scroll to the bottom of the page to load all content"""
+        """滚动到页面底部，以加载全部内容"""
         last_height = self.driver.execute_script("return document.body.scrollHeight")
         while True:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(2)  # Wait for content to load
+            time.sleep(2)  # 等待内容加载
             new_height = self.driver.execute_script("return document.body.scrollHeight")
             if new_height == last_height:
                 break
             last_height = new_height
 
     def _scroll_to_percentage(self, ratio: float) -> None:
-        """Scroll to a percentage of the page"""
+        """滚动到页面的指定百分比位置"""
         if ratio < 0 or ratio > 1:
             raise ValueError("Percentage should be between 0 and 1")
         self.driver.execute_script(f"window.scrollTo(0, document.body.scrollHeight * {ratio});")
 
     def _add_header(self) -> None:
-        """Add a header to the website"""
+        """为网站添加一个 header"""
         self.driver.execute_script(open(f"{FILE_DIR}/browser/js/overlay.js", "r").read())

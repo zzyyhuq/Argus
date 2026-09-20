@@ -1,6 +1,6 @@
-# Bing Search Retriever
+# Bing Search retriever
 
-# libraries
+# 依赖库
 import os
 import requests
 import json
@@ -9,13 +9,13 @@ import logging
 
 class BingSearch():
     """
-    Bing Search Retriever
+    Bing Search retriever
     """
 
     def __init__(self, query, query_domains=None):
         """
-        Initializes the BingSearch object
-        Args:
+        初始化 BingSearch 对象
+        参数：
             query:
         """
         self.query = query
@@ -25,8 +25,8 @@ class BingSearch():
 
     def get_api_key(self):
         """
-        Gets the Bing API key
-        Returns:
+        获取 Bing API key
+        返回：
 
         """
         try:
@@ -38,21 +38,21 @@ class BingSearch():
 
     def search(self, max_results=7) -> list[dict[str]]:
         """
-        Searches the query
-        Returns:
+        执行查询搜索
+        返回：
 
         """
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Bing API."""
 
-        # Search the query
+        # 执行查询搜索
         url = "https://api.bing.microsoft.com/v7.0/search"
 
         headers = {
             'Ocp-Apim-Subscription-Key': self.api_key,
             'Content-Type': 'application/json'
         }
-        # TODO: Add support for query domains
+        # TODO: 增加对 query domains 的支持
         params = {
             "responseFilter": "Webpages",
             "q": self.query,
@@ -65,7 +65,7 @@ class BingSearch():
 
         resp = requests.get(url, headers=headers, params=params)
 
-        # Preprocess the results
+        # 预处理结果
         if resp is None:
             return []
         try:
@@ -79,9 +79,9 @@ class BingSearch():
             self.logger.warning(f"No search results found for query: {self.query}")
             return []
 
-        # Normalize the results to match the format of the other search APIs.
-        # Skip non-dict rows (API drift / error stubs) and empty URLs rather
-        # than AttributeError/'NoneType' crashes mid-research.
+        # 把结果归一化成与其他搜索 API 一致的格式。
+        # 跳过非 dict 的行（API 变动/错误占位）与空 URL，
+        # 而不是让它们在研究过程中触发 AttributeError/'NoneType' 崩溃。
         search_response = []
         if not isinstance(results, list):
             return []
@@ -91,7 +91,7 @@ class BingSearch():
             url = result.get("url") or ""
             if not url:
                 continue
-            # skip youtube results
+            # 跳过 youtube 结果
             if "youtube.com" in url:
                 continue
             search_response.append({

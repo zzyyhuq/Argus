@@ -23,7 +23,7 @@ class DocumentLoader:
         tasks = []
         if isinstance(self.path, list):
             for file_path in self.path:
-                if os.path.isfile(file_path):  # Ensure it's a valid file
+                if os.path.isfile(file_path):  # 确认是有效文件
                     filename = os.path.basename(file_path)
                     file_name, file_extension_with_dot = os.path.splitext(filename)
                     file_extension = file_extension_with_dot.strip(".").lower()

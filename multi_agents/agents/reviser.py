@@ -20,7 +20,8 @@ class ReviserAgent:
 
     async def revise_draft(self, draft_state: dict):
         """
-        Review a draft article
+        评审一份草稿文章
+
         :param draft_state:
         :return:
         """

@@ -2,21 +2,18 @@ import re
 
 def sanitize_filename(filename: str) -> str:
     """
-    Sanitize a given filename by replacing characters that are invalid 
-    in Windows file paths with an underscore ('_').
+    清理文件名，把 Windows 文件路径中非法字符替换为下划线（'_'）。
 
-    This function ensures that the filename is compatible with all 
-    operating systems by removing or replacing characters that are 
-    not allowed in Windows file paths. Specifically, it replaces 
-    the following characters: < > : " / \\ | ? *
+    文件名要能在各操作系统上都用得了，所以 Windows 文件路径不允许的字符必须去掉
+    或替换掉。具体替换以下字符：< > : " / \\ | ? *
 
-    Parameters:
-    filename (str): The original filename to be sanitized.
+    参数：
+    filename (str): 待清理的原始文件名。
 
-    Returns:
-    str: The sanitized filename with invalid characters replaced by an underscore.
+    返回：
+    str: 清理后的文件名，非法字符已替换为下划线。
     
-    Examples:
+    示例：
     >>> sanitize_filename('invalid:file/name*example?.txt')
     'invalid_file_name_example_.txt'
     

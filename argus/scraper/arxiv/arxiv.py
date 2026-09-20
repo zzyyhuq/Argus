@@ -1,7 +1,7 @@
-"""ArXiv paper scraper using the maintained `arxiv` Client API.
+"""使用仍在维护的 `arxiv` Client API 抓取 arXiv 论文。
 
-Avoids langchain_community.ArxivRetriever, which still calls the removed
-`arxiv.Search.results()` method (broken for arxiv>=2.2).
+避开 langchain_community.ArxivRetriever——它仍在调用已被移除的
+`arxiv.Search.results()` 方法（在 arxiv>=2.2 上已失效）。
 """
 
 from __future__ import annotations
@@ -16,13 +16,13 @@ _ID_RE = re.compile(
 
 
 def _paper_id_from_link(link: str) -> str:
-    """Extract an arXiv id from a URL or bare id string."""
+    """从 URL 或裸 id 字符串中提取 arXiv id。"""
     if not link:
         return ""
     m = _ID_RE.search(link.strip())
     if m:
         return m.group("id")
-    # last path segment fallback (legacy behavior)
+    # 回退到取最后一段路径（沿袭旧行为）
     return link.rstrip("/").split("/")[-1].removesuffix(".pdf")
 
 
@@ -32,14 +32,13 @@ class ArxivScraper:
         self.session = session
 
     def scrape(self):
-        """Fetch paper abstract/content via arxiv.Client.
+        """通过 arxiv.Client 获取论文摘要/内容。
 
-        Returns:
-            (context, title) matching other scrapers.
+        返回：
+            (context, title)，与其他 scraper 保持一致。
 
-        When the query matches no paper (malformed/non-arXiv id, or empty
-        client results), degrade to an empty result instead of raising so a
-        single bad URL cannot abort the whole scrape pipeline.
+        当查询匹配不到论文时（id 畸形/非 arXiv，或 client 结果为空），
+        降级为空结果而不是抛异常，避免单个坏 URL 中断整条抓取流水线。
         """
         paper_id = _paper_id_from_link(self.link)
         if not paper_id:
@@ -52,7 +51,7 @@ class ArxivScraper:
         try:
             paper = next(client.results(search))
         except StopIteration:
-            # No matching paper — mirror other scrapers: empty degrade.
+            # 没有匹配的论文——与其他 scraper 一致：降级为空结果。
             return "", ""
 
         authors = ", ".join(a.name for a in (paper.authors or []))

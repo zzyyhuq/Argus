@@ -16,7 +16,7 @@ from .fact_review import (
     route_fact_check,
 )
 
-# Import agent classes
+# 导入各 agent 类
 from . import \
     WriterAgent, \
     EditorAgent, \
@@ -28,7 +28,7 @@ from . import \
 
 
 class ChiefEditorAgent:
-    """Agent responsible for managing and coordinating editing tasks."""
+    """负责管理与协调编辑任务的 agent。"""
 
     def __init__(self, task: dict, websocket=None, stream_output=None, tone=None, headers=None):
         self.task = task
@@ -40,7 +40,7 @@ class ChiefEditorAgent:
         self.output_dir = self._create_output_directory()
 
     def _generate_task_id(self):
-        # Currently time based, but can be any unique identifier
+        # 目前基于时间戳，但也可以是任何能唯一标识任务的字符串
         return int(time.time())
 
     def _create_output_directory(self):
@@ -65,7 +65,7 @@ class ChiefEditorAgent:
     def _create_workflow(self, agents):
         workflow = StateGraph(ResearchState)
 
-        # Add nodes for each agent
+        # 为每个 agent 添加节点
         workflow.add_node("browser", agents["research"].run_initial_research)
         workflow.add_node("planner", agents["editor"].plan_research)
         workflow.add_node("researcher", agents["editor"].run_parallel_research)
@@ -75,7 +75,7 @@ class ChiefEditorAgent:
         workflow.add_node("publisher", agents["publisher"].run)
         workflow.add_node("human", agents["human"].review_plan)
 
-        # Add edges
+        # 添加边
         self._add_workflow_edges(workflow)
 
         return workflow
@@ -89,15 +89,15 @@ class ChiefEditorAgent:
         workflow.set_entry_point("browser")
         workflow.add_edge('publisher', END)
 
-        # Human loop: exact "no" approval (human agent) + bounded plan revisions
-        # via plan_review.route_human_feedback (task.max_plan_revisions).
+        # 人工回路：由 human agent 判断是否为精确的 "no"（即批准），规划修订次数
+        # 则由 plan_review.route_human_feedback 依据 task.max_plan_revisions 限制。
         workflow.add_conditional_edges(
             'human',
             self._route_human_feedback,
             {"accept": "researcher", "revise": "planner"},
         )
 
-        # Fact-checker loop — bounded via task.max_fact_check_revisions
+        # 事实核查回路 —— 由 task.max_fact_check_revisions 限制轮次
         workflow.add_conditional_edges(
             'fact_checker',
             self._route_fact_check,
@@ -105,11 +105,11 @@ class ChiefEditorAgent:
         )
 
     def _route_human_feedback(self, review):
-        """Route human plan feedback; force-accept after max_plan_revisions.
+        """路由人工对规划的反馈；超过 max_plan_revisions 后强制 accept。
 
-        ``route_human_feedback`` raises when the configured ceiling is exceeded.
-        For the graph edge we treat that as accept so the run proceeds to
-        research instead of dying at LangGraph's default recursion_limit.
+        ``route_human_feedback`` 在超出所配置的上限时会抛异常。作为图的边，
+        这里把该情况视为 accept，让流程继续进入调研，而不是死在 LangGraph 默认的
+        recursion_limit 上。
         """
         from .plan_review import MaxPlanRevisionsExceededError
 
@@ -121,11 +121,11 @@ class ChiefEditorAgent:
             return "accept"
 
     def _route_fact_check(self, state):
-        """Route fact-check results; force-accept once the ceiling is passed.
+        """路由事实核查结果；一旦越过上限就强制 accept。
 
-        ``route_fact_check`` raises when max_fact_check_revisions is exceeded.
-        As with the human loop, the edge treats that as accept so the run
-        proceeds instead of dying at LangGraph's recursion_limit.
+        ``route_fact_check`` 在超出 max_fact_check_revisions 时会抛异常。
+        与人工回路一样，这条边把该情况视为 accept，让流程继续推进，而不是死在
+        LangGraph 的 recursion_limit 上。
         """
         max_fact_check_revisions = self.task.get(
             "max_fact_check_revisions", DEFAULT_MAX_FACT_CHECK_REVISIONS)
@@ -135,7 +135,7 @@ class ChiefEditorAgent:
             return "accept"
 
     def init_research_team(self):
-        """Initialize and create a workflow for the research team."""
+        """初始化研究团队并创建对应的工作流。"""
         agents = self._initialize_agents()
         return self._create_workflow(agents)
 
@@ -148,13 +148,13 @@ class ChiefEditorAgent:
 
     async def run_research_task(self, task_id=None):
         """
-        Run a research task with the initialized research team.
+        用已初始化的研究团队执行一次调研任务。
 
-        Args:
-            task_id (optional): The ID of the task to run.
+        参数：
+            task_id（可选）：要运行的任务的 ID。
 
-        Returns:
-            The result of the research task.
+        返回：
+            该调研任务的执行结果。
         """
         research_team = self.init_research_team()
         chain = research_team.compile()

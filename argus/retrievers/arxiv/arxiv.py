@@ -3,7 +3,7 @@ import arxiv
 
 class ArxivSearch:
     """
-    Arxiv API Retriever
+    Arxiv API retriever
     """
     def __init__(self, query, sort='Relevance', query_domains=None):
         self.arxiv = arxiv
@@ -14,7 +14,7 @@ class ArxivSearch:
 
     def search(self, max_results=5):
         """
-        Performs the search
+        执行搜索
         :param query:
         :param max_results:
         :return:
@@ -33,9 +33,9 @@ class ArxivSearch:
 
         search_result = []
         for result in arxiv_gen:
-            # Incomplete arxiv.Result objects can surface None for title/pdf_url
-            # /summary. Skip entries without a usable href; default other fields
-            # so a single partial hit cannot crash the normalizer.
+            # 不完整的 arxiv.Result 对象可能让 title/pdf_url/summary 变成 None。
+            # 跳过没有可用 href 的条目，其余字段给默认值，
+            # 避免单条不完整的命中把归一化逻辑搞崩。
             href = getattr(result, "pdf_url", None) or getattr(result, "entry_id", None)
             if not href:
                 continue

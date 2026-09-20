@@ -10,7 +10,7 @@ from pathlib import Path
 
 from .outputs_cleanup import periodic_cleanup
 
-# Suppress Pydantic V2 migration warnings
+# 屏蔽 Pydantic V2 的迁移告警
 warnings.filterwarnings("ignore", message="Valid config keys have changed in V2")
 warnings.filterwarnings("ignore", category=UserWarning, module="pydantic")
 
@@ -21,7 +21,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from pydantic import BaseModel, ConfigDict
 
-# Add the parent directory to sys.path to make sure we can import from server
+# 把上级目录加入 sys.path，确保能按 server.* 的形式导入
 sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
 
 from server.websocket_manager import WebSocketManager
@@ -39,18 +39,18 @@ from chat.chat import ChatAgentWithMemory
 
 from server.report_store import ReportStore
 
-# MongoDB services removed - no database persistence needed
+# MongoDB 相关服务已移除——不再需要数据库持久化
 
-# Setup logging
+# 配置日志
 logger = logging.getLogger(__name__)
 
-# Don't override parent logger settings
+# 不覆盖父 logger 的设置
 logger.propagate = True
 
-# Silence uvicorn reload logs
+# 让 uvicorn 的 reload 日志闭嘴
 logging.getLogger("uvicorn.supervisors.ChangeReload").setLevel(logging.WARNING)
 
-# Models
+# 数据模型
 
 
 class ResearchRequest(BaseModel):
@@ -65,7 +65,7 @@ class ResearchRequest(BaseModel):
 
 
 class ChatRequest(BaseModel):
-    model_config = ConfigDict(extra="allow")  # Allow extra fields in the request
+    model_config = ConfigDict(extra="allow")  # 允许请求中带额外字段
     
     report: str
     messages: List[Dict[str, Any]]
@@ -73,17 +73,17 @@ class ChatRequest(BaseModel):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # 启动
     os.makedirs("outputs", exist_ok=True)
     app.mount("/outputs", StaticFiles(directory="outputs"), name="outputs")
     
-    # Mount frontend static files
+    # 挂载前端的静态文件
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
     if os.path.exists(frontend_path):
         app.mount("/site", StaticFiles(directory=frontend_path), name="frontend")
         logger.debug(f"Frontend mounted from: {frontend_path}")
         
-        # Also mount the static directory directly for assets referenced as /static/
+        # 同时把 static 目录单独挂上，供以 /static/ 引用的资源使用
         static_path = os.path.join(frontend_path, "static")
         if os.path.exists(static_path):
             app.mount("/static", StaticFiles(directory=static_path), name="static")
@@ -91,13 +91,13 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning(f"Frontend directory not found: {frontend_path}")
     
-    # Sweep expired report artifacts on a timer. outputs/ is served publicly and
-    # otherwise grows one .md/.docx/.json set per visitor, forever.
+    # 定时清掉过期的报告产物。outputs/ 是对外公开的，否则每来一位访客就会多留
+    # 一套 .md/.docx/.json，永远涨下去。
     cleanup_task = asyncio.create_task(periodic_cleanup())
 
     logger.info("Argus API ready - local mode (no database persistence)")
     yield
-    # Shutdown
+    # 关闭
     cleanup_task.cancel()
     try:
         await cleanup_task
@@ -105,10 +105,10 @@ async def lifespan(app: FastAPI):
         pass
     logger.info("Research API shutting down")
 
-# App initialization
+# 应用初始化
 app = FastAPI(lifespan=lifespan)
 
-# Configure allowed origins for CORS
+# 配置 CORS 允许的来源
 allowed_origins_env = os.getenv("CORS_ALLOW_ORIGINS")
 ALLOWED_ORIGINS = (
     [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
@@ -120,9 +120,9 @@ ALLOWED_ORIGINS = (
     ]
 )
 
-# Standard JSON response - no custom MongoDB encoding needed
+# 用标准 JSON 响应——不需要为 MongoDB 定制编码
 
-# Add CORS middleware
+# 添加 CORS 中间件
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -132,14 +132,12 @@ app.add_middleware(
 )
 
 
-# Serve the frontend without browser caching.
+# 前端一律不做浏览器缓存。
 #
-# index.html and scripts.js are edited together but cached independently, and
-# scripts.js carries a fixed ?v= query string, so a stale copy can outlive the
-# markup it was written for. That mismatch fails at page load -- the script
-# looks up DOM nodes the new markup no longer has -- and presents as the UI
-# silently doing nothing when you click. This is a single-user local app, so
-# not caching at all is cheaper than getting cache invalidation right.
+# index.html 与 scripts.js 是一起改的，但缓存各自独立，而 scripts.js 又挂着固定的
+# ?v= 查询串，于是一份过期的副本可能比它所配套的那份标记活得还久。这种错配会在
+# 页面加载时就炸——脚本要去找的 DOM 节点，新标记里已经没有——表现出来的却是点了
+# 没反应。这是个单用户本地应用，与其把缓存失效做对，不如干脆不缓存。
 @app.middleware("http")
 async def no_cache_frontend_assets(request, call_next):
     response = await call_next(request)
@@ -147,34 +145,34 @@ async def no_cache_frontend_assets(request, call_next):
         response.headers["Cache-Control"] = "no-store"
     return response
 
-# Use default JSON response class
+# 使用默认的 JSON 响应类
 
-# Mount static files for frontend
-# Get the absolute path to the frontend directory
+# 为前端挂载静态文件
+# 取前端目录的绝对路径
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
 
-# Mount static directories
+# 挂载静态目录
 app.mount("/static", StaticFiles(directory=os.path.join(frontend_dir, "static")), name="static")
 app.mount("/site", StaticFiles(directory=frontend_dir), name="site")
 
-# WebSocket manager
+# websocket 管理器
 manager = WebSocketManager()
 
 report_store = ReportStore(Path(os.getenv('REPORT_STORE_PATH', os.path.join('data', 'reports.json'))))
 
-# Constants
+# 常量
 DOC_PATH = os.getenv("DOC_PATH", "./my-docs")
 
-# Startup event
+# 启动事件
 
 
-# Lifespan events now handled in the lifespan context manager above
+# lifespan 事件现已由上方的 lifespan 上下文管理器处理
 
 
-# Routes
+# 路由
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    """Serve the main frontend HTML page."""
+    """返回前端主页面 HTML。"""
     frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
     index_path = os.path.join(frontend_dir, "index.html")
     
@@ -189,7 +187,7 @@ async def serve_frontend():
 
 @app.get("/.well-known/agent-discovery.json")
 async def agent_discovery(request: Request):
-    """Advertise Argus services via the Agent Discovery Protocol."""
+    """通过 Agent Discovery Protocol 对外公布 Argus 的服务。"""
     origin = str(request.base_url).rstrip("/")
     domain = request.url.hostname or request.headers.get("host", "")
     contact = os.getenv("AGENT_DISCOVERY_CONTACT")
@@ -207,7 +205,7 @@ async def read_report(request: Request, research_id: str):
     return FileResponse(docx_path)
 
 
-# Simplified API routes - no database persistence
+# 简化后的 API 路由——不做数据库持久化
 @app.get("/api/reports")
 async def get_all_reports(report_ids: str = None):
     report_ids_list = report_ids.split(",") if report_ids else None
@@ -290,7 +288,7 @@ async def get_report_chat(research_id: str):
 
 @app.post("/api/reports/{research_id}/chat")
 async def research_report_chat(research_id: str, request: Request):
-    """Chat against a stored report: LLM reply + persist user/assistant messages."""
+    """针对已存储的报告对话：拿到 LLM 回复，并持久化 user/assistant 消息。"""
     report = await report_store.get_report(research_id)
     if report is None:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -302,7 +300,7 @@ async def research_report_chat(research_id: str, request: Request):
     if not isinstance(data, dict):
         data = {}
 
-    # Accept either a bare chat message object or {messages, report, message}
+    # 既可接受单条 chat 消息对象，也可接受 {messages, report, message}
     incoming_messages = data.get("messages")
     if not isinstance(incoming_messages, list):
         if any(key in data for key in ("role", "content")):
@@ -383,7 +381,7 @@ async def write_report(research_request: ResearchRequest, research_id: str = Non
                 "source_urls": researcher.get_source_urls(),
                 "research_costs": researcher.get_costs(),
                 "visited_urls": list(researcher.visited_urls),
-                # "research_sources": researcher.get_research_sources(),  # Raw content of sources may be very large
+                # "research_sources": researcher.get_research_sources(),  # 来源的原始内容可能非常大
             },
             "report": report,
             "docx_path": docx_path
@@ -436,35 +434,35 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         await handle_websocket_communication(websocket, manager)
     except WebSocketDisconnect as e:
-        # Disconnect with more detailed logging about the WebSocket disconnect reason
+        # 断开连接，并把 WebSocket 断开原因记得更详细一些
         logger.info(f"WebSocket disconnected with code {e.code} and reason: '{e.reason}'")
         await manager.disconnect(websocket)
     except Exception as e:
-        # More general exception handling
+        # 更通用的异常处理
         logger.error(f"Unexpected WebSocket error: {str(e)}")
         await manager.disconnect(websocket)
 
 @app.post("/api/chat")
 async def chat(chat_request: ChatRequest):
-    """Process a chat request with a report and message history.
+    """处理一次携带报告与消息历史的 chat 请求。
 
-    Args:
-        chat_request: ChatRequest object containing report text and message history
+    参数：
+        chat_request: 含报告正文与消息历史的 ChatRequest 对象
 
-    Returns:
-        JSON response with the assistant's message and any tool usage metadata
+    返回：
+        带有助手回复与工具使用元数据的 JSON 响应
     """
     try:
         logger.info(f"Received chat request with {len(chat_request.messages)} messages")
 
-        # Create chat agent with the report
+        # 用报告创建 chat agent
         chat_agent = ChatAgentWithMemory(
             report=chat_request.report,
             config_path="default",
             headers=None
         )
 
-        # Process the chat and get response with metadata
+        # 处理这次 chat，拿到回复与元数据
         response_content, tool_calls_metadata = await chat_agent.chat(chat_request.messages, None)
         logger.info(f"response_content: {response_content}")
         logger.info(f"Got chat response of length: {len(response_content) if response_content else 0}")
@@ -472,11 +470,11 @@ async def chat(chat_request: ChatRequest):
         if tool_calls_metadata:
             logger.info(f"Tool calls used: {json.dumps(tool_calls_metadata)}")
 
-        # Format response as a ChatMessage object with role, content, timestamp and metadata
+        # 把响应整理成带 role、content、timestamp 与 metadata 的 ChatMessage 对象
         response_message = {
             "role": "assistant",
             "content": response_content,
-            "timestamp": int(time.time() * 1000),  # Current time in milliseconds
+            "timestamp": int(time.time() * 1000),  # 当前时间，毫秒
             "metadata": {
                 "tool_calls": tool_calls_metadata
             } if tool_calls_metadata else None

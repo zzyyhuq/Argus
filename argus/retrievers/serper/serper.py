@@ -1,6 +1,6 @@
-# Google Serper Retriever
+# Google Serper retriever
 
-# libraries
+# 依赖库
 import os
 import requests
 import json
@@ -8,18 +8,18 @@ import json
 
 class SerperSearch():
     """
-    Google Serper Retriever with support for country, language, and date filtering
+    Google Serper retriever，支持按国家、语言与时间范围过滤
     """
     def __init__(self, query, query_domains=None, country=None, language=None, time_range=None, exclude_sites=None):
         """
-        Initializes the SerperSearch object
-        Args:
-            query (str): The search query string.
-            query_domains (list, optional): List of domains to include in the search. Defaults to None.
-            country (str, optional): Country code for search results (e.g., 'us', 'kr', 'jp'). Defaults to None.
-            language (str, optional): Language code for search results (e.g., 'en', 'ko', 'ja'). Defaults to None.
-            time_range (str, optional): Time range filter (e.g., 'qdr:h', 'qdr:d', 'qdr:w', 'qdr:m', 'qdr:y'). Defaults to None.
-            exclude_sites (list, optional): List of sites to exclude from search results. Defaults to None.
+        初始化 SerperSearch 对象
+        参数：
+            query (str): 搜索查询字符串。
+            query_domains (list, optional): 要纳入搜索的域名列表。默认为 None。
+            country (str, optional): 搜索结果的国家代码（如 'us'、'kr'、'jp'）。默认为 None。
+            language (str, optional): 搜索结果的语言代码（如 'en'、'ko'、'ja'）。默认为 None。
+            time_range (str, optional): 时间范围过滤（如 'qdr:h'、'qdr:d'、'qdr:w'、'qdr:m'、'qdr:y'）。默认为 None。
+            exclude_sites (list, optional): 要从搜索结果中排除的站点列表。默认为 None。
         """
         self.query = query
         self.query_domains = query_domains or None
@@ -31,20 +31,20 @@ class SerperSearch():
 
     def _get_exclude_sites_from_env(self):
         """
-        Gets the list of sites to exclude from environment variables
-        Returns:
-            list: List of sites to exclude
+        从环境变量中读取要排除的站点列表
+        返回：
+            list: 要排除的站点列表
         """
         exclude_sites_env = os.getenv("SERPER_EXCLUDE_SITES", "")
         if exclude_sites_env:
-            # Split by comma and strip whitespace
+            # 按逗号切分并去掉空白
             return [site.strip() for site in exclude_sites_env.split(",") if site.strip()]
         return []
 
     def get_api_key(self):
         """
-        Gets the Serper API key
-        Returns:
+        获取 Serper API key
+        返回：
 
         """
         try:
@@ -56,14 +56,14 @@ class SerperSearch():
 
     def search(self, max_results=7):
         """
-        Searches the query with optional country, language, and time filtering
-        Returns:
-            list: List of search results with title, href, and body
+        执行查询搜索，可选地带上国家、语言与时间过滤
+        返回：
+            list: 含 title、href 与 body 的搜索结果列表
         """
         print("Searching with query {0}...".format(self.query))
         """Useful for general internet search queries using the Serper API."""
 
-        # Search the query (see https://serper.dev/playground for the format)
+        # 执行查询搜索（请求格式见 https://serper.dev/playground）
         url = "https://google.serper.dev/search"
 
         headers = {
@@ -71,17 +71,17 @@ class SerperSearch():
             'Content-Type': 'application/json'
         }
 
-        # Build search parameters
+        # 构造搜索参数
         query_with_filters = self.query
 
-        # Exclude sites using Google search syntax
+        # 用 Google 搜索语法排除指定站点
         if self.exclude_sites:
             for site in self.exclude_sites:
                 query_with_filters += f" -site:{site}"
 
-        # Add domain filtering if specified
+        # 若指定了域名过滤，则加上
         if self.query_domains:
-            # Add site:domain1 OR site:domain2 OR ... to the search query
+            # 在搜索查询后追加 site:domain1 OR site:domain2 OR ...
             domain_query = " site:" + " OR site:".join(self.query_domains)
             query_with_filters += domain_query
 
@@ -90,22 +90,22 @@ class SerperSearch():
             "num": max_results
         }
 
-        # Add optional parameters if they exist
+        # 存在时加上可选参数
         if self.country:
-            search_params["gl"] = self.country  # Geographic location (country)
+            search_params["gl"] = self.country  # 地理位置（国家）
 
         if self.language:
-            search_params["hl"] = self.language  # Host language
+            search_params["hl"] = self.language  # 界面语言
 
         if self.time_range:
-            search_params["tbs"] = self.time_range  # Time-based search
+            search_params["tbs"] = self.time_range  # 按时间过滤搜索
 
         data = json.dumps(search_params)
 
         resp = requests.request("POST", url, timeout=10, headers=headers, data=data)
 
-        # Preprocess the results. Always return a list so callers (which do
-        # `len(...)` / iterate over the result) never receive None.
+        # 预处理结果。始终返回 list，避免调用方（会做 `len(...)` 或遍历结果）
+        # 拿到 None。
         if resp is None:
             return []
         try:
@@ -120,8 +120,8 @@ class SerperSearch():
             return []
         search_results = []
 
-        # Normalize the results to match the format of the other search APIs
-        # Excluded sites should already be filtered out by the query parameters
+        # 把结果归一化成与其他搜索 API 一致的格式
+        # 被排除的站点应已由查询参数过滤掉
         for result in results:
             if not isinstance(result, dict):
                 continue

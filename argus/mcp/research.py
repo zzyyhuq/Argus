@@ -1,7 +1,7 @@
 """
-MCP Research Execution Skill
+MCP 研究执行 skill。
 
-Handles research execution using selected MCP tools as a skill component.
+作为 skill 组件，负责用选出的 MCP 工具执行研究。
 """
 import asyncio
 import logging
@@ -12,35 +12,35 @@ logger = logging.getLogger(__name__)
 
 class MCPResearchSkill:
     """
-    Handles research execution using selected MCP tools.
+    用选出的 MCP 工具执行研究。
     
-    Responsible for:
-    - Executing research with LLM and bound tools
-    - Processing tool results into standard format
-    - Managing tool execution and error handling
+    职责：
+    - 借助 LLM 与绑定的工具执行研究
+    - 把工具返回结果整理成标准格式
+    - 管理工具执行与错误处理
     """
 
     def __init__(self, cfg, researcher=None):
         """
-        Initialize the MCP research skill.
+        初始化 MCP 研究 skill。
         
-        Args:
-            cfg: Configuration object with LLM settings
-            researcher: Researcher instance for cost tracking
+        参数：
+            cfg: 携带 LLM 设置的配置对象
+            researcher: 用于统计花费的 researcher 实例
         """
         self.cfg = cfg
         self.researcher = researcher
 
     async def conduct_research_with_tools(self, query: str, selected_tools: List) -> List[Dict[str, str]]:
         """
-        Use LLM with bound tools to conduct intelligent research.
+        让 LLM 带上绑定工具去开展研究。
         
-        Args:
-            query: Research query
-            selected_tools: List of selected MCP tools
+        参数：
+            query: 研究查询
+            selected_tools: 选出的 MCP 工具列表
             
-        Returns:
-            List[Dict[str, str]]: Research results in standard format
+        返回：
+            List[Dict[str, str]]: 标准格式的研究结果
         """
         if not selected_tools:
             logger.warning("No tools available for research")
@@ -51,7 +51,7 @@ class MCPResearchSkill:
         try:
             from ..llm_provider.generic.base import GenericLLMProvider
             
-            # Create LLM provider using the config
+            # 按配置创建 LLM provider
             provider_kwargs = {
                 'model': self.cfg.strategic_llm_model,
                 **self.cfg.llm_kwargs
@@ -62,49 +62,49 @@ class MCPResearchSkill:
                 **provider_kwargs
             )
             
-            # Bind tools to LLM
+            # 把工具绑定到 LLM
             llm_with_tools = llm_provider.llm.bind_tools(selected_tools)
             
-            # Import here to avoid circular imports
+            # 在此处导入，避免循环导入
             from ..prompts import PromptFamily
             
-            # Create research prompt
+            # 生成研究用的 prompt
             research_prompt = PromptFamily.generate_mcp_research_prompt(query, selected_tools)
 
-            # Create messages
+            # 组装 messages
             messages = [{"role": "user", "content": research_prompt}]
             
-            # Invoke LLM with tools
+            # 带上工具调用 LLM
             logger.info("LLM researching with bound tools...")
             response = await llm_with_tools.ainvoke(messages)
             
-            # Process tool calls and results
+            # 处理工具调用与返回结果
             research_results = []
             
-            # Check if the LLM made tool calls
+            # 看 LLM 是否发起了工具调用
             if hasattr(response, 'tool_calls') and response.tool_calls:
                 logger.info(f"LLM made {len(response.tool_calls)} tool calls")
                 
-                # Process each tool call
+                # 逐个处理工具调用
                 for i, tool_call in enumerate(response.tool_calls, 1):
                     tool_name = tool_call.get("name", "unknown")
                     tool_args = tool_call.get("args", {})
                     
                     logger.info(f"Executing tool {i}/{len(response.tool_calls)}: {tool_name}")
                     
-                    # Log the tool arguments for transparency
+                    # 记录工具入参，便于事后追溯
                     if tool_args:
                         args_str = ", ".join([f"{k}={v}" for k, v in tool_args.items()])
                         logger.debug(f"Tool arguments: {args_str}")
                     
                     try:
-                        # Find the tool by name
+                        # 按名字找到对应工具
                         tool = next((t for t in selected_tools if t.name == tool_name), None)
                         if not tool:
                             logger.warning(f"Tool {tool_name} not found in selected tools")
                             continue
                         
-                        # Execute the tool
+                        # 执行该工具
                         if hasattr(tool, 'ainvoke'):
                             result = await tool.ainvoke(tool_args)
                         elif hasattr(tool, 'invoke'):
@@ -112,17 +112,17 @@ class MCPResearchSkill:
                         else:
                             result = await tool(tool_args) if asyncio.iscoroutinefunction(tool) else tool(tool_args)
                         
-                        # Log the actual tool response for debugging
+                        # 记录工具的真实返回内容，便于排查
                         if result:
                             result_preview = str(result)[:500] + "..." if len(str(result)) > 500 else str(result)
                             logger.debug(f"Tool {tool_name} response preview: {result_preview}")
                             
-                            # Process the result
+                            # 处理返回结果
                             formatted_results = self._process_tool_result(tool_name, result)
                             research_results.extend(formatted_results)
                             logger.info(f"Tool {tool_name} returned {len(formatted_results)} formatted results")
                             
-                            # Log details of each formatted result
+                            # 记录每条格式化结果的细节
                             for j, formatted_result in enumerate(formatted_results):
                                 title = formatted_result.get("title", "No title")
                                 content_preview = formatted_result.get("body", "")[:200] + "..." if len(formatted_result.get("body", "")) > 200 else formatted_result.get("body", "")
@@ -134,7 +134,7 @@ class MCPResearchSkill:
                         logger.error(f"Error executing tool {tool_name}: {e}")
                         continue
                         
-            # Also include the LLM's own analysis/response as a result
+            # 把 LLM 自己的分析/回答也当作一条结果收进来
             if hasattr(response, 'content') and response.content:
                 llm_analysis = {
                     "title": f"LLM Analysis: {query}",
@@ -143,7 +143,7 @@ class MCPResearchSkill:
                 }
                 research_results.append(llm_analysis)
                 
-                # Log LLM analysis content
+                # 记录 LLM 的分析内容
                 analysis_preview = response.content[:300] + "..." if len(response.content) > 300 else response.content
                 logger.debug(f"LLM Analysis: {analysis_preview}")
                 logger.info("Added LLM analysis to results")
@@ -157,22 +157,22 @@ class MCPResearchSkill:
 
     def _process_tool_result(self, tool_name: str, result: Any) -> List[Dict[str, str]]:
         """
-        Process tool result into search result format.
+        把工具返回结果转换成搜索结果格式。
         
-        Args:
-            tool_name: Name of the tool that produced the result
-            result: The tool result
+        参数：
+            tool_name: 产出该结果的工具名
+            result: 工具的返回结果
             
-        Returns:
-            List[Dict[str, str]]: Formatted search results
+        返回：
+            List[Dict[str, str]]: 格式化后的搜索结果
         """
         search_results = []
         
         try:
-            # 1) First: handle MCP result wrapper with structured_content/content
+            # 1) 先处理带 structured_content/content 的 MCP 结果包装
             if isinstance(result, dict) and ("structured_content" in result or "content" in result):
                 search_results = []
-                # Prefer structured_content when present
+                # 有 structured_content 时优先用它
                 structured = result.get("structured_content")
                 if isinstance(structured, dict):
                     items = structured.get("results")
@@ -184,14 +184,14 @@ class MCPResearchSkill:
                                     "href": item.get("href", item.get("url", f"mcp://{tool_name}/{i}")),
                                     "body": item.get("body", item.get("content", str(item)))
                                 })
-                    # If no items array but structured is dict, treat as single
+                    # 没有 items 数组、但 structured 本身是 dict 时，当作单条结果
                     elif isinstance(structured, dict):
                         search_results.append({
                             "title": structured.get("title", f"Result from {tool_name}"),
                             "href": structured.get("href", structured.get("url", f"mcp://{tool_name}")),
                             "body": structured.get("body", structured.get("content", str(structured)))
                         })
-                # Fallback to content if provided (MCP spec: list of {type: text, text: ...})
+                # 上面没取到就退回 content（MCP 规范：{type: text, text: ...} 组成的列表）
                 if not search_results:
                     content_field = result.get("content")
                     if isinstance(content_field, list):
@@ -203,7 +203,7 @@ class MCPResearchSkill:
                                 elif "text" in part:
                                     texts.append(str(part.get("text")))
                                 else:
-                                    # unknown piece; stringify
+                                    # 认不出的片段，直接转字符串
                                     texts.append(str(part))
                             else:
                                 texts.append(str(part))
@@ -219,12 +219,12 @@ class MCPResearchSkill:
                     })
                 return search_results
 
-            # 2) If the result is already a list, process each item normally
+            # 2) 结果本身就是 list，逐项常规处理
             if isinstance(result, list):
-                # If the result is already a list, process each item
+                # 结果是 list，逐项处理
                 for i, item in enumerate(result):
                     if isinstance(item, dict):
-                        # Use the item as is if it has required fields
+                        # 字段齐全就直接沿用该条目
                         if "title" in item and ("content" in item or "body" in item):
                             search_result = {
                                 "title": item.get("title", ""),
@@ -233,16 +233,16 @@ class MCPResearchSkill:
                             }
                             search_results.append(search_result)
                         else:
-                            # Create a search result with a generic title
+                            # 否则补一个通用标题，构造搜索结果
                             search_result = {
                                 "title": f"Result from {tool_name}",
                                 "href": f"mcp://{tool_name}/{i}",
                                 "body": str(item),
                             }
                             search_results.append(search_result)
-            # 3) If the result is a dict (non-MCP wrapper), use it as a single search result
+            # 3) 结果是 dict（非 MCP 包装）时，整体作为单条搜索结果
             elif isinstance(result, dict):
-                # If the result is a dictionary, use it as a single search result
+                # 结果是字典，就整体作为单条搜索结果
                 search_result = {
                     "title": result.get("title", f"Result from {tool_name}"),
                     "href": result.get("href", result.get("url", f"mcp://{tool_name}")),
@@ -250,7 +250,7 @@ class MCPResearchSkill:
                 }
                 search_results.append(search_result)
             else:
-                # For any other type, convert to string and use as a single search result
+                # 其他类型一律转成字符串，作为单条搜索结果
                 search_result = {
                     "title": f"Result from {tool_name}",
                     "href": f"mcp://{tool_name}",
@@ -260,7 +260,7 @@ class MCPResearchSkill:
                 
         except Exception as e:
             logger.error(f"Error processing tool result from {tool_name}: {e}")
-            # Fallback: create a basic result
+            # 兜底：构造一条最基础的结果
             search_result = {
                 "title": f"Result from {tool_name}",
                 "href": f"mcp://{tool_name}",

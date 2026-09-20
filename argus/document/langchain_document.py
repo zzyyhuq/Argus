@@ -5,7 +5,7 @@ from langchain_core.documents import Document
 from typing import List, Dict
 
 
-# Supports the base Document class from langchain
+# 兼容 langchain 的基础 Document 类
 # - https://github.com/langchain-ai/langchain/blob/master/libs/core/langchain_core/documents/base.py
 class LangChainDocumentLoader:
 

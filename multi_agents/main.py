@@ -4,10 +4,10 @@ import os
 import uuid
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Optional Monocle observability, gated by MONOCLE_TRACING (mirrors the LangSmith
-# toggle below). Runs before the framework imports so Monocle instruments them as
-# they load. The app owns MONOCLE_EXPORTERS: it validates the selection, then
-# forwards the raw comma-separated string to Monocle. No-op when unset.
+# 可选的 Monocle 可观测性，由 MONOCLE_TRACING 开关控制（与下方的 LangSmith
+# 开关同理）。必须在框架导入之前执行，这样 Monocle 才能在它们加载时就完成埋点。
+# MONOCLE_EXPORTERS 由本应用负责解析：先校验取值，再把原始的逗号分隔字符串
+# 原样转交给 Monocle。未设置时不做任何事。
 if os.environ.get("MONOCLE_TRACING", "").strip().lower() in ("1", "true", "yes", "on"):
     _exporters = os.environ.get("MONOCLE_EXPORTERS", "").strip() or "file"
     _allowed = ("file", "console", "okahu", "s3", "blob", "gcs")
@@ -34,15 +34,15 @@ import asyncio
 import json
 from argus.utils.enum import Tone
 
-# Run with LangSmith if API key is set
+# 若设置了 API key，则启用 LangSmith 追踪
 if os.environ.get("LANGCHAIN_API_KEY"):
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
 load_dotenv()
 
 def open_task():
-    # Get the directory of the current script
+    # 取当前脚本所在目录
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    # Construct the absolute path to task.json
+    # 拼出 task.json 的绝对路径
     task_json_path = os.path.join(current_dir, 'task.json')
     
     with open(task_json_path, 'r') as f:
@@ -51,10 +51,10 @@ def open_task():
     if not task:
         raise Exception("No task found. Please ensure a valid task.json file is present in the multi_agents directory and contains the necessary task information.")
 
-    # Override model with STRATEGIC_LLM if defined in environment
+    # 若环境中定义了 STRATEGIC_LLM，则用它覆盖模型设置
     strategic_llm = os.environ.get("STRATEGIC_LLM")
     if strategic_llm and ":" in strategic_llm:
-        # Extract the model name (part after the first colon)
+        # 取出模型名（第一个冒号之后的部分）
         model_name = strategic_llm.split(":", 1)[1]
         task["model"] = model_name
     elif strategic_llm:

@@ -37,7 +37,7 @@ class OnlineDocumentLoader:
 
     async def _download_and_process(self, url: str) -> list:
         try:
-            # Reject SSRF / local-file targets before issuing the request.
+            # 发请求之前先挡掉 SSRF / 本地文件这类目标。
             try:
                 validate_url(url)
             except UnsafeURLError as e:
@@ -97,8 +97,7 @@ class OnlineDocumentLoader:
 
     @staticmethod
     def _get_extension(url: str) -> str:
-        # Lower-case the extension so loader lookup (whose keys are lower-case,
-        # e.g. "pdf"/"docx") matches URLs that use upper-case extensions like
-        # "report.PDF" or "doc.DOCX". The leading "?" split drops query strings
-        # (signed CDN/S3 URLs) before extracting the suffix.
+        # 扩展名统一转小写：loader 查表的键都是小写（如 "pdf"/"docx"），
+        # 这样才能匹配后缀为大写的 URL，例如 "report.PDF" 或 "doc.DOCX"。
+        # 先按 "?" 切掉查询串（CDN/S3 的签名 URL），再取后缀。
         return os.path.splitext(url.split("?")[0])[1].lower()

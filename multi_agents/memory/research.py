@@ -9,7 +9,7 @@ class ResearchState(TypedDict):
     research_data: List[dict]
     human_feedback: str
     plan_revision_count: int
-    # Report layout
+    # 报告结构
     title: str
     headers: dict
     date: str

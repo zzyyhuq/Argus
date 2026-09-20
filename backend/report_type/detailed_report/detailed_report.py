@@ -40,15 +40,14 @@ class DetailedReport:
         self.headers = headers or {}
         self.complement_source_urls = complement_source_urls
         self.max_search_results = max_search_results
-        # Kept on self rather than only handed to the first researcher: every
-        # subtopic spins up its own Argus (see _get_subtopic_report),
-        # and those must bill the same visitor key.
+        # 留在 self 上，而不是只交给第一个 researcher：每个子主题都会另起一个
+        # Argus（见 _get_subtopic_report），它们必须用同一个访客 key 计费。
         self.api_keys = api_keys
 
-        # Generate a unique research ID for this report
+        # 为本次报告生成唯一的研究 ID
         self.research_id = self._generate_research_id(query)
         
-        # Initialize researcher with optional MCP parameters
+        # 初始化 researcher，MCP 参数是可选的
         argus_params = {
             "query": self.query,
             "query_domains": self.query_domains,
@@ -63,19 +62,19 @@ class DetailedReport:
             "complement_source_urls": self.complement_source_urls,
         }
 
-        # Add MCP parameters if provided
+        # 提供了 MCP 参数才加进去
         if mcp_configs is not None:
             argus_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             argus_params["mcp_strategy"] = mcp_strategy
 
-        # Visitor-supplied credentials, scoped to this request
+        # 访客提供的凭据，作用范围仅限本次请求
         if api_keys:
             argus_params["api_keys"] = api_keys
 
         self.argus = Argus(**argus_params)
 
-        # Override max_search_results_per_query if provided by user
+        # 用户传了 max_search_results 就覆盖默认值
         if max_search_results is not None:
             self.argus.cfg.max_search_results_per_query = int(max_search_results)
         self.existing_headers: List[Dict] = []
@@ -85,7 +84,7 @@ class DetailedReport:
             self.source_urls) if self.source_urls else set()
 
     def _generate_research_id(self, query: str) -> str:
-        """Generate a unique research ID from query and timestamp."""
+        """根据 query 与时间戳生成唯一的研究 ID。"""
         timestamp = str(int(time.time()))
         query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
         return f"detailed_{timestamp}_{query_hash}"
@@ -129,12 +128,12 @@ class DetailedReport:
         return subtopic_reports, subtopics_report_body
 
     def _hashable_context(self, input_context: List[str] | List[dict]):
-        # Convert context to strings to ensure hashability (handle both strings and dicts from MCP)
+        # 把上下文统一转成字符串以便哈希（既要处理字符串，也要处理 MCP 传来的 dict）
         context_items = []
         
         for item in input_context:
             if isinstance(item, dict):
-                # Convert dict context to string format
+                # 把 dict 形式的上下文转成字符串
                 title = item.get("title", "No title")
                 content = item.get("body", item.get("content", ""))
                 context_str = f"Title: {title}\nContent: {content}"
@@ -161,15 +160,14 @@ class DetailedReport:
             tone=self.tone,
             complement_source_urls=self.complement_source_urls,
             source_urls=self.source_urls,
-            # Propagate MCP configuration so follow-up researchers can use MCP
+            # 把 MCP 配置传下去，后续的 researcher 才能继续用 MCP
             mcp_configs=self.argus.mcp_configs,
             mcp_strategy=self.argus.mcp_strategy,
-            # Same visitor credentials -- without this the subtopic researcher
-            # would silently fall back to the server's key
+            # 同一份访客凭据——不传的话，子主题 researcher 会悄悄退回用服务器的 key
             api_keys=self.api_keys,
         )
 
-        # Propagate max_search_results override to subtopic researcher
+        # 把 max_search_results 的覆盖值也传给子主题 researcher
         if self.max_search_results is not None:
             subtopic_assistant.cfg.max_search_results_per_query = int(self.max_search_results)
 
@@ -189,7 +187,7 @@ class DetailedReport:
             current_subtopic_task, parse_draft_section_titles_text, self.global_written_sections
         )
 
-        # Write subtopic report (images are pre-generated at the main research level)
+        # 撰写子主题报告（图片在主研究那一层就已预先生成好了）
         subtopic_report = await subtopic_assistant.write_report(
             existing_headers=self.existing_headers,
             relevant_written_contents=relevant_contents,
@@ -213,5 +211,5 @@ class DetailedReport:
             conclusion, self.argus.visited_urls)
         report = f"{introduction}\n\n{toc}\n\n{report_body}\n\n{conclusion_with_references}"
         
-        # Note: Images are now pre-generated during conduct_research() and embedded during write_report()
+        # 注意：图片现在在 conduct_research() 阶段预先生成，在 write_report() 时嵌入
         return report

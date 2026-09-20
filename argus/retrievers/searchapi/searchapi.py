@@ -1,6 +1,6 @@
-# SearchApi Retriever
+# SearchApi retriever
 
-# libraries
+# 依赖库
 import logging
 import os
 import requests
@@ -9,12 +9,12 @@ import urllib.parse
 
 class SearchApiSearch():
     """
-    SearchApi Retriever
+    SearchApi retriever
     """
     def __init__(self, query, query_domains=None):
         """
-        Initializes the SearchApiSearch object
-        Args:
+        初始化 SearchApiSearch 对象
+        参数：
             query:
         """
         self.query = query
@@ -22,8 +22,8 @@ class SearchApiSearch():
 
     def get_api_key(self):
         """
-        Gets the SearchApi API key
-        Returns:
+        获取 SearchApi API key
+        返回：
 
         """
         try:
@@ -35,8 +35,8 @@ class SearchApiSearch():
 
     def search(self, max_results=7):
         """
-        Searches the query
-        Returns:
+        执行查询搜索
+        返回：
 
         """
         print("SearchApiSearch: Searching with query {0}...".format(self.query))
@@ -62,15 +62,14 @@ class SearchApiSearch():
             response = requests.get(encoded_url, headers=headers, timeout=20)
             if response.status_code == 200:
                 search_results = response.json() or {}
-                # ``organic_results`` may be absent (e.g. no matches, an error
-                # payload, or a non-google engine response). Default to [] so a
-                # missing key does not raise KeyError and silently drop every
-                # result via the broad ``except`` below.
+                # ``organic_results`` 可能不存在（例如无匹配、错误载荷，
+                # 或非 google 引擎的响应）。默认取 []，避免键缺失时抛
+                # KeyError，被下面宽泛的 ``except`` 吞掉后静默丢掉全部结果。
                 results = search_results.get("organic_results") or []
                 results_processed = 0
                 for result in results:
                     href = result.get("link") or ""
-                    # skip youtube results
+                    # 跳过 youtube 结果
                     if "youtube.com" in href:
                         continue
                     if results_processed >= max_results:

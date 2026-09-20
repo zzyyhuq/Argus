@@ -10,7 +10,7 @@ class FactCheckerAgent:
     async def check_facts(self, research_state: dict):
         task = research_state.get("task")
         
-        # Assemble a draft representation for the fact checker
+        # 为事实核查器拼装一份草稿的整体表示
         intro = research_state.get("introduction", "")
         conclusion = research_state.get("conclusion", "")
         data = research_state.get("research_data", [])

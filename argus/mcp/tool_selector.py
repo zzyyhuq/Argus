@@ -1,7 +1,7 @@
 """
-MCP Tool Selection Module
+MCP 工具筛选模块。
 
-Handles intelligent tool selection using LLM analysis.
+负责借助 LLM 分析来智能挑选工具。
 """
 import asyncio
 import json
@@ -15,36 +15,36 @@ logger = logging.getLogger(__name__)
 
 class MCPToolSelector:
     """
-    Handles intelligent selection of MCP tools using LLM analysis.
+    借助 LLM 分析，智能挑选要用的 MCP 工具。
     
-    Responsible for:
-    - Analyzing available tools with LLM
-    - Selecting the most relevant tools for a query
-    - Providing fallback selection mechanisms
+    职责：
+    - 用 LLM 分析有哪些可用工具
+    - 为查询挑出最相关的工具
+    - 提供兜底的挑选机制
     """
 
     def __init__(self, cfg, researcher=None):
         """
-        Initialize the tool selector.
+        初始化工具筛选器。
         
-        Args:
-            cfg: Configuration object with LLM settings
-            researcher: Researcher instance for cost tracking
+        参数：
+            cfg: 携带 LLM 设置的配置对象
+            researcher: 用于统计花费的 researcher 实例
         """
         self.cfg = cfg
         self.researcher = researcher
 
     async def select_relevant_tools(self, query: str, all_tools: List, max_tools: int = 3) -> List:
         """
-        Use LLM to select the most relevant tools for the research query.
+        用 LLM 为研究查询挑出最相关的工具。
         
-        Args:
-            query: Research query
-            all_tools: List of all available tools
-            max_tools: Maximum number of tools to select (default: 3)
+        参数：
+            query: 研究查询
+            all_tools: 全部可用工具列表
+            max_tools: 最多挑选几个工具（默认 3）
             
-        Returns:
-            List: Selected tools most relevant for the query
+        返回：
+            List: 对该查询最相关的已选工具
         """
         if not all_tools:
             return []
@@ -54,7 +54,7 @@ class MCPToolSelector:
             
         logger.info(f"Using LLM to select {max_tools} most relevant tools from {len(all_tools)} available")
         
-        # Create tool descriptions for LLM analysis
+        # 整理工具描述，供 LLM 分析
         tools_info = []
         for i, tool in enumerate(all_tools):
             tool_info = {
@@ -64,25 +64,25 @@ class MCPToolSelector:
             }
             tools_info.append(tool_info)
         
-        # Import here to avoid circular imports
+        # 在此处导入，避免循环导入
         from ..prompts import PromptFamily
         
-        # Create prompt for intelligent tool selection
+        # 生成用于智能筛选工具的 prompt
         prompt = PromptFamily.generate_mcp_tool_selection_prompt(query, tools_info, max_tools)
 
         try:
-            # Call LLM for tool selection
+            # 让 LLM 来做工具筛选
             response = await self._call_llm_for_tool_selection(prompt)
             
             if not response:
                 logger.warning("No LLM response for tool selection, using fallback")
                 return self._fallback_tool_selection(all_tools, max_tools)
             
-            # Log a preview of the LLM response for debugging
+            # 记录 LLM 返回内容的片段，便于排查
             response_preview = response[:500] + "..." if len(response) > 500 else response
             logger.debug(f"LLM tool selection response: {response_preview}")
             
-            # Parse LLM response — json_repair handles fences/preambles (same as deep_research)
+            # 解析 LLM 的返回 —— json_repair 能处理代码围栏与前后缀（与 deep_research 一致）
             try:
                 selection_result = json_repair.loads(response)
             except Exception:
@@ -95,7 +95,7 @@ class MCPToolSelector:
 
             selected_tools = []
 
-            # Process selected tools
+            # 处理被选中的工具
             for tool_selection in selection_result.get("selected_tools", []) or []:
                 if not isinstance(tool_selection, dict):
                     continue
@@ -112,7 +112,7 @@ class MCPToolSelector:
                 logger.warning("No tools selected by LLM, using fallback selection")
                 return self._fallback_tool_selection(all_tools, max_tools)
             
-            # Log the overall selection reasoning
+            # 记录整体筛选思路
             selection_reasoning = selection_result.get("selection_reasoning", "No reasoning provided")
             logger.info(f"LLM selection strategy: {selection_reasoning}")
             
@@ -126,13 +126,13 @@ class MCPToolSelector:
 
     async def _call_llm_for_tool_selection(self, prompt: str) -> str:
         """
-        Call the LLM using the existing create_chat_completion function for tool selection.
+        复用现成的 create_chat_completion 来调用 LLM，完成工具筛选。
         
-        Args:
-            prompt (str): The prompt to send to the LLM.
+        参数：
+            prompt (str): 发给 LLM 的 prompt。
             
-        Returns:
-            str: The generated text response.
+        返回：
+            str: 生成的文本回复。
         """
         if not self.cfg:
             logger.warning("No config available for LLM call")
@@ -141,14 +141,14 @@ class MCPToolSelector:
         try:
             from ..utils.llm import create_chat_completion
             
-            # Create messages for the LLM
+            # 组装发给 LLM 的 messages
             messages = [{"role": "user", "content": prompt}]
             
-            # Use the strategic LLM for tool selection (as it's more complex reasoning)
+            # 工具筛选用 strategic LLM（这一步推理更复杂）
             result = await create_chat_completion(
                 model=self.cfg.strategic_llm_model,
                 messages=messages,
-                temperature=0.0,  # Low temperature for consistent tool selection
+                temperature=0.0,  # 低 temperature，让筛选结果稳定
                 llm_provider=self.cfg.strategic_llm_provider,
                 llm_kwargs=self.cfg.llm_kwargs,
                 cost_callback=self.researcher.add_costs if self.researcher and hasattr(self.researcher, 'add_costs') else None,
@@ -160,16 +160,16 @@ class MCPToolSelector:
 
     def _fallback_tool_selection(self, all_tools: List, max_tools: int) -> List:
         """
-        Fallback tool selection using pattern matching if LLM selection fails.
+        LLM 筛选失败时，用模式匹配兜底挑选工具。
         
-        Args:
-            all_tools: List of all available tools
-            max_tools: Maximum number of tools to select
+        参数：
+            all_tools: 全部可用工具列表
+            max_tools: 最多挑选几个工具
             
-        Returns:
-            List: Selected tools
+        返回：
+            List: 选出的工具
         """
-        # Define patterns for research-relevant tools
+        # 与研究场景相关的工具名模式
         research_patterns = [
             'search', 'get', 'read', 'fetch', 'find', 'list', 'query', 
             'lookup', 'retrieve', 'browse', 'view', 'show', 'describe'
@@ -181,7 +181,7 @@ class MCPToolSelector:
             tool_name = tool.name.lower()
             tool_description = (tool.description or "").lower()
             
-            # Calculate relevance score based on pattern matching
+            # 按模式匹配累计相关性得分
             score = 0
             for pattern in research_patterns:
                 if pattern in tool_name:
@@ -192,7 +192,7 @@ class MCPToolSelector:
             if score > 0:
                 scored_tools.append((tool, score))
         
-        # Sort by score and take top tools
+        # 按分数排序，取前几个
         scored_tools.sort(key=lambda x: x[1], reverse=True)
         selected_tools = [tool for tool, score in scored_tools[:max_tools]]
         

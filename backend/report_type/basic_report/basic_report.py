@@ -35,10 +35,10 @@ class BasicReport:
         self.websocket = websocket
         self.headers = headers or {}
         
-        # Generate a unique research ID for this report
+        # 为本次报告生成唯一的研究 ID
         self.research_id = self._generate_research_id(query)
 
-        # Initialize researcher with optional MCP parameters
+        # 初始化 researcher，MCP 参数是可选的
         argus_params = {
             "query": self.query,
             "query_domains": self.query_domains,
@@ -52,24 +52,24 @@ class BasicReport:
             "headers": self.headers,
         }
 
-        # Add MCP parameters if provided
+        # 提供了 MCP 参数才加进去
         if mcp_configs is not None:
             argus_params["mcp_configs"] = mcp_configs
         if mcp_strategy is not None:
             argus_params["mcp_strategy"] = mcp_strategy
 
-        # Visitor-supplied credentials, scoped to this request
+        # 访客提供的凭据，作用范围仅限本次请求
         if api_keys:
             argus_params["api_keys"] = api_keys
 
         self.argus = Argus(**argus_params)
 
-        # Override max_search_results_per_query if provided by user
+        # 用户传了 max_search_results 就覆盖默认值
         if max_search_results is not None:
             self.argus.cfg.max_search_results_per_query = int(max_search_results)
 
     def _generate_research_id(self, query: str) -> str:
-        """Generate a unique research ID from query and timestamp."""
+        """根据 query 与时间戳生成唯一的研究 ID。"""
         timestamp = str(int(time.time()))
         query_hash = hashlib.md5(query.encode()).hexdigest()[:8]
         return f"research_{timestamp}_{query_hash}"

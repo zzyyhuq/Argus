@@ -2,7 +2,7 @@ DEFAULT_MAX_PLAN_REVISIONS = 3
 
 
 class MaxPlanRevisionsExceededError(RuntimeError):
-    """Raised when human feedback requests exceed the configured planning limit."""
+    """人工反馈请求次数超过所配置的规划上限时抛出。"""
 
 
 def route_human_feedback(review, max_plan_revisions=DEFAULT_MAX_PLAN_REVISIONS):

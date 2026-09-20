@@ -59,7 +59,7 @@ class NoDriverScraper:
         async def scroll_page_to_bottom(self, page: "zendriver.Tab"):
             total_scroll_percent = 0
             while True:
-                # in tab mode, we need to bring the tab to front before scrolling to load the page content properly
+                # 在 tab 模式下，滚动前需要先把 tab 切到前台，页面内容才能正确加载
                 if self.tab_mode:
                     await page.bring_to_front()
                 scroll_percent = random.randrange(46, 97)
@@ -122,7 +122,7 @@ class NoDriverScraper:
                     yield
 
             except Exception as e:
-                # Log error but don't block the request
+                # 记录错误，但不阻塞请求
                 NoDriverScraper.logger.warning(
                     f"Rate limiting error for {url}: {str(e)}"
                 )
@@ -156,13 +156,13 @@ class NoDriverScraper:
 
         async with cls.browsers_lock:
             if len(cls.browsers) == 0:
-                # No browsers available, create new one
+                # 没有可用浏览器，新建一个
                 return await create_browser()
 
-            # Load balancing: Get browser with lowest number of tabs
+            # 负载均衡：取标签页数最少的浏览器
             browser = min(cls.browsers, key=lambda b: b.processing_count)
 
-            # If all browsers are heavily loaded and we can create more
+            # 所有浏览器都负载很高、且还能再创建时
             if (
                 browser.processing_count >= cls.browser_load_threshold
                 and len(cls.browsers) < cls.max_browsers
@@ -188,7 +188,7 @@ class NoDriverScraper:
         self.debug = False
 
     async def scrape_async(self) -> Tuple[str, str]:
-        """Returns tuple of (text, title)"""
+        """返回 (text, title) 元组"""
         if not self.url:
             return (
                 "A URL was not specified, cancelling request to browse website.",
@@ -206,13 +206,13 @@ class NoDriverScraper:
 
             page = await browser.get(self.url)
             if page is None:
-                # browser.get() increments processing_count before returning;
-                # a None result means the connection timed out. Decrement to
-                # avoid leaking the slot and deadlocking the browser pool.
+                # browser.get() 在返回前已经递增了 processing_count；
+                # 返回 None 说明连接超时。这里减回去，避免槽位泄漏，
+                # 最终把浏览器池锁死。
                 browser.processing_count -= 1
                 return "Browser failed to open page (returned None)", ""
             await browser.wait_or_timeout(page, "complete", 2)
-            # wait for potential redirection
+            # 等待可能发生的重定向
             await page.sleep(random.uniform(0.3, 0.7))
             await browser.wait_or_timeout(page, "idle", 2)
 

@@ -7,17 +7,16 @@ from ..utils import extract_title, get_text_from_soup, clean_soup
 
 logger = logging.getLogger(__name__)
 
-# Response codes worth one retry: rate limiting and transient server errors.
+# 值得重试一次的状态码：限流与临时性服务端错误。
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
-MAX_CONTENT_BYTES = 10 * 1024 * 1024  # Skip pages larger than 10MB
+MAX_CONTENT_BYTES = 10 * 1024 * 1024  # 超过 10MB 的页面直接跳过
 
-# (connect, read) timeouts for the page fetch, matching PyMuPDFScraper's shape.
+# 页面抓取的 (connect, read) 超时，与 PyMuPDFScraper 的形式保持一致。
 #
-# Connect is the one that matters on this network: hosts that are unreachable
-# (blocked or unroutable) fail at connect, and a flat 10s spent twice -- once per
-# attempt -- is pure waiting, observed as ~21s per dead URL. Reachable hosts
-# finish the handshake in well under a second, so 5s costs nothing. Read stays
-# generous so a slow but working page with a large body is not cut off.
+# 在这个网络环境下关键的是 connect：不可达的主机（被拦或路由不通）会在
+# connect 阶段失败，而固定 10s 乘以两次尝试纯属干等，实测每个失效 URL 约
+# 花 21s。可达主机完成握手的耗时远低于一秒，所以 5s 没有任何代价。
+# read 保持宽松，避免响应慢但正常的大页面被截断。
 FETCH_TIMEOUT = (5, 30)
 
 
@@ -28,21 +27,19 @@ class BeautifulSoupScraper:
         self.session = session
 
     def scrape(self):
-        """Fetch the page and extract cleaned text and title.
+        """抓取页面并提取清洗后的文本与标题。
 
-        Returns:
-            Tuple of (content, title). Empty values are returned when the page
-            cannot be fetched or yields no usable content.
+        返回：
+            (content, title) 元组。页面抓不到或没有可用内容时返回空值。
         """
         response = self._fetch()
         if response is None:
             return "", ""
 
         try:
-            # response.encoding defaults to ISO-8859-1 when the Content-Type
-            # header omits a charset, which garbles many UTF-8 pages. Only
-            # trust it when the server actually declared a charset; otherwise
-            # let BeautifulSoup detect the encoding from the document itself.
+            # Content-Type header 未声明 charset 时，response.encoding 默认是
+            # ISO-8859-1，会把大量 UTF-8 页面解码成乱码。只有服务器确实声明了
+            # charset 才采信它；否则交给 BeautifulSoup 从文档自身探测编码。
             content_type = response.headers.get("Content-Type", "")
             declared_encoding = response.encoding if "charset" in content_type.lower() else None
             soup = BeautifulSoup(
@@ -53,7 +50,7 @@ class BeautifulSoupScraper:
 
             content = get_text_from_soup(soup)
 
-            # Extract the title using the utility function
+            # 用工具函数提取标题
             title = extract_title(soup)
 
             return content, title
@@ -63,10 +60,9 @@ class BeautifulSoupScraper:
             return "", ""
 
     def _fetch(self):
-        """GET the page, retrying once on transient failures.
+        """GET 页面，遇到临时性失败时重试一次。
 
-        Returns the response on success, or None when the page is
-        unreachable, an error status, or too large to be worth parsing.
+        成功时返回 response；页面不可达、状态码为错误、或大到不值得解析时返回 None。
         """
         if self.session is None:
             logger.warning(f"No session provided for {self.link}; cannot fetch")
@@ -90,7 +86,7 @@ class BeautifulSoupScraper:
                 continue
 
             if response.status_code >= 400:
-                # Don't parse error/paywall pages as if they were content
+                # 不要把错误页/付费墙页当成正文来解析
                 logger.warning(f"Got HTTP {response.status_code} for {self.link}, skipping")
                 return None
 

@@ -1,7 +1,7 @@
 """
-MCP Streaming Utilities Module
+MCP 流式输出工具模块。
 
-Handles websocket streaming and logging for MCP operations.
+负责 MCP 操作过程中的 websocket 推送与日志。
 """
 import asyncio
 import logging
@@ -12,25 +12,25 @@ logger = logging.getLogger(__name__)
 
 class MCPStreamer:
     """
-    Handles streaming output for MCP operations.
+    负责 MCP 操作的流式输出。
     
-    Responsible for:
-    - Streaming logs to websocket
-    - Synchronous/asynchronous logging
-    - Error handling in streaming
+    职责：
+    - 把日志推送到 websocket
+    - 同步/异步两套日志接口
+    - 流式输出过程中的错误处理
     """
 
     def __init__(self, websocket=None):
         """
-        Initialize the MCP streamer.
+        初始化 MCP streamer。
         
-        Args:
-            websocket: WebSocket for streaming output
+        参数：
+            websocket: 用于流式输出的 WebSocket
         """
         self.websocket = websocket
 
     async def stream_log(self, message: str, data: Any = None):
-        """Stream a log message to the websocket if available."""
+        """若有 websocket，就把这条日志推送给它。"""
         logger.info(message)
         
         if self.websocket:
@@ -47,7 +47,7 @@ class MCPStreamer:
                 logger.error(f"Error streaming log: {e}")
                 
     def stream_log_sync(self, message: str, data: Any = None):
-        """Synchronous version of stream_log for use in sync contexts."""
+        """stream_log 的同步版本，供同步上下文中调用。"""
         logger.info(message)
         
         if self.websocket:
@@ -64,39 +64,39 @@ class MCPStreamer:
                 logger.error(f"Error in sync log streaming: {e}")
 
     async def stream_stage_start(self, stage: str, description: str):
-        """Stream the start of a research stage."""
+        """推送某个研究阶段的开始。"""
         await self.stream_log(f"🔧 {stage}: {description}")
 
     async def stream_stage_complete(self, stage: str, result_count: int = None):
-        """Stream the completion of a research stage."""
+        """推送某个研究阶段的完成。"""
         if result_count is not None:
             await self.stream_log(f"✅ {stage} completed: {result_count} results")
         else:
             await self.stream_log(f"✅ {stage} completed")
 
     async def stream_tool_selection(self, selected_count: int, total_count: int):
-        """Stream tool selection information."""
+        """推送工具筛选的结果。"""
         await self.stream_log(f"🧠 Using LLM to select {selected_count} most relevant tools from {total_count} available")
 
     async def stream_tool_execution(self, tool_name: str, step: int, total: int):
-        """Stream tool execution progress."""
+        """推送工具的执行进度。"""
         await self.stream_log(f"🔍 Executing tool {step}/{total}: {tool_name}")
 
     async def stream_research_results(self, result_count: int, total_chars: int = None):
-        """Stream research results summary."""
+        """推送研究结果的汇总。"""
         if total_chars:
             await self.stream_log(f"✅ MCP research completed: {result_count} results obtained ({total_chars:,} chars)")
         else:
             await self.stream_log(f"✅ MCP research completed: {result_count} results obtained")
 
     async def stream_error(self, error_msg: str):
-        """Stream error messages."""
+        """推送错误信息。"""
         await self.stream_log(f"❌ {error_msg}")
 
     async def stream_warning(self, warning_msg: str):
-        """Stream warning messages."""
+        """推送警告信息。"""
         await self.stream_log(f"⚠️ {warning_msg}")
 
     async def stream_info(self, info_msg: str):
-        """Stream informational messages."""
+        """推送提示信息。"""
         await self.stream_log(f"ℹ️ {info_msg}") 

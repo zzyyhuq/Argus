@@ -4,16 +4,16 @@ from ..utils import check_pkg
 
 class ExaSearch:
     """
-    Exa API Retriever
+    Exa API retriever
     """
 
     def __init__(self, query, query_domains=None):
         """
-        Initializes the ExaSearch object.
-        Args:
-            query: The search query.
+        初始化 ExaSearch 对象。
+        参数：
+            query: 搜索查询。
         """
-        # This validation is necessary since exa_py is optional
+        # 这个校验是必要的，因为 exa_py 是可选依赖
         check_pkg("exa_py")
         from exa_py import Exa
         self.query = query
@@ -23,11 +23,11 @@ class ExaSearch:
 
     def _retrieve_api_key(self):
         """
-        Retrieves the Exa API key from environment variables.
-        Returns:
-            The API key.
-        Raises:
-            Exception: If the API key is not found.
+        从环境变量中读取 Exa API key。
+        返回：
+            API key。
+        异常：
+            Exception: 找不到 API key 时抛出。
         """
         try:
             api_key = os.environ["EXA_API_KEY"]
@@ -42,14 +42,14 @@ class ExaSearch:
         self, max_results=10, use_autoprompt=False, search_type="neural", **filters
     ):
         """
-        Searches the query using the Exa API.
-        Args:
-            max_results: The maximum number of results to return.
-            use_autoprompt: Whether to use autoprompting.
-            search_type: The type of search (e.g., "neural", "keyword").
-            **filters: Additional filters (e.g., date range, domains).
-        Returns:
-            A list of search results.
+        使用 Exa API 执行查询搜索。
+        参数：
+            max_results: 最多返回的结果数。
+            use_autoprompt: 是否启用 autoprompt。
+            search_type: 搜索类型（如 "neural"、"keyword"）。
+            **filters: 附加过滤条件（如日期范围、域名）。
+        返回：
+            搜索结果列表。
         """
         try:
             results = self.client.search(
@@ -78,13 +78,13 @@ class ExaSearch:
 
     def find_similar(self, url, exclude_source_domain=False, **filters):
         """
-        Finds similar documents to the provided URL using the Exa API.
-        Args:
-            url: The URL to find similar documents for.
-            exclude_source_domain: Whether to exclude the source domain in the results.
-            **filters: Additional filters.
-        Returns:
-            A list of similar documents.
+        使用 Exa API 查找与给定 URL 相似的文档。
+        参数：
+            url: 要查找相似文档的 URL。
+            exclude_source_domain: 是否在结果中排除来源域名。
+            **filters: 附加过滤条件。
+        返回：
+            相似文档列表。
         """
         results = self.client.find_similar(
             url, exclude_source_domain=exclude_source_domain, **filters
@@ -101,12 +101,12 @@ class ExaSearch:
 
     def get_contents(self, ids, **options):
         """
-        Retrieves the contents of the specified IDs using the Exa API.
-        Args:
-            ids: The IDs of the documents to retrieve.
-            **options: Additional options for content retrieval.
-        Returns:
-            A list of document contents.
+        使用 Exa API 获取指定 ID 的内容。
+        参数：
+            ids: 要获取的文档 ID。
+            **options: 内容获取的附加选项。
+        返回：
+            文档内容列表。
         """
         results = self.client.get_contents(ids, **options)
 
