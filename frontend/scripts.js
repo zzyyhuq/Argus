@@ -611,77 +611,95 @@ const GPTResearcher = (() => {
     });
   }
 
-  // Load a research entry from history
-  const loadResearchEntry = (index) => {
+  // Fetch a previously saved report so a history entry can be read — and chatted
+  // about — again. The stored link is a relative path such as
+  // "outputs/task_....md", served by the app's /outputs mount.
+  const fetchStoredReport = async (links) => {
+    if (!links || !links.md) return '';
+    try {
+      const res = await fetch(links.md);
+      if (!res.ok) {
+        console.warn(`Stored report unavailable (HTTP ${res.status}): ${links.md}`);
+        return '';
+      }
+      return await res.text();
+    } catch (e) {
+      console.warn('Could not fetch the stored report:', e);
+      return '';
+    }
+  };
+
+  // Load a research entry from history: restores the query and the settings it
+  // ran with, brings the report back, and re-enables the download bar and chat.
+  // Previously this only refilled the query — and reset the selects to their
+  // first options, because the settings were never stored.
+  const loadResearchEntry = async (index) => {
     const entry = conversationHistory[index];
     if (!entry) return;
 
     // Fill form with the entry data
-    document.getElementById('task').value = entry.prompt; // Changed from entry.task for consistency
-    
-    // Check if report_type, report_source, and tone are in entry, otherwise use defaults or skip
-    const reportTypeSelect = document.querySelector('select[name="report_type"]');
-    if (reportTypeSelect && entry.reportType) {
-        reportTypeSelect.value = entry.reportType;
-    } else if (reportTypeSelect) {
-        reportTypeSelect.value = reportTypeSelect.options[0].value; // Default to first option
-    }
+    document.getElementById('task').value = entry.prompt;
 
-    const reportSourceSelect = document.querySelector('select[name="report_source"]');
-    if (reportSourceSelect && entry.reportSource) {
-        reportSourceSelect.value = entry.reportSource;
-    } else if (reportSourceSelect) {
-        reportSourceSelect.value = reportSourceSelect.options[0].value; // Default to first option
-    }
-
-    const toneSelect = document.querySelector('select[name="tone"]');
-    if (toneSelect && entry.tone) {
-        toneSelect.value = entry.tone;
-    } else if (toneSelect) {
-        toneSelect.value = toneSelect.options[0].value; // Default to first option
-    }
+    // Restore the settings this entry was run with. Missing values are left
+    // alone rather than reset: older entries predate these fields, and silently
+    // reverting the visitor's current choices is worse than not touching them.
+    const restoreSelect = (name, value) => {
+      if (!value) return;
+      const el = document.querySelector(`select[name="${name}"]`);
+      if (el) el.value = value;
+    };
+    restoreSelect('report_type', entry.reportType);
+    restoreSelect('report_source', entry.reportSource);
+    restoreSelect('tone', entry.tone);
 
     const queryDomainsInput = document.querySelector('input[name="query_domains"]');
-    if (queryDomainsInput) {
-        if (entry.queryDomains && Array.isArray(entry.queryDomains) && entry.queryDomains.length > 0) {
-            queryDomainsInput.value = entry.queryDomains.join(', ');
-        } else {
-            queryDomainsInput.value = ''; // Clear if not present
-        }
+    if (queryDomainsInput && Array.isArray(entry.queryDomains)) {
+      queryDomainsInput.value = entry.queryDomains.join(', ');
     }
 
     // Clear current research/report areas
     document.getElementById('output').innerHTML = '';
     document.getElementById('reportContainer').innerHTML = '';
 
-    // Hide download bar and chat
     const stickyDownloadsBar = document.getElementById('stickyDownloadsBar');
     if (stickyDownloadsBar) {
-        stickyDownloadsBar.classList.remove('visible');
+      stickyDownloadsBar.classList.remove('visible');
     }
     const chatContainer = document.getElementById('chatContainer');
     if (chatContainer) {
-        chatContainer.style.display = 'none';
+      chatContainer.style.display = 'none';
     }
 
-    // Reset UI state and report-specific buttons
-    updateState('initial'); // This will hide copy buttons etc.
+    const report = await fetchStoredReport(entry.links);
+
+    if (report) {
+      // Re-render the stored report and drive the UI into the 'finished' state,
+      // which is what reveals the download bar and the chat panel. The rendered
+      // DOM is the source of truth for copying; reportContent is local to the
+      // socket handler and deliberately not touched here.
+      writeReport({ output: report, type: 'report' }, reportConverter, true, false);
+      if (entry.links) {
+        updateDownloadLink({ output: entry.links });
+      }
+      updateState('finished');
+      showToast('已载入该次研究，可以继续阅读或提问。');
+    } else {
+      updateState('initial');
+      showToast('报告文件已不可用，已载入查询内容，可以重新开始研究。');
+    }
 
     // Close the history panel
     const historyPanel = document.getElementById('historyPanel');
     if (historyPanel) {
-        historyPanel.classList.remove('open');
+      historyPanel.classList.remove('open');
     }
 
     // Scroll to the form
     const formElement = document.getElementById('form');
     if (formElement) {
-        formElement.scrollIntoView({ behavior: 'smooth' });
+      formElement.scrollIntoView({ behavior: 'smooth' });
     }
-
-    // Inform user
-    showToast('研究参数已载入，你可以重新开始研究。');
-  }
+  };
 
   // Copy entry content to clipboard
   const copyEntryToClipboard = (index) => {
@@ -739,11 +757,27 @@ const GPTResearcher = (() => {
 
     console.debug('Saving history with links:', links);
 
+    // Capture the settings this run used. They were previously not stored, yet
+    // loadResearchEntry read them back — getting undefined and resetting every
+    // select to its first option, silently changing the visitor's choices.
+    const selectValue = (name) => {
+      const el = document.querySelector(`select[name="${name}"]`);
+      return el ? el.value : '';
+    };
+    const domainsInput = document.querySelector('input[name="query_domains"]');
+    const queryDomains = domainsInput && domainsInput.value.trim()
+      ? domainsInput.value.split(',').map((d) => d.trim()).filter((d) => d.length > 0)
+      : [];
+
     // Create history entry with timestamp
     const historyEntry = {
       prompt,
       links,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      reportType: selectValue('report_type'),
+      reportSource: selectValue('report_source'),
+      tone: selectValue('tone'),
+      queryDomains
     };
 
     // Add to beginning of array if it's not empty
@@ -836,19 +870,9 @@ const GPTResearcher = (() => {
       console.log("WebSocket connection timed out");
     }, 10000); // 10 seconds timeout
 
-    // Configure Showdown converter to properly handle code blocks
-    const converter = new showdown.Converter({
-      ghCodeBlocks: true,         // GitHub style code blocks
-      tables: true,               // Enable tables
-      tasklists: true,            // Enable task lists
-      smartIndentationFix: true,  // Fix weird indentation
-      simpleLineBreaks: true,     // Treat newlines as <br>
-      openLinksInNewWindow: true, // Open links in new tab
-      parseImgDimensions: true    // Parse image dimensions from markdown
-    });
-
-    // Fix issues with code block formatting
-    converter.setOption('literalMidWordUnderscores', true);
+    // Shared module-level converter (see reportConverter) — a history load
+    // renders through the same instance, so both paths look identical.
+    const converter = reportConverter;
 
     // Increment connection attempts counter
     connectionAttempts++;
@@ -1222,6 +1246,21 @@ const GPTResearcher = (() => {
     output.scrollTop = output.scrollHeight;
     output.style.display = 'block';
   }
+
+  // Markdown renderer for reports. Module scope rather than local to the socket
+  // handler, because loading a history entry renders a report too and must match.
+  const reportConverter = new showdown.Converter({
+    ghCodeBlocks: true,         // GitHub style code blocks
+    tables: true,               // Enable tables
+    tasklists: true,            // Enable task lists
+    smartIndentationFix: true,  // Fix weird indentation
+    simpleLineBreaks: true,     // Treat newlines as <br>
+    openLinksInNewWindow: true, // Open links in new tab
+    parseImgDimensions: true    // Parse image dimensions from markdown
+  });
+
+  // Fix issues with code block formatting
+  reportConverter.setOption('literalMidWordUnderscores', true);
 
   const writeReport = (data, converter, isFinal = false, append = false) => {
     const reportContainer = document.getElementById('reportContainer');
@@ -1771,6 +1810,9 @@ const GPTResearcher = (() => {
     reader.readAsText(file);
   }
 
+  // Guards against binding initChat's handlers more than once (see below).
+  let chatBound = false;
+
   // Initialize chat functionality
   const initChat = () => {
     const chatInput = document.getElementById('chatInput');
@@ -1784,6 +1826,13 @@ const GPTResearcher = (() => {
     if (chatMessages) {
       chatMessages.innerHTML = '';
     }
+
+    // Bind the handlers exactly once. initChat runs on every transition into
+    // 'finished' — each completed research, and now each loaded history entry —
+    // and addEventListener does not dedupe, so rebinding sent every chat message
+    // N times after N researches.
+    if (chatBound) return;
+    chatBound = true;
 
     // Add event listeners for chat input
     chatInput.addEventListener('keydown', (e) => {
