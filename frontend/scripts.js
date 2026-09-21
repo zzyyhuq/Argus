@@ -544,7 +544,8 @@ const Argus = (() => {
     historyEntries.innerHTML = '';
 
     if (!conversationHistory || conversationHistory.length === 0) {
-      historyEntries.innerHTML = '<p class="text-center mt-4 text-muted">还没有研究历史。</p>';
+      // 注意：不要用 Bootstrap 的 class —— 本项目已移除 Bootstrap，用了等于裸样式
+      historyEntries.innerHTML = '<p class="history-empty">还没有研究历史。<br>完成一次研究会出现在这里。</p>';
       return;
     }
 
@@ -2728,3 +2729,93 @@ const Argus = (() => {
 })()
 
 window.addEventListener('DOMContentLoaded', Argus.init)
+
+/* ---------------------------------------------------------------------------
+ * macOS Sonoma 风下拉选择器
+ * 原生 <select> 的弹出面板由操作系统绘制，CSS 无法定制（毛玻璃弹层、
+ * 选项 hover/选中色都做不到）。这里给 select.form-control 套一层自定义
+ * 外壳：交互走外壳，原生 select 留在 DOM 里（隐藏、不参与 Tab），值双向
+ * 同步 —— 表单提交、selectValue() / restoreSelect() 等既有逻辑不受影响。
+ * ------------------------------------------------------------------------- */
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('select.form-control').forEach(select => {
+    if (select.closest('.mac-select')) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mac-select';
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    select.tabIndex = -1;  // Tab 焦点交给触发按钮
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'mac-select__trigger';
+
+    const value = document.createElement('span');
+    value.className = 'mac-select__value';
+
+    const chevron = document.createElement('i');
+    chevron.className = 'fas fa-chevron-down mac-select__chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    trigger.append(value, chevron);
+
+    const popup = document.createElement('div');
+    popup.className = 'mac-select__popup';
+    popup.setAttribute('role', 'listbox');
+
+    const syncValue = () => {
+      const current = select.options[select.selectedIndex];
+      value.textContent = current ? current.textContent : '';
+      popup.querySelectorAll('.mac-select__option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.value === select.value);
+      });
+    };
+
+    Array.from(select.options).forEach(opt => {
+      const item = document.createElement('div');
+      item.className = 'mac-select__option';
+      item.textContent = opt.textContent;
+      item.dataset.value = opt.value;
+      item.title = opt.textContent;  // 长选项悬停可见全文
+      item.setAttribute('role', 'option');
+      item.addEventListener('click', () => {
+        select.value = opt.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        wrapper.classList.remove('open');
+      });
+      popup.appendChild(item);
+    });
+
+    trigger.addEventListener('click', event => {
+      event.stopPropagation();
+      wrapper.classList.toggle('open');
+    });
+
+    trigger.addEventListener('keydown', event => {
+      if (event.key === 'Escape') wrapper.classList.remove('open');
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        wrapper.classList.toggle('open');
+      }
+    });
+
+    document.addEventListener('click', event => {
+      if (!wrapper.contains(event.target)) wrapper.classList.remove('open');
+    });
+
+    select.addEventListener('change', syncValue);
+
+    // restoreSelect() 只给 value 赋值不派发事件，这里按实例拦截赋值，
+    // 让外壳的显示跟着刷新。
+    const protoValue = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value');
+    Object.defineProperty(select, 'value', {
+      get: () => protoValue.get.call(select),
+      set: (v) => { protoValue.set.call(select, v); syncValue(); },
+      configurable: true
+    });
+
+    wrapper.append(trigger, popup);
+    syncValue();
+  });
+});

@@ -10,6 +10,7 @@
 """
 
 import asyncio
+import ipaddress
 import os
 import time
 from typing import Dict, List, Tuple
@@ -57,15 +58,51 @@ class RateLimiter:
             return True, 0
 
 
+def _is_trusted_proxy(host: str) -> bool:
+    """对端是否可信代理（tunnel / 反向代理与本机同机部署）。
+
+    只信任回环与 RFC1918/ULA/链路本地地址。注意不能用 ``is_private`` 判断
+    —— 自 3.11 起它涵盖所有"不全局可达"段（含 100.64/10 CGNAT、203.0.113/24
+    等文档示例段），范围过大；这里用显式网段白名单。
+    """
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    if ip.is_loopback:
+        return True
+    return any(ip in net for net in _TRUSTED_PROXY_NETWORKS)
+
+
+_TRUSTED_PROXY_NETWORKS = tuple(
+    ipaddress.ip_network(c)
+    for c in ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7", "fe80::/10")
+)
+
+
 def client_key(websocket) -> str:
     """识别调用方，供限流使用。
 
-    注意：这里取的是*直接对端*的地址。若身处反向代理之后（nginx、Cloudflare
-    等），所有访客共用代理的 IP，会被当成同一个客户端来限流——到那时就必须改读
-    可信的 X-Forwarded-For。
+    优先取真实客户端 IP：对端是可信代理（cloudflared / Caddy / nginx 与本机
+    同机部署时，对端为 127.0.0.1）时，依次读取 Cloudflare 的
+    ``CF-Connecting-IP`` 与 ``X-Forwarded-For`` 的首段；对端是公网地址时
+    忽略这些头（否则访客可以伪造 IP 绕过限流），直接沿用对端地址。
     """
     client = getattr(websocket, "client", None)
-    return getattr(client, "host", None) or "unknown"
+    host = getattr(client, "host", None) or "unknown"
+    if not _is_trusted_proxy(host):
+        return host
+
+    headers = websocket.headers
+    cf_ip = headers.get("cf-connecting-ip")
+    if cf_ip:
+        return cf_ip
+    forwarded = headers.get("x-forwarded-for")
+    if forwarded:
+        first = forwarded.split(",")[0].strip()
+        if first:
+            return first
+    return host
 
 
 def build_limiter(env_var: str = "RATE_LIMIT_PER_HOUR", default: int = 3) -> RateLimiter:

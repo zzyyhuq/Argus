@@ -6,11 +6,15 @@
     <title>Argus · AI 深度研究助手</title>
     <meta name="description" content="Argus —— AI 驱动的深度研究助手，自动搜集资料并生成带引用的研究报告">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f5f7">
+    <meta property="og:title" content="Argus · AI 深度研究助手">
+    <meta property="og:description" content="输入话题，自动检索、抓取、交叉核对多个信源，产出带引用的研究报告。">
+    <meta property="og:type" content="website">
     <!-- v= 参数用于缓存击穿：改图标时必须同时改这个版本号，
          否则浏览器会一直用缓存的旧图（favicon 的缓存尤其顽固）。 -->
     <link rel="icon" href="./static/favicon.ico?v=argus1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/site/styles.css?v=argus2" />
+    <link rel="stylesheet" href="/site/styles.css?v=argus7" />
 </head>
 
 <body>
@@ -79,7 +83,7 @@
     </div>
 
     <section class="hero">
-        <h1>把资料调研<br><span class="hero-accent">交给 AI</span></h1>
+        <h1>把资料调研，<br>交给 AI。</h1>
         <p class="hero-sub">输入一个话题，它会自动检索、抓取、交叉核对多个信源，<br class="br-desktop">最终产出带引用的研究报告。</p>
     </section>
 
@@ -284,8 +288,8 @@
                 <button id="voiceInputBtn" class="icon-button" title="使用语音输入">
                     <i class="fas fa-microphone"></i>
                 </button>
-                <button id="sendChatBtn" class="btn-primary">
-                    <i class="fas fa-paper-plane"></i> 发送
+                <button id="sendChatBtn" class="btn-primary" title="发送">
+                    <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
         </div>
@@ -344,7 +348,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.6/purify.min.js"
             integrity="sha512-YlctBG9PGZIhh9keoqI3eZkQM9T8QUbiBi7qNYAO/TUEo8jqWX5pLp5+x1cKRQDRzJ/lyGyJ9WUVNIRduxIIFw=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="/site/scripts.js?v=argus2"></script>
+    <script src="/site/scripts.js?v=argus4"></script>
     <script>
         // 研究问题输入框随内容自动增高
         const taskTextarea = document.getElementById('task');
