@@ -3,16 +3,17 @@ services:
     pull_policy: build
     image: argus:local
     build: ./
+    # .env 整个注入容器（gitignore 掉的密钥文件由部署时在机器上手写；
+    # 只列变量的方式会漏传 —— DASHSCOPE_API_KEY 曾被漏掉导致向量化报缺 key）。
+    env_file:
+      - .env
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
-      TAVILY_API_KEY: ${TAVILY_API_KEY}
-      LANGCHAIN_API_KEY: ${LANGCHAIN_API_KEY}
       LOGGING_LEVEL: INFO
     volumes:
       - ${PWD}/my-docs:/usr/src/app/my-docs:rw
       - ${PWD}/outputs:/usr/src/app/outputs:rw
       - ${PWD}/logs:/usr/src/app/logs:rw
+      - ${PWD}/data:/usr/src/app/data:rw
     user: root
     restart: always
     ports:
